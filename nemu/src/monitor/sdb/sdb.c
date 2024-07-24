@@ -19,6 +19,8 @@
 #include <readline/history.h>
 #include "sdb.h"
 
+#include <memory/vaddr.h>
+
 static int is_batch_mode = false;
 
 void init_regex();
@@ -49,10 +51,59 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
 static int cmd_help(char *args);
+
+static int cmd_si(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, " ");
+  int i=1;
+
+  if (arg == NULL) {
+    /* no argument given */
+    cpu_exec(1);
+  }
+  else {
+    i = atoi(arg);
+    if ( i >= 1){
+      cpu_exec(i);
+      }
+      else {
+        printf("Unknown command");
+      }
+    }
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  char *arg = strtok(NULL, " ");
+  
+  if (strcmp(arg, "r") == 0)
+    isa_reg_display();
+  else
+    printf("Unknown command '%s'\n", arg);
+  return 0;
+}
+
+static int cmd_x(char *args) {
+  char *arg_N = strtok(NULL, " ");
+  char *arg_EXPR = strtok(NULL, " ");
+  
+  int N;
+  vaddr_t EXPR;
+  
+  if ( sscanf( arg_N, "%d", &N) == 1 && sscanf( arg_EXPR, "%x", &EXPR) == 1)
+    for ( int i = 0; i < N; i++) {
+      printf("0x%08x\t0x%08x\n", EXPR, vaddr_read(EXPR, 4));
+      EXPR += 4;
+    }
+  else
+    printf("Unknown command");
+  return 0;
+}
 
 static struct {
   const char *name;
@@ -64,6 +115,12 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
+  { "si", "dan bu zhi xing, e.g., si 10", cmd_si},
+  { "info", "da yin cheng xu zhuang tai, e.g., info r, info w", cmd_info},
+  { "x", "sao miao nei cun, e.g., x 10 $esp", cmd_x},
+  //{ "p", "biao da shi qiu zhi, e.g., p $eax + 1", cmd_p},
+  //{ "w", "she zhi jian shi dian, e.g., w *0x2000", cmd_w},
+  //{ "d", "shan chu jian shi dian, e.g., d 2", cmd_d},
 
 };
 
