@@ -137,7 +137,10 @@ cmd_p (char *args)
     }
   bool flag = false;
   uint32_t ans = expr (args, &flag);
-  printf ("DEC: %010d\nHEX: 0x%08x\n", ans, ans);
+  if (flag == true)
+    printf ("DEC: %010d\nHEX: 0x%08x\n", ans, ans);
+  else
+    printf ("[WARNING} some bugs occur\n");
   return 0;
 }
 
@@ -172,13 +175,15 @@ static struct
   const char *description;
   int (*handler) (char *);
 } cmd_table[] = {
-  {"help", "Display information about all supported commands", cmd_help},
+  {"help", "Display information about all supported commands",
+   cmd_help},
   {"c", "Continue the execution of the program", cmd_c},
   {"q", "Exit NEMU", cmd_q},
 
   /* TODO: Add more commands */
   {"si", "dan bu zhi xing, e.g., si 10", cmd_si},
-  {"info", "da yin cheng xu zhuang tai, e.g., info r, info w", cmd_info},
+  {"info", "da yin cheng xu zhuang tai, e.g., info r, info w",
+   cmd_info},
   {"x", "sao miao nei cun, e.g., x 10 $esp", cmd_x},
   {"p", "biao da shi qiu zhi, e.g., p $eax + 1", cmd_p},
   {"w", "she zhi jian shi dian, e.g., w *0x2000", cmd_w},
@@ -253,7 +258,6 @@ sdb_mainloop ()
 	{
 	  args = NULL;
 	}
-
 #ifdef CONFIG_DEVICE
       extern void sdl_clear_event_queue ();
       sdl_clear_event_queue ();

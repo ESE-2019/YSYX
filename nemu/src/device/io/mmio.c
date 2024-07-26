@@ -34,8 +34,8 @@ report_mmio_overlap (const char *name1, paddr_t l1, paddr_t r1,
 		     const char *name2, paddr_t l2, paddr_t r2)
 {
   panic ("MMIO region %s@[" FMT_PADDR ", " FMT_PADDR "] is overlapped "
-	 "with %s@[" FMT_PADDR ", " FMT_PADDR "]", name1, l1, r1, name2, l2,
-	 r2);
+	 "with %s@[" FMT_PADDR ", " FMT_PADDR "]", name1, l1, r1, name2,
+	 l2, r2);
 }
 
 /* device interface */
@@ -53,15 +53,15 @@ add_mmio_map (const char *name, paddr_t addr, void *space, uint32_t len,
     {
       if (left <= maps[i].high && right >= maps[i].low)
 	{
-	  report_mmio_overlap (name, left, right, maps[i].name, maps[i].low,
-			       maps[i].high);
+	  report_mmio_overlap (name, left, right, maps[i].name,
+			       maps[i].low, maps[i].high);
 	}
     }
 
   maps[nr_map] = (IOMap)
   {
-  .name = name,.low = addr,.high = addr + len - 1,.space = space,.callback =
-      callback};
+  .name = name,.low = addr,.high = addr + len - 1,.space =
+      space,.callback = callback};
   Log ("Add mmio map '%s' at [" FMT_PADDR ", " FMT_PADDR "]",
        maps[nr_map].name, maps[nr_map].low, maps[nr_map].high);
 

@@ -53,8 +53,8 @@ __attribute__((noinline))
 	  ("If it is the first case, see\n%s\nfor more details.\n\n"
 	   "If it is the second case, remember:\n"
 	   "* The machine is always right!\n"
-	   "* Every line of untested code is always wrong!\n\n", ANSI_FG_RED),
-	  isa_logo);
+	   "* Every line of untested code is always wrong!\n\n",
+	   ANSI_FG_RED), isa_logo);
 
   set_nemu_state (NEMU_ABORT, thispc, -1);
 }

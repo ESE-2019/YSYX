@@ -31,8 +31,8 @@ static int nr_token __attribute__((used)) = 0;
 
 enum
 {
-  TK_NOTYPE = 256,
-  NUM = 1,
+  NOTYPE = 256,
+  DEC = 1,
   REG = 2,
   HEX = 3,
   EQ = 4,
@@ -40,29 +40,32 @@ enum
   OR = 6,
   AND = 7,
   LEQ = 8,
-  DEREF
+  DEREF = 9
 };
 static struct rule
 {
   const char *regex;
   int token_type;
 } rules[] = {
-  {" +", TK_NOTYPE},
+  {" +", NOTYPE},
+  {"\\$[a-zA-Z]*[0-9]*", REG},	//caution $0 $t0 etc
+  {"0[xX][0-9a-fA-F]+", HEX},
+  {"[0-9]+", DEC},		// must be HEX hou mian
   {"\\+", '+'},
   {"\\-", '-'},
   {"\\*", '*'},
   {"\\/", '/'},
   {"\\(", '('},
   {"\\)", ')'},
-  {"\\<\\=", LEQ},
   {"\\=\\=", EQ},
   {"\\!\\=", NOTEQ},
   {"\\|\\|", OR},
   {"\\&\\&", AND},
-  {"\\!", '!'},
-  {"\\$[a-zA-Z]*[0-9]*", REG},
-  {"0[xX][0-9a-fA-F]+", HEX},
-  {"[0-9]+", NUM}
+  {"\\<\\=", LEQ},
+  {"\\!", '!'},			//must be != hou mian
+  {"\\&", '&'},			//must be && hou mian
+  {"\\^", '^'},
+  {"\\|", '|'}
 };
 
 
@@ -111,7 +114,7 @@ eval (int p, int q)
   else
     {
       int op = -1;
-      int flag = -1;
+      int pri = 0;
       for (int i = p; i <= q; i++)
 	{
 	  if (tokens[i].type == '(')	// skip parentheses
@@ -126,75 +129,87 @@ eval (int p, int q)
 		    cnt--;
 		}
 	    }
-	  // priority
-	  if (flag <= 7 && tokens[i].type == OR)
+	  // priority of 14
+	  if (pri <= 12 && tokens[i].type == OR)
 	    {
-	      flag = 7;
+	      pri = 12;
 	      op = max (op, i);
 	    }
-	  if (flag <= 6 && tokens[i].type == AND)
+	  if (pri <= 11 && tokens[i].type == AND)
 	    {
-	      flag = 6;
+	      pri = 11;
 	      op = max (op, i);
 	    }
-	  if (flag <= 5 && tokens[i].type == NOTEQ)
+	  if (pri <= 10 && tokens[i].type == '|')
 	    {
-	      flag = 5;
+	      pri = 10;
 	      op = max (op, i);
 	    }
-	  if (flag <= 4 && tokens[i].type == EQ)
+	  if (pri <= 9 && tokens[i].type == '^')
 	    {
-	      flag = 4;
+	      pri = 9;
 	      op = max (op, i);
 	    }
-	  if (flag <= 3 && tokens[i].type == LEQ)
+	  if (pri <= 8 && tokens[i].type == '&')
 	    {
-	      flag = 3;
+	      pri = 8;
 	      op = max (op, i);
 	    }
-	  if (flag <= 2 && (tokens[i].type == '+' || tokens[i].type == '-'))
+	  if (pri <= 7 && (tokens[i].type == EQ || tokens[i].type == NOTEQ))
 	    {
-	      flag = 2;
+	      pri = 7;
 	      op = max (op, i);
 	    }
-	  if (flag <= 1 && (tokens[i].type == '*' || tokens[i].type == '/'))
+	  if (pri <= 6 && tokens[i].type == LEQ)
 	    {
-	      flag = 1;
+	      pri = 6;
+	      op = max (op, i);
+	    }
+	  if (pri <= 4 && (tokens[i].type == '+' || tokens[i].type == '-'))
+	    {
+	      pri = 4;
+	      op = max (op, i);
+	    }
+	  if (pri <= 3 && (tokens[i].type == '*' || tokens[i].type == '/'))
+	    {
+	      pri = 3;
 	      op = max (op, i);
 	    }
 	}
-      int op_type = tokens[op].type;
 
-      uint32_t val1 = eval (p, op - 1);
-      uint32_t val2 = eval (op + 1, q);
-
-      switch (op_type)
+      switch (tokens[op].type)
 	{
 	case '+':
-	  return val1 + val2;
+	  return eval (p, op - 1) + eval (op + 1, q);
 	case '-':
-	  return val1 - val2;
+	  return eval (p, op - 1) - eval (op + 1, q);
 	case '*':
-	  return val1 * val2;
+	  return eval (p, op - 1) * eval (op + 1, q);
 	case '/':
-	  if (val2 == 0)
+	  uint32_t calc = eval (op + 1, q);
+	  if (calc == 0)
 	    {
-	      printf ("----------\n[INFO] div by 0\n----------\n");
+	      printf ("----------\n[WARNING] div by 0\n----------\n");
 	      return 0;
 	    }
-	  return val1 / val2;
-	case 3:
-	  return val1 <= val2;
-	case 4:
-	  return val1 == val2;
-	case 5:
-	  return val1 != val2;
-	case 6:
-	  return val1 || val2;
-	case 7:
-	  return val1 && val2;
+	  return eval (p, op - 1) / calc;
+	case '&':
+	  return eval (p, op - 1) & eval (op + 1, q);
+	case '^':
+	  return eval (p, op - 1) ^ eval (op + 1, q);
+	case '|':
+	  return eval (p, op - 1) | eval (op + 1, q);
+	case LEQ:
+	  return eval (p, op - 1) <= eval (op + 1, q);
+	case EQ:
+	  return eval (p, op - 1) == eval (op + 1, q);
+	case NOTEQ:
+	  return eval (p, op - 1) != eval (op + 1, q);
+	case OR:
+	  return eval (p, op - 1) || eval (op + 1, q);
+	case AND:
+	  return eval (p, op - 1) && eval (op + 1, q);
 	default:
-	  printf ("No Op type.");
 	  assert (0);
 	}
     }
@@ -250,6 +265,8 @@ make_token (char *e)
 
 	      switch (rules[i].token_type)
 		{
+		case NOTYPE:
+		  break;
 		case '+':
 		  tokens[nr_token++].type = '+';
 		  break;
@@ -262,8 +279,6 @@ make_token (char *e)
 		case '/':
 		  tokens[nr_token++].type = '/';
 		  break;
-		case 256:
-		  break;
 		case '!':
 		  tokens[nr_token++].type = '!';
 		  break;
@@ -273,54 +288,62 @@ make_token (char *e)
 		case '(':
 		  tokens[nr_token++].type = '(';
 		  break;
-
-		  // Special
-		case NUM:	// num
-		  tokens[nr_token].type = 1;
+		case '&':
+		  tokens[nr_token++].type = '&';
+		  break;
+		case '^':
+		  tokens[nr_token++].type = '^';
+		  break;
+		case '|':
+		  tokens[nr_token++].type = '|';
+		  break;
+		case REG:
+		  tokens[nr_token].type = REG;
 		  strncpy (tokens[nr_token].str,
 			   &e[position - substr_len], substr_len);
 		  nr_token++;
 		  break;
-		case REG:	// regex
-		  tokens[nr_token].type = 2;
+		case HEX:
+		  tokens[nr_token].type = HEX;
 		  strncpy (tokens[nr_token].str,
 			   &e[position - substr_len], substr_len);
 		  nr_token++;
 		  break;
-		case HEX:	// HEX
-		  tokens[nr_token].type = 3;
+		case DEC:
+		  tokens[nr_token].type = DEC;
 		  strncpy (tokens[nr_token].str,
 			   &e[position - substr_len], substr_len);
 		  nr_token++;
 		  break;
-		case 4:
-		  tokens[nr_token].type = 4;
+		case EQ:
+		  tokens[nr_token].type = EQ;
 		  strcpy (tokens[nr_token].str, "==");
 		  nr_token++;
 		  break;
-		case 5:
-		  tokens[nr_token].type = 5;
+		case NOTEQ:
+		  tokens[nr_token].type = NOTEQ;
 		  strcpy (tokens[nr_token].str, "!=");
 		  nr_token++;
 		  break;
-		case 6:
-		  tokens[nr_token].type = 6;
+		case OR:
+		  tokens[nr_token].type = OR;
 		  strcpy (tokens[nr_token].str, "||");
 		  nr_token++;
 		  break;
-		case 7:
-		  tokens[nr_token].type = 7;
+		case AND:
+		  tokens[nr_token].type = AND;
 		  strcpy (tokens[nr_token].str, "&&");
 		  nr_token++;
 		  break;
-		case 8:
-		  tokens[nr_token].type = 8;
+		case LEQ:
+		  tokens[nr_token].type = LEQ;
 		  strcpy (tokens[nr_token].str, "<=");
 		  nr_token++;
 		  break;
 		default:
-		  printf ("i = %d and No rules is com.\n", i);
-		  break;
+		  printf ("no match at position %d\n%s\n%*.s^\n",
+			  position, e, position, "");
+		  return false;
 		}
 	      break;
 	    }
@@ -340,100 +363,86 @@ make_token (char *e)
 uint32_t
 expr (char *e, bool *success)
 {
-  for (int ii = 0; ii < 32; ii++)
-    {				// reset tokens
+  *success = false;
+  for (int ii = 0; ii < 32; ii++)	// reset tokens
+    {
       tokens[ii].type = 0;
       memset (tokens[ii].str, 0, sizeof (tokens[ii].str));
     }
   if (!make_token (e))
-    {
-      *success = false;
-      return 0;
-    }
+    return 0;
+
   Log ("------befoce process------");
   int tokens_len = 0;		// calc len
   for (int i = 0; i < 32; i++)
     {
-      if (tokens[i].type == 0)
+      if (tokens[i].type == 0)	//if == reset value
 	break;
       Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
       tokens_len++;
     }
   Log ("len%d", tokens_len);
 
-  for (int i = 0; i < tokens_len; i++)	// trans reg 2 num
+  for (int i = 0; i < tokens_len; i++)	// trans reg 2 dec
     {
-      if (tokens[i].type == 2)
+      if (tokens[i].type == REG)
 	{
-	  int reg2num;
+	  int reg2dec;
 	  bool flag = true;
 	  if (strcmp (tokens[i].str, "$0") == 0)
 	    {
-	      reg2num = isa_reg_str2val ("$0", &flag);
+	      reg2dec = isa_reg_str2val ("$0", &flag);
 	    }
 	  else
 	    {
-	      reg2num = isa_reg_str2val (tokens[i].str, &flag);
+	      reg2dec = isa_reg_str2val (tokens[i].str, &flag);
 	    }
 	  if (flag)
 	    {
-	      sprintf (tokens[i].str, "%d", reg2num);
-	      tokens[i].type = 1;
+	      sprintf (tokens[i].str, "%d", reg2dec);
+	      tokens[i].type = DEC;
 	    }
 	  else
 	    {
-	      printf ("Transfrom error. \n");
-	      assert (0);
+	      printf ("[ERROR]reg2dec failed \n");
+	      return 0;
 	    }
 	}
     }
 
-  for (int i = 0; i < tokens_len; i++)	// trans hex 2 num
+  for (int i = 0; i < tokens_len; i++)	// trans hex 2 dec
     {
-      if (tokens[i].type == 3)	// Hex num
+      if (tokens[i].type == HEX)
 	{
-	  int hex2num = strtol (tokens[i].str, NULL, 16);
-	  sprintf (tokens[i].str, "%d", hex2num);
-	  tokens[i].type = 1;
+	  int hex2dec = strtol (tokens[i].str, NULL, 16);
+	  sprintf (tokens[i].str, "%d", hex2dec);
+	  tokens[i].type = DEC;
 	}
     }
 
-  // recognize e.g. +-1
-
-  for (int i = 0; i < tokens_len; i++)
+  for (int i = 0; i < tokens_len; i++)	// recognize -1, next token must be dec (reg hex)
     {
-      if ((tokens[i].type == '-' && i > 0 && tokens[i - 1].type != NUM
-	   && tokens[i + 1].type == NUM) || (tokens[i].type == '-' && i == 0))
+      if ((tokens[i].type == '-' && i > 0 && tokens[i - 1].type != DEC
+	   && tokens[i - 1].type != ')' && tokens[i + 1].type == DEC)
+	  || (tokens[i].type == '-' && i == 0 && tokens[i + 1].type == DEC))
 	{
-	  tokens[i].type = TK_NOTYPE;
-
-	  for (int j = 31; j >= 0; j--)
-	    {
-	      tokens[i + 1].str[j] = tokens[i + 1].str[j - 1];
-	    }
+	  for (int j = 31; j >= 0; j--)	//set minus
+	    tokens[i + 1].str[j] = tokens[i + 1].str[j - 1];
 	  tokens[i + 1].str[0] = '-';
-	  for (int j = 0; j < tokens_len; j++)
-	    {
-	      if (tokens[j].type == TK_NOTYPE)
-		{
-		  for (int k = j + 1; k < tokens_len; k++)
-		    {
-		      tokens[k - 1] = tokens[k];
-		    }
-		  tokens_len--;
-		}
-	    }
+	  for (int k = i + 1; k < tokens_len; k++)
+	    tokens[k - 1] = tokens[k];
+	  tokens_len--;
 	}
     }
 
-  // bit !
-  for (int i = 0; i < tokens_len; i++)
+  for (int i = 0; i < tokens_len; i++)	// recognize !, next token must be dec (reg hex)
     {
-      if (tokens[i].type == '!')
+      if ((tokens[i].type == '!' && i > 0 && tokens[i - 1].type != DEC
+	   && tokens[i - 1].type != ')' && tokens[i + 1].type == DEC)
+	  || (tokens[i].type == '!' && i == 0 && tokens[i + 1].type == DEC))
 	{
-	  tokens[i].type = TK_NOTYPE;
-	  int tmp = strtol (tokens[i + 1].str, NULL, 0);
-	  if (tmp == 0)
+	  int next_num = strtol (tokens[i + 1].str, NULL, 0);
+	  if (next_num == 0)
 	    {
 	      memset (tokens[i + 1].str, 0, sizeof (tokens[i + 1].str));
 	      tokens[i + 1].str[0] = '1';
@@ -441,50 +450,26 @@ expr (char *e, bool *success)
 	  else
 	    {
 	      memset (tokens[i + 1].str, 0, sizeof (tokens[i + 1].str));
+	      tokens[i + 1].str[0] = '0';
 	    }
-	  for (int j = 0; j < tokens_len; j++)
-	    {
-	      if (tokens[j].type == TK_NOTYPE)
-		{
-		  for (int k = j + 1; k < tokens_len; k++)
-		    {
-		      tokens[k - 1] = tokens[k];
-		    }
-		  tokens_len--;
-		}
-	    }
+	  for (int k = i + 1; k < tokens_len; k++)
+	    tokens[k - 1] = tokens[k];
+	  tokens_len--;
 	}
     }
-  // DEREF
-  for (int i = 0; i < tokens_len; i++)
+
+
+  for (int i = 0; i < tokens_len; i++)	// DEREF, next token must be dec (reg hex)
     {
-      if (tokens[i].type == '*'
-	  && (i == 0 || (i > 0 && tokens[i - 1].type != NUM)))
+      if ((tokens[i].type == '*' && i > 0 && tokens[i - 1].type != DEC
+	   && tokens[i - 1].type != ')' && tokens[i + 1].type == DEC)
+	  || (tokens[i].type == '*' && i == 0 && tokens[i + 1].type == DEC))
 	{
-	  tokens[i].type = DEREF;
-	}
-    }
-  for (int i = 0; i < tokens_len; i++)
-    {
-      if ((tokens[i].type == '*' && i > 0
-	   && tokens[i - 1].type != NUM && tokens[i + 1].type == NUM)
-	  || (tokens[i].type == '*' && i == 0))
-	{
-	  tokens[i].type = TK_NOTYPE;
-	  int tmp = strtol (tokens[i + 1].str, NULL, 0);
-	  uintptr_t a = (uintptr_t) tmp;
-	  sprintf (tokens[i + 1].str, "%d", *((int *) a));
-	  for (int j = 0; j < tokens_len; j++)
-	    {
-	      if (tokens[j].type == TK_NOTYPE)
-		{
-		  for (int k = j + 1; k < tokens_len; k++)
-		    {
-		      tokens[k - 1] = tokens[k];
-		    }
-		  tokens_len--;
-		}
-	    }
+	  uintptr_t point = strtoul (tokens[i + 1].str, NULL, 0);
+	  sprintf (tokens[i + 1].str, "%d", *((int *) point));
+	  for (int k = i + 1; k < tokens_len; k++)
+	    tokens[k - 1] = tokens[k];
+	  tokens_len--;
 	}
     }
   Log ("------after process------");
