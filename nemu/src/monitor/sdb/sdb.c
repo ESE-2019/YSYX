@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-
+#include <string.h>
 #include <memory/vaddr.h>
 
 static int is_batch_mode = false;
@@ -99,6 +99,8 @@ cmd_info (char *args)
 
   if (strcmp (arg, "r") == 0)
     isa_reg_display ();
+  else if (strcmp (arg, "w") == 0)
+    print_wp ();
   else
     printf ("Unknown command '%s'\n", arg);
   return 0;
@@ -139,7 +141,29 @@ cmd_p (char *args)
   return 0;
 }
 
+static int
+cmd_w (char *args)
+{
+  if (args == NULL)
+    {
+      printf ("No args\n");
+      return 0;
+    }
+  set_wp (args);
+  return 0;
+}
 
+static int
+cmd_d (char *args)
+{
+  if (args == NULL)
+    {
+      printf ("No args\n");
+      return 0;
+    }
+  del_wp (strtol (args, NULL, 0));
+  return 0;
+}
 
 
 static struct
@@ -157,8 +181,8 @@ static struct
   {"info", "da yin cheng xu zhuang tai, e.g., info r, info w", cmd_info},
   {"x", "sao miao nei cun, e.g., x 10 $esp", cmd_x},
   {"p", "biao da shi qiu zhi, e.g., p $eax + 1", cmd_p},
-  //{ "w", "she zhi jian shi dian, e.g., w *0x2000", cmd_w},
-  //{ "d", "shan chu jian shi dian, e.g., d 2", cmd_d},
+  {"w", "she zhi jian shi dian, e.g., w *0x2000", cmd_w},
+  {"d", "shan chu jian shi dian, e.g., d 2", cmd_d},
 
 };
 

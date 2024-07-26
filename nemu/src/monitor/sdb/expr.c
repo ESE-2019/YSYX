@@ -493,5 +493,6 @@ expr (char *e, bool *success)
       Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
     }
   Log ("len%d", tokens_len);
+  *success = true;
   return eval (0, tokens_len - 1);
 }
