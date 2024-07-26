@@ -22,26 +22,39 @@
 #define Mr vaddr_read
 #define Mw vaddr_write
 
-enum {
+enum
+{
   TYPE_2RI12, TYPE_1RI20,
-  TYPE_N, // none
+  TYPE_N,			// none
 };
 
 #define src1R()  do { *src1 = R(rj); } while (0)
 #define simm12() do { *imm = SEXT(BITS(i, 21, 10), 12); } while (0)
 #define simm20() do { *imm = SEXT(BITS(i, 24, 5), 20) << 12; } while (0)
 
-static void decode_operand(Decode *s, int *rd_, word_t *src1, word_t *src2, word_t *imm, int type) {
+static void
+decode_operand (Decode * s, int *rd_, word_t * src1, word_t * src2,
+		word_t * imm, int type)
+{
   uint32_t i = s->isa.inst.val;
-  int rj = BITS(i, 9, 5);
-  *rd_ = BITS(i, 4, 0);
-  switch (type) {
-    case TYPE_1RI20: simm20(); src1R(); break;
-    case TYPE_2RI12: simm12(); src1R(); break;
-  }
+  int rj = BITS (i, 9, 5);
+  *rd_ = BITS (i, 4, 0);
+  switch (type)
+    {
+    case TYPE_1RI20:
+      simm20 ();
+      src1R ();
+      break;
+    case TYPE_2RI12:
+      simm12 ();
+      src1R ();
+      break;
+    }
 }
 
-static int decode_exec(Decode *s) {
+static int
+decode_exec (Decode * s)
+{
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
@@ -52,21 +65,26 @@ static int decode_exec(Decode *s) {
   __VA_ARGS__ ; \
 }
 
-  INSTPAT_START();
-  INSTPAT("0001110 ????? ????? ????? ????? ?????" , pcaddu12i, 1RI20 , R(rd) = s->pc + imm);
-  INSTPAT("0010100010 ???????????? ????? ?????"   , ld.w     , 2RI12 , R(rd) = Mr(src1 + imm, 4));
-  INSTPAT("0010100110 ???????????? ????? ?????"   , st.w     , 2RI12 , Mw(src1 + imm, 4, R(rd)));
+  INSTPAT_START ();
+  INSTPAT ("0001110 ????? ????? ????? ????? ?????", pcaddu12i, 1 RI20,
+	   R (rd) = s->pc + imm);
+  INSTPAT ("0010100010 ???????????? ????? ?????", ld.w, 2 RI12, R (rd) =
+	   Mr (src1 + imm, 4));
+  INSTPAT ("0010100110 ???????????? ????? ?????", st.w, 2 RI12,
+	   Mw (src1 + imm, 4, R (rd)));
 
-  INSTPAT("0000 0000 0010 10100 ????? ????? ?????", break    , N     , NEMUTRAP(s->pc, R(4))); // R(4) is $a0
-  INSTPAT("????????????????? ????? ????? ?????"   , inv      , N     , INV(s->pc));
-  INSTPAT_END();
+  INSTPAT ("0000 0000 0010 10100 ????? ????? ?????", break, N, NEMUTRAP (s->pc, R (4)));	// R(4) is $a0
+  INSTPAT ("????????????????? ????? ????? ?????", inv, N, INV (s->pc));
+  INSTPAT_END ();
 
-  R(0) = 0; // reset $zero to 0
+  R (0) = 0;			// reset $zero to 0
 
   return 0;
 }
 
-int isa_exec_once(Decode *s) {
-  s->isa.inst.val = inst_fetch(&s->snpc, 4);
-  return decode_exec(s);
+int
+isa_exec_once (Decode * s)
+{
+  s->isa.inst.val = inst_fetch (&s->snpc, 4);
+  return decode_exec (s);
 }

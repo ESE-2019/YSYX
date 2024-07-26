@@ -31,9 +31,44 @@ static char *code_format =
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+//my code
+int buff;//index of buf
+int choose(int in){
+	int out=rand()%in;
+	return out;
+	}
+	
+void gen_num2(){
+	switch (choose(5)){
+	case 0:gen_num2();gen_num2();break;
+	default:buf[buff++]='0'+choose(10);break;
+	}
 }
+
+void gen_num(){
+	switch (choose(10)){
+	case 0:buf[buff++]='0';break;
+	default:buf[buff++]='1'+choose(9);gen_num2();break;
+	}
+}
+
+void gen(char in){buf[buff++]=in;}
+
+void gen_rand_op(){
+char op[]={'+','-','*','/'};
+int len=sizeof(op)/sizeof(op[0]);
+buf[buff++]=op[choose(len)];
+}
+
+static void gen_rand_expr() {
+//  buf[0] = '\0';
+  switch (choose(8)) {
+    case 0: case 1: case 2: case 3: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+    case 6: gen('('); gen_rand_expr(); gen(')'); break;
+    default: gen_num(); break;
+  }
+}
+//end of my code
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -44,7 +79,11 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    //buf[0]='"';
+    buff=0;
     gen_rand_expr();
+//buf[buff++]='"';
+for(;buff<65536;buff++){buf[buff]='\0';}
 
     sprintf(code_buf, code_format, buf);
 

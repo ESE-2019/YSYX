@@ -18,15 +18,18 @@
 
 #include <common.h>
 
-typedef struct {
+typedef struct
+{
   word_t gpr[32];
   word_t pad[5];
   vaddr_t pc;
 } mips32_CPU_state;
 
 // decode
-typedef struct {
-  union {
+typedef struct
+{
+  union
+  {
     uint32_t val;
   } inst;
 } mips32_ISADecodeInfo;

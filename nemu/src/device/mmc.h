@@ -26,75 +26,75 @@
 
 /* Standard MMC commands (4.1)           type  argument     response */
    /* class 1 */
-#define MMC_GO_IDLE_STATE         0   /* bc                          */
-#define MMC_SEND_OP_COND          1   /* bcr  [31:0] OCR         R3  */
-#define MMC_ALL_SEND_CID          2   /* bcr                     R2  */
-#define MMC_SET_RELATIVE_ADDR     3   /* ac   [31:16] RCA        R1  */
-#define MMC_SET_DSR               4   /* bc   [31:16] RCA            */
-#define MMC_SLEEP_AWAKE		  5   /* ac   [31:16] RCA 15:flg R1b */
-#define MMC_SWITCH                6   /* ac   [31:0] See below   R1b */
-#define MMC_SELECT_CARD           7   /* ac   [31:16] RCA        R1  */
-#define MMC_SEND_EXT_CSD          8   /* adtc                    R1  */
-#define MMC_SEND_CSD              9   /* ac   [31:16] RCA        R2  */
-#define MMC_SEND_CID             10   /* ac   [31:16] RCA        R2  */
-#define MMC_READ_DAT_UNTIL_STOP  11   /* adtc [31:0] dadr        R1  */
-#define MMC_STOP_TRANSMISSION    12   /* ac                      R1b */
-#define MMC_SEND_STATUS          13   /* ac   [31:16] RCA        R1  */
-#define MMC_BUS_TEST_R           14   /* adtc                    R1  */
-#define MMC_GO_INACTIVE_STATE    15   /* ac   [31:16] RCA            */
-#define MMC_BUS_TEST_W           19   /* adtc                    R1  */
-#define MMC_SPI_READ_OCR         58   /* spi                  spi_R3 */
-#define MMC_SPI_CRC_ON_OFF       59   /* spi  [0:0] flag      spi_R1 */
+#define MMC_GO_IDLE_STATE         0	/* bc                          */
+#define MMC_SEND_OP_COND          1	/* bcr  [31:0] OCR         R3  */
+#define MMC_ALL_SEND_CID          2	/* bcr                     R2  */
+#define MMC_SET_RELATIVE_ADDR     3	/* ac   [31:16] RCA        R1  */
+#define MMC_SET_DSR               4	/* bc   [31:16] RCA            */
+#define MMC_SLEEP_AWAKE		  5	/* ac   [31:16] RCA 15:flg R1b */
+#define MMC_SWITCH                6	/* ac   [31:0] See below   R1b */
+#define MMC_SELECT_CARD           7	/* ac   [31:16] RCA        R1  */
+#define MMC_SEND_EXT_CSD          8	/* adtc                    R1  */
+#define MMC_SEND_CSD              9	/* ac   [31:16] RCA        R2  */
+#define MMC_SEND_CID             10	/* ac   [31:16] RCA        R2  */
+#define MMC_READ_DAT_UNTIL_STOP  11	/* adtc [31:0] dadr        R1  */
+#define MMC_STOP_TRANSMISSION    12	/* ac                      R1b */
+#define MMC_SEND_STATUS          13	/* ac   [31:16] RCA        R1  */
+#define MMC_BUS_TEST_R           14	/* adtc                    R1  */
+#define MMC_GO_INACTIVE_STATE    15	/* ac   [31:16] RCA            */
+#define MMC_BUS_TEST_W           19	/* adtc                    R1  */
+#define MMC_SPI_READ_OCR         58	/* spi                  spi_R3 */
+#define MMC_SPI_CRC_ON_OFF       59	/* spi  [0:0] flag      spi_R1 */
 
   /* class 2 */
-#define MMC_SET_BLOCKLEN         16   /* ac   [31:0] block len   R1  */
-#define MMC_READ_SINGLE_BLOCK    17   /* adtc [31:0] data addr   R1  */
-#define MMC_READ_MULTIPLE_BLOCK  18   /* adtc [31:0] data addr   R1  */
-#define MMC_SEND_TUNING_BLOCK    19   /* adtc                    R1  */
+#define MMC_SET_BLOCKLEN         16	/* ac   [31:0] block len   R1  */
+#define MMC_READ_SINGLE_BLOCK    17	/* adtc [31:0] data addr   R1  */
+#define MMC_READ_MULTIPLE_BLOCK  18	/* adtc [31:0] data addr   R1  */
+#define MMC_SEND_TUNING_BLOCK    19	/* adtc                    R1  */
 #define MMC_SEND_TUNING_BLOCK_HS200	21	/* adtc R1  */
 
   /* class 3 */
-#define MMC_WRITE_DAT_UNTIL_STOP 20   /* adtc [31:0] data addr   R1  */
+#define MMC_WRITE_DAT_UNTIL_STOP 20	/* adtc [31:0] data addr   R1  */
 
   /* class 4 */
-#define MMC_SET_BLOCK_COUNT      23   /* adtc [31:0] data addr   R1  */
-#define MMC_WRITE_BLOCK          24   /* adtc [31:0] data addr   R1  */
-#define MMC_WRITE_MULTIPLE_BLOCK 25   /* adtc                    R1  */
-#define MMC_PROGRAM_CID          26   /* adtc                    R1  */
-#define MMC_PROGRAM_CSD          27   /* adtc                    R1  */
+#define MMC_SET_BLOCK_COUNT      23	/* adtc [31:0] data addr   R1  */
+#define MMC_WRITE_BLOCK          24	/* adtc [31:0] data addr   R1  */
+#define MMC_WRITE_MULTIPLE_BLOCK 25	/* adtc                    R1  */
+#define MMC_PROGRAM_CID          26	/* adtc                    R1  */
+#define MMC_PROGRAM_CSD          27	/* adtc                    R1  */
 
   /* class 6 */
-#define MMC_SET_WRITE_PROT       28   /* ac   [31:0] data addr   R1b */
-#define MMC_CLR_WRITE_PROT       29   /* ac   [31:0] data addr   R1b */
-#define MMC_SEND_WRITE_PROT      30   /* adtc [31:0] wpdata addr R1  */
+#define MMC_SET_WRITE_PROT       28	/* ac   [31:0] data addr   R1b */
+#define MMC_CLR_WRITE_PROT       29	/* ac   [31:0] data addr   R1b */
+#define MMC_SEND_WRITE_PROT      30	/* adtc [31:0] wpdata addr R1  */
 
   /* class 5 */
-#define MMC_ERASE_GROUP_START    35   /* ac   [31:0] data addr   R1  */
-#define MMC_ERASE_GROUP_END      36   /* ac   [31:0] data addr   R1  */
-#define MMC_ERASE                38   /* ac                      R1b */
+#define MMC_ERASE_GROUP_START    35	/* ac   [31:0] data addr   R1  */
+#define MMC_ERASE_GROUP_END      36	/* ac   [31:0] data addr   R1  */
+#define MMC_ERASE                38	/* ac                      R1b */
 
   /* class 9 */
-#define MMC_FAST_IO              39   /* ac   <Complex>          R4  */
-#define MMC_GO_IRQ_STATE         40   /* bcr                     R5  */
+#define MMC_FAST_IO              39	/* ac   <Complex>          R4  */
+#define MMC_GO_IRQ_STATE         40	/* bcr                     R5  */
 
   /* class 7 */
-#define MMC_LOCK_UNLOCK          42   /* adtc                    R1b */
+#define MMC_LOCK_UNLOCK          42	/* adtc                    R1b */
 
   /* class 8 */
-#define MMC_APP_CMD              55   /* ac   [31:16] RCA        R1  */
-#define MMC_GEN_CMD              56   /* adtc [0] RD/WR          R1  */
+#define MMC_APP_CMD              55	/* ac   [31:16] RCA        R1  */
+#define MMC_GEN_CMD              56	/* adtc [0] RD/WR          R1  */
 
   /* class 11 */
-#define MMC_QUE_TASK_PARAMS      44   /* ac   [20:16] task id    R1  */
-#define MMC_QUE_TASK_ADDR        45   /* ac   [31:0] data addr   R1  */
-#define MMC_EXECUTE_READ_TASK    46   /* adtc [20:16] task id    R1  */
-#define MMC_EXECUTE_WRITE_TASK   47   /* adtc [20:16] task id    R1  */
-#define MMC_CMDQ_TASK_MGMT       48   /* ac   [20:16] task id    R1b */
+#define MMC_QUE_TASK_PARAMS      44	/* ac   [20:16] task id    R1  */
+#define MMC_QUE_TASK_ADDR        45	/* ac   [31:0] data addr   R1  */
+#define MMC_EXECUTE_READ_TASK    46	/* adtc [20:16] task id    R1  */
+#define MMC_EXECUTE_WRITE_TASK   47	/* adtc [20:16] task id    R1  */
+#define MMC_CMDQ_TASK_MGMT       48	/* ac   [20:16] task id    R1b */
 
 //static inline bool mmc_op_multi(u32 opcode)
 //{
-//	return opcode == MMC_WRITE_MULTIPLE_BLOCK ||
-//	       opcode == MMC_READ_MULTIPLE_BLOCK;
+//      return opcode == MMC_WRITE_MULTIPLE_BLOCK ||
+//             opcode == MMC_READ_MULTIPLE_BLOCK;
 //}
 
 /*
@@ -220,24 +220,24 @@
  * CSD field definitions
  */
 
-#define CSD_STRUCT_VER_1_0  0           /* Valid for system specification 1.0 - 1.2 */
-#define CSD_STRUCT_VER_1_1  1           /* Valid for system specification 1.4 - 2.2 */
-#define CSD_STRUCT_VER_1_2  2           /* Valid for system specification 3.1 - 3.2 - 3.31 - 4.0 - 4.1 */
-#define CSD_STRUCT_EXT_CSD  3           /* Version is coded in CSD_STRUCTURE in EXT_CSD */
+#define CSD_STRUCT_VER_1_0  0	/* Valid for system specification 1.0 - 1.2 */
+#define CSD_STRUCT_VER_1_1  1	/* Valid for system specification 1.4 - 2.2 */
+#define CSD_STRUCT_VER_1_2  2	/* Valid for system specification 3.1 - 3.2 - 3.31 - 4.0 - 4.1 */
+#define CSD_STRUCT_EXT_CSD  3	/* Version is coded in CSD_STRUCTURE in EXT_CSD */
 
-#define CSD_SPEC_VER_0      0           /* Implements system specification 1.0 - 1.2 */
-#define CSD_SPEC_VER_1      1           /* Implements system specification 1.4 */
-#define CSD_SPEC_VER_2      2           /* Implements system specification 2.0 - 2.2 */
-#define CSD_SPEC_VER_3      3           /* Implements system specification 3.1 - 3.2 - 3.31 */
-#define CSD_SPEC_VER_4      4           /* Implements system specification 4.0 - 4.1 */
+#define CSD_SPEC_VER_0      0	/* Implements system specification 1.0 - 1.2 */
+#define CSD_SPEC_VER_1      1	/* Implements system specification 1.4 */
+#define CSD_SPEC_VER_2      2	/* Implements system specification 2.0 - 2.2 */
+#define CSD_SPEC_VER_3      3	/* Implements system specification 3.1 - 3.2 - 3.31 */
+#define CSD_SPEC_VER_4      4	/* Implements system specification 4.0 - 4.1 */
 
 /*
  * EXT_CSD fields
  */
 
 #define EXT_CSD_CMDQ_MODE_EN		15	/* R/W */
-#define EXT_CSD_FLUSH_CACHE		32      /* W */
-#define EXT_CSD_CACHE_CTRL		33      /* R/W */
+#define EXT_CSD_FLUSH_CACHE		32	/* W */
+#define EXT_CSD_CACHE_CTRL		33	/* R/W */
 #define EXT_CSD_POWER_OFF_NOTIFICATION	34	/* R/W */
 #define EXT_CSD_PACKED_FAILURE_INDEX	35	/* RO */
 #define EXT_CSD_PACKED_CMD_STATUS	36	/* RO */
@@ -252,7 +252,7 @@
 #define EXT_CSD_RST_N_FUNCTION		162	/* R/W */
 #define EXT_CSD_BKOPS_EN		163	/* R/W */
 #define EXT_CSD_BKOPS_START		164	/* W */
-#define EXT_CSD_SANITIZE_START		165     /* W */
+#define EXT_CSD_SANITIZE_START		165	/* W */
 #define EXT_CSD_WR_REL_PARAM		166	/* RO */
 #define EXT_CSD_RPMB_MULT		168	/* RO */
 #define EXT_CSD_FW_CONFIG		169	/* R/W */
@@ -269,7 +269,7 @@
 #define EXT_CSD_CARD_TYPE		196	/* RO */
 #define EXT_CSD_DRIVER_STRENGTH		197	/* RO */
 #define EXT_CSD_OUT_OF_INTERRUPT_TIME	198	/* RO */
-#define EXT_CSD_PART_SWITCH_TIME        199     /* RO */
+#define EXT_CSD_PART_SWITCH_TIME        199	/* RO */
 #define EXT_CSD_PWR_CL_52_195		200	/* RO */
 #define EXT_CSD_PWR_CL_26_195		201	/* RO */
 #define EXT_CSD_PWR_CL_52_360		202	/* RO */
@@ -335,9 +335,9 @@
 #define EXT_CSD_CARD_TYPE_HS_52	(1<<1)	/* Card can run at 52MHz */
 #define EXT_CSD_CARD_TYPE_HS	(EXT_CSD_CARD_TYPE_HS_26 | \
 				 EXT_CSD_CARD_TYPE_HS_52)
-#define EXT_CSD_CARD_TYPE_DDR_1_8V  (1<<2)   /* Card can run at 52MHz */
+#define EXT_CSD_CARD_TYPE_DDR_1_8V  (1<<2)	/* Card can run at 52MHz */
 					     /* DDR mode @1.8V or 3V I/O */
-#define EXT_CSD_CARD_TYPE_DDR_1_2V  (1<<3)   /* Card can run at 52MHz */
+#define EXT_CSD_CARD_TYPE_DDR_1_2V  (1<<3)	/* Card can run at 52MHz */
 					     /* DDR mode @1.2V I/O */
 #define EXT_CSD_CARD_TYPE_DDR_52       (EXT_CSD_CARD_TYPE_DDR_1_8V  \
 					| EXT_CSD_CARD_TYPE_DDR_1_2V)
@@ -368,7 +368,7 @@
 #define EXT_CSD_SEC_ER_EN	BIT(0)
 #define EXT_CSD_SEC_BD_BLK_EN	BIT(2)
 #define EXT_CSD_SEC_GB_CL_EN	BIT(4)
-#define EXT_CSD_SEC_SANITIZE	BIT(6)  /* v4.5 only */
+#define EXT_CSD_SEC_SANITIZE	BIT(6)	/* v4.5 only */
 
 #define EXT_CSD_RST_N_EN_MASK	0x3
 #define EXT_CSD_RST_N_ENABLED	1	/* RST_n is enabled on card */

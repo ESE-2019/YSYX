@@ -18,14 +18,17 @@
 
 #include <common.h>
 
-typedef struct {
+typedef struct
+{
   word_t gpr[32];
   vaddr_t pc;
 } loongarch32r_CPU_state;
 
 // decode
-typedef struct {
-  union {
+typedef struct
+{
+  union
+  {
     uint32_t val;
   } inst;
 } loongarch32r_ISADecodeInfo;

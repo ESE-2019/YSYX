@@ -15,5 +15,7 @@
 
 #include <isa.h>
 
-void dev_raise_intr() {
+void
+dev_raise_intr ()
+{
 }
