@@ -52,25 +52,25 @@ void free_wp (WP * wp);
 void
 wp_exec ()
 {
-  for (WP * i = head; i->next != NULL; i = i->next)
+  for (int i = 0; i < NR_WP; i++)
     {
-      assert (i->status);
-      bool success = false;
-      uint32_t ans = expr (i->expr, &success);
-      if (success == true)
+      if (wp_pool[i].status == true)
 	{
-	  if (ans != i->value)
+	  bool success = false;
+	  uint32_t ans = expr (wp_pool[i].expr, &success);
+	  if (success == true)
 	    {
-	      printf ("watch point %s changed %d -> %d\n", i->expr,
-		      i->value, ans);
-	      nemu_state.state = NEMU_STOP;
-	      break;
+	      if (ans != wp_pool[i].value)
+		{
+		  printf ("watch point %s changed %d -> %d\n",
+			  wp_pool[i].expr, wp_pool[i].value, ans);
+		  nemu_state.state = NEMU_STOP;
+		  break;
+		}
 	    }
-	}
-      else
-	{
-	  printf ("wp error\n");
-	  assert (0);
+	  else
+	    assert (0);
+
 	}
     }
 }

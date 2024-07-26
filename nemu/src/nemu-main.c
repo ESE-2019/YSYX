@@ -14,11 +14,33 @@
 ***************************************************************************************/
 
 #include <common.h>
+#include "monitor/sdb/sdb.h"
 
 void init_monitor (int, char *[]);
 void am_init_monitor ();
 void engine_start ();
 int is_exit_status_bad ();
+
+void
+expr_test ()
+{
+  FILE *fp = fopen ("./tools/gen-expr/input", "r");
+  assert (fp != NULL);
+  uint32_t ans, ret;
+  bool success;
+  char str[65536];
+  while (fscanf (fp, "%d %s", &ans, str) != EOF)
+    {
+      Log ("test: %s = %d", str, ans);
+      success = false;
+      ret = expr (str, &success);
+      if (success != true || ret != ans)
+	{
+	  printf ("[fail_case]expr_test%s\n", str);
+	}
+    }
+
+}
 
 int
 main (int argc, char *argv[])
@@ -29,7 +51,7 @@ main (int argc, char *argv[])
 #else
   init_monitor (argc, argv);
 #endif
-
+  expr_test ();
   /* Start engine. */
   engine_start ();
 
