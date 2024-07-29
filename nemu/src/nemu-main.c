@@ -51,7 +51,7 @@ main (int argc, char *argv[])
 #else
   init_monitor (argc, argv);
 #endif
-  expr_test ();
+  //expr_test ();
   /* Start engine. */
   engine_start ();
 
