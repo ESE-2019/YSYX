@@ -62,7 +62,7 @@ wp_exec ()
 	    {
 	      if (ans != wp_pool[i].value)
 		{
-		  printf ("watch point %s changed %d -> %d\n",
+		  printf ("------------------\nwatch point %s changed %d -> %d\n------------------\n",
 			  wp_pool[i].expr, wp_pool[i].value, ans);
 		  nemu_state.state = NEMU_STOP;
 		  break;

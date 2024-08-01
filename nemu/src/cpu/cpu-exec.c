@@ -30,8 +30,21 @@ CPU_state cpu = { };
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0;	// unit: us
 static bool g_print_step = false;
-
 void device_update ();
+
+//iringbuf begin
+static char iringbuf[16][128];
+int iringbuf_index=0;
+static void print_iringbuf(){
+	Log ("print_iringbuf begin");
+  for(int i =0; i<16; i++){
+  if(i==iringbuf_index) printf("--> ");
+  else printf("    ");
+	printf("%s\n",iringbuf[i]);
+	}
+	Log ("print_iringbuf end");
+}
+//iringbuf end
 
 static void
 trace_and_difftest (Decode * _this, vaddr_t dnpc)
@@ -48,8 +61,9 @@ trace_and_difftest (Decode * _this, vaddr_t dnpc)
     }
   IFDEF (CONFIG_DIFFTEST, difftest_step (_this->pc, dnpc));
 
-  //watchpoint
+  #ifdef CONFIG_WATCHPOINT
   wp_exec ();
+  #endif
 }
 
 static void
@@ -83,6 +97,9 @@ exec_once (Decode * s, vaddr_t pc)
   disassemble (p, s->logbuf + sizeof (s->logbuf) - p,
 	       MUXDEF (CONFIG_ISA_x86, s->snpc, s->pc),
 	       (uint8_t *) & s->isa.inst.val, ilen);
+  snprintf(iringbuf[iringbuf_index], 128, "0x%08x: 0x%08x %s", pc, s->isa.inst.val, p);//iringbuf
+  if(iringbuf_index++>=15) iringbuf_index=0;//iringbuf
+  //print_iringbuf();//iringbuf
 #else
   p[0] = '\0';			// the upstream llvm does not support loongarch32r
 #endif
@@ -148,7 +165,7 @@ cpu_exec (uint64_t n)
 
   uint64_t timer_end = get_time ();
   g_timer += timer_end - timer_start;
-
+print_iringbuf();//iringbuf
   switch (nemu_state.state)
     {
     case NEMU_RUNNING:

@@ -113,33 +113,16 @@ seg seg(
     .o_seg7(seg7)
 );*/
 //ex7
-wire [7:0] data;
-wire ready,overflow;
-reg nextdata_n;
-ps2_keyboard ps2_keyboard(
-    .clk(clk),
-    .clrn(~rst),
-    .ps2_clk(ps2_clk),
-    .ps2_data(ps2_data),
-    .data(data),
-    .ready(ready),
-    .nextdata_n(nextdata_n),
-    .overflow(overflow)
-);
-//reg [1:0] ff;
-reg [8:0] cnt;
-always@(posedge clk) begin
-	if(ready && data!=8'hf0) //begin
-		 cnt<=cnt+1;
-//	end else ff<=0;
-end
-wire [7:0] seg00,seg11;
-assign seg0=(data!=8'hf0)?seg00:8'hff;
-assign seg1=(data!=8'hf0)?seg11:8'hff;
+wire [31:0] dout;
+wire douten;
+wire [7:0] seg00, seg11;
+ps2_display dut(clk, rst, ps2_clk, ps2_data, dout, douten);
+assign seg0 = douten?seg00:8'hff;
+assign seg1 = douten?seg11:8'hff;
 seg seg(
     .clk(clk),
     .rst(rst),
-    .data({cnt[8:1],data,data,data}),
+    .data(dout),
     .o_seg0(seg00),
     .o_seg1(seg11),
     .o_seg2(seg2),

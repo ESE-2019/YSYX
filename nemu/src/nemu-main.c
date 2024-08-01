@@ -28,18 +28,21 @@ expr_test ()
   assert (fp != NULL);
   uint32_t ans, ret;
   bool success;
+  int cnt=0;
   char str[65536];
   while (fscanf (fp, "%d %s", &ans, str) != EOF)
     {
-      Log ("test: %s = %d", str, ans);
+      Log ("%10s\tans=%d", str, ans);
       success = false;
       ret = expr (str, &success);
       if (success != true || ret != ans)
 	{
-	  printf ("[fail_case]expr_test%s\n", str);
+	  printf ("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n", str, ans, ret, ans, ret);
+	  break;
 	}
+	cnt++;
     }
-
+printf ("expr_test end with %d tc passed\n", cnt);
 }
 
 int
@@ -48,10 +51,11 @@ main (int argc, char *argv[])
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
   am_init_monitor ();
+  printf("\n\n\n\n\n\nifdef CONFIG_TARGET_AM\n\n\n\n\n\n");
 #else
   init_monitor (argc, argv);
-#endif
   //expr_test ();
+#endif
   /* Start engine. */
   engine_start ();
 

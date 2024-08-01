@@ -17,7 +17,7 @@ module ps2_keyboard(clk,clrn,ps2_clk,ps2_data,data,
         ps2_clk_sync <=  {ps2_clk_sync[1:0],ps2_clk};
     end
 
-    wire sampling = ps2_clk_sync[2] & ~ps2_clk_sync[1];
+    wire sampling = ps2_clk_sync[2] & ~ps2_clk_sync[1];//sample negedge of ps2_clk
 
     always @(posedge clk) begin
         if (clrn == 0) begin // reset
@@ -32,11 +32,12 @@ module ps2_keyboard(clk,clrn,ps2_clk,ps2_data,data,
                         ready <= 1'b0;
                 end
             end
+            
             if (sampling) begin
               if (count == 4'd10) begin
-                if ((buffer[0] == 0) &&  // start bit
-                    (ps2_data)       &&  // stop bit
-                    (^buffer[9:1])) begin      // odd  parity
+                if ((buffer[0] == 0) &&   // start bit
+                    (ps2_data)       &&   // stop bit
+                    (^buffer[9:1])) begin // odd  parity
                     fifo[w_ptr] <= buffer[8:1];  // kbd scan code
                     w_ptr <= w_ptr+3'b1;
                     ready <= 1'b1;

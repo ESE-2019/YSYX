@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <memory/vaddr.h>
 
 typedef struct token
 {
@@ -32,15 +33,15 @@ static int nr_token __attribute__((used)) = 0;
 enum
 {
   NOTYPE = 256,
-  DEC = 1,
-  REG = 2,
-  HEX = 3,
-  EQ = 4,
-  NOTEQ = 5,
-  OR = 6,
-  AND = 7,
-  LEQ = 8,
-  DEREF = 9
+  DEC = 'd',
+  REG = 'r',
+  HEX = 'h',
+  EQ = 'e',
+  NOTEQ = 'n',
+  OR = 'o',
+  AND = 'a',
+  LEQ = 'l',
+  DEREF = 'D'
 };
 static struct rule
 {
@@ -61,7 +62,7 @@ static struct rule
   {"\\!\\=", NOTEQ},
   {"\\|\\|", OR},
   {"\\&\\&", AND},
-  {"\\<\\=", LEQ},
+  {"<=", LEQ},
   {"\\!", '!'},			//must be != hou mian
   {"\\&", '&'},			//must be && hou mian
   {"\\^", '^'},
@@ -77,9 +78,9 @@ check_parentheses (int p, int q)
     return false;
   for (i = p; i <= q; i++)
     {
-      if (tokens[p].type == '(')
+      if (tokens[i].type == '(')
 	cnt++;
-      else if (tokens[q].type == ')')
+      else if (tokens[i].type == ')')
 	cnt--;
       if (cnt == 0 && i < q)
 	return false;
@@ -98,9 +99,11 @@ max (int a, int b)
 uint32_t
 eval (int p, int q)
 {
+  //printf("eval %d > %d\n", p, q);
   if (p > q)
     {				// Bad expression
-      assert (0);
+      printf("eval %d > %d\n", p, q);
+      panic();
       return -1;
     }
   else if (p == q)
@@ -176,41 +179,42 @@ eval (int p, int q)
 	      op = max (op, i);
 	    }
 	}
-
+      int32_t eval_l = eval (p, op - 1);
+      int32_t eval_r = eval (op + 1, q);
+      printf("TYPE %c %d\nl=%d\tr=%d\n",tokens[op].type,tokens[op].type,eval_l,eval_r);
       switch (tokens[op].type)
 	{
 	case '+':
-	  return eval (p, op - 1) + eval (op + 1, q);
+	  return eval_l + eval_r;
 	case '-':
-	  return eval (p, op - 1) - eval (op + 1, q);
+	  return eval_l - eval_r;
 	case '*':
-	  return eval (p, op - 1) * eval (op + 1, q);
+	  return eval_l * eval_r;
 	case '/':
-	  uint32_t calc = eval (op + 1, q);
-	  if (calc == 0)
+	  if (eval_r == 0)
 	    {
 	      printf ("----------\n[WARNING] div by 0\n----------\n");
 	      return 0;
 	    }
-	  return eval (p, op - 1) / calc;
+	  return eval_l / eval_r;
 	case '&':
-	  return eval (p, op - 1) & eval (op + 1, q);
+	  return eval_l & eval_r;
 	case '^':
-	  return eval (p, op - 1) ^ eval (op + 1, q);
+	  return eval_l ^ eval_r;
 	case '|':
-	  return eval (p, op - 1) | eval (op + 1, q);
+	  return eval_l | eval_r;
 	case LEQ:
-	  return eval (p, op - 1) <= eval (op + 1, q);
+	  return eval_l <= eval_r;
 	case EQ:
-	  return eval (p, op - 1) == eval (op + 1, q);
+	  return eval_l == eval_r;
 	case NOTEQ:
-	  return eval (p, op - 1) != eval (op + 1, q);
+	  return eval_l != eval_r;
 	case OR:
-	  return eval (p, op - 1) || eval (op + 1, q);
+	  return eval_l || eval_r;
 	case AND:
-	  return eval (p, op - 1) && eval (op + 1, q);
+	  return eval_l && eval_r;
 	default:
-	  assert (0);
+	  printf("NOTYPE? %c %d\nl=%d\tr=%d\n",tokens[op].type,tokens[op].type,eval_l,eval_r);panic();
 	}
     }
 }
@@ -253,13 +257,13 @@ make_token (char *e)
 	  if (regexec (&re[i], e + position, 1, &pmatch, 0) == 0
 	      && pmatch.rm_so == 0)
 	    {
-	      char *substr_start = e + position;
+	      //char *substr_start = e + position;
 	      int substr_len = pmatch.rm_eo;
 
-	      Log
+	      /*Log
 		("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
 		 i, rules[i].regex, position, substr_len, substr_len,
-		 substr_start);
+		 substr_start);*/
 
 	      position += substr_len;
 
@@ -372,16 +376,16 @@ expr (char *e, bool *success)
   if (!make_token (e))
     return 0;
 
-  Log ("------befoce process------");
+  //Log ("------befoce process------");
   int tokens_len = 0;		// calc len
   for (int i = 0; i < 32; i++)
     {
       if (tokens[i].type == 0)	//if == reset value
 	break;
-      Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
+      //Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
       tokens_len++;
     }
-  Log ("len%d", tokens_len);
+  //Log ("len%d", tokens_len);
 
   for (int i = 0; i < tokens_len; i++)	// trans reg 2 dec
     {
@@ -465,19 +469,22 @@ expr (char *e, bool *success)
 	   && tokens[i - 1].type != ')' && tokens[i + 1].type == DEC)
 	  || (tokens[i].type == '*' && i == 0 && tokens[i + 1].type == DEC))
 	{
-	  uintptr_t point = strtoul (tokens[i + 1].str, NULL, 0);
-	  sprintf (tokens[i + 1].str, "%d", *((int *) point));
+	  //uintptr_t point = strtoul (tokens[i + 1].str, NULL, 0);
+	  //sprintf (tokens[i + 1].str, "%d", *((int *) point));
+	  vaddr_t EXPR_DEREF;
+	  EXPR_DEREF = strtoul (tokens[i + 1].str, NULL, 0);
+	  sprintf (tokens[i + 1].str, "%d", vaddr_read (EXPR_DEREF, 4));
 	  for (int k = i + 1; k < tokens_len; k++)
 	    tokens[k - 1] = tokens[k];
 	  tokens_len--;
 	}
     }
-  Log ("------after process------");
+  //Log ("------after process------");
   for (int i = 0; i < tokens_len; i++)
     {
-      Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
+      //Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
     }
-  Log ("len%d", tokens_len);
+  //Log ("len%d", tokens_len);
   *success = true;
   return eval (0, tokens_len - 1);
 }
