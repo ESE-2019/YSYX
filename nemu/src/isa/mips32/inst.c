@@ -22,10 +22,9 @@
 #define Mr vaddr_read
 #define Mw vaddr_write
 
-enum
-{
-  TYPE_I, TYPE_U,
-  TYPE_N,			// none
+enum {
+    TYPE_I, TYPE_U,
+    TYPE_N,			// none
 };
 
 #define src1R() do { *src1 = R(rs); } while (0)
@@ -34,32 +33,30 @@ enum
 #define immU() do { *imm = BITS(i, 15, 0); } while(0)
 
 static void
-decode_operand (Decode * s, int *rd, word_t * src1, word_t * src2,
-		word_t * imm, int type)
+decode_operand(Decode * s, int *rd, word_t * src1, word_t * src2,
+	       word_t * imm, int type)
 {
-  uint32_t i = s->isa.inst.val;
-  int rt = BITS (i, 20, 16);
-  int rs = BITS (i, 25, 21);
-  *rd = (type == TYPE_U || type == TYPE_I) ? rt : BITS (i, 15, 11);
-  switch (type)
-    {
+    uint32_t i = s->isa.inst.val;
+    int rt = BITS(i, 20, 16);
+    int rs = BITS(i, 25, 21);
+    *rd = (type == TYPE_U || type == TYPE_I) ? rt : BITS(i, 15, 11);
+    switch (type) {
     case TYPE_I:
-      src1R ();
-      immI ();
-      break;
+	src1R();
+	immI();
+	break;
     case TYPE_U:
-      src1R ();
-      immU ();
-      break;
+	src1R();
+	immU();
+	break;
     }
 }
 
-static int
-decode_exec (Decode * s)
+static int decode_exec(Decode * s)
 {
-  int rd = 0;
-  word_t src1 = 0, src2 = 0, imm = 0;
-  s->dnpc = s->snpc;
+    int rd = 0;
+    word_t src1 = 0, src2 = 0, imm = 0;
+    s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
@@ -67,26 +64,25 @@ decode_exec (Decode * s)
   __VA_ARGS__ ; \
 }
 
-  INSTPAT_START ();
-  INSTPAT ("001111 ????? ????? ????? ????? ??????", lui, U, R (rd) =
-	   imm << 16);
-  INSTPAT ("100011 ????? ????? ????? ????? ??????", lw, I, R (rd) =
-	   Mr (src1 + imm, 4));
-  INSTPAT ("101011 ????? ????? ????? ????? ??????", sw, I,
-	   Mw (src1 + imm, 4, R (rd)));
+    INSTPAT_START();
+    INSTPAT("001111 ????? ????? ????? ????? ??????", lui, U, R(rd) =
+	    imm << 16);
+    INSTPAT("100011 ????? ????? ????? ????? ??????", lw, I, R(rd) =
+	    Mr(src1 + imm, 4));
+    INSTPAT("101011 ????? ????? ????? ????? ??????", sw, I,
+	    Mw(src1 + imm, 4, R(rd)));
 
-  INSTPAT ("011100 ????? ????? ????? ????? 111111", sdbbp, N, NEMUTRAP (s->pc, R (2)));	// R(2) is $v0;
-  INSTPAT ("?????? ????? ????? ????? ????? ??????", inv, N, INV (s->pc));
-  INSTPAT_END ();
+    INSTPAT("011100 ????? ????? ????? ????? 111111", sdbbp, N, NEMUTRAP(s->pc, R(2)));	// R(2) is $v0;
+    INSTPAT("?????? ????? ????? ????? ????? ??????", inv, N, INV(s->pc));
+    INSTPAT_END();
 
-  R (0) = 0;			// reset $zero to 0
+    R(0) = 0;			// reset $zero to 0
 
-  return 0;
+    return 0;
 }
 
-int
-isa_exec_once (Decode * s)
+int isa_exec_once(Decode * s)
 {
-  s->isa.inst.val = inst_fetch (&s->snpc, 4);
-  return decode_exec (s);
+    s->isa.inst.val = inst_fetch(&s->snpc, 4);
+    return decode_exec(s);
 }

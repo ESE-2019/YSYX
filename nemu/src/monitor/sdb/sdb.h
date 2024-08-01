@@ -18,10 +18,10 @@
 
 #include <common.h>
 
-uint32_t expr (char *e, bool *success);
-void wp_exec ();
-void print_wp ();
-void set_wp (char *e);
-void del_wp (int N);
+uint32_t expr(char *e, bool *success);
+void wp_exec();
+void print_wp();
+void set_wp(char *e);
+void del_wp(int N);
 
 #endif

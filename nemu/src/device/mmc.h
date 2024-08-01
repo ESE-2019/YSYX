@@ -436,4 +436,4 @@
 
 #define mmc_driver_type_mask(n)		(1 << (n))
 
-#endif /* LINUX_MMC_MMC_H */
+#endif				/* LINUX_MMC_MMC_H */

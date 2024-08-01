@@ -16,48 +16,45 @@
 #include <common.h>
 #include "monitor/sdb/sdb.h"
 
-void init_monitor (int, char *[]);
-void am_init_monitor ();
-void engine_start ();
-int is_exit_status_bad ();
+void init_monitor(int, char *[]);
+void am_init_monitor();
+void engine_start();
+int is_exit_status_bad();
 
-void
-expr_test ()
+void expr_test()
 {
-  FILE *fp = fopen ("./tools/gen-expr/input", "r");
-  assert (fp != NULL);
-  uint32_t ans, ret;
-  bool success;
-  int cnt=0;
-  char str[65536];
-  while (fscanf (fp, "%d %s", &ans, str) != EOF)
-    {
-      Log ("%10s\tans=%d", str, ans);
-      success = false;
-      ret = expr (str, &success);
-      if (success != true || ret != ans)
-	{
-	  printf ("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n", str, ans, ret, ans, ret);
-	  break;
+    FILE *fp = fopen("./tools/gen-expr/input", "r");
+    assert(fp != NULL);
+    word_t ans, ret;
+    bool success;
+    int cnt = 0;
+    char str[65536];
+    while (fscanf(fp, "%d %s", &ans, str) != EOF) {
+	Log("exp = %s\n\tans = %d", str, ans);
+	success = false;
+	ret = expr(str, &success);
+	if (success != true || ret != ans) {
+	    printf
+		("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n",
+		 str, ans, ret, ans, ret);
+	    break;
 	}
 	cnt++;
     }
-printf ("expr_test end with %d tc passed\n", cnt);
+    printf("expr_test end with %d tc passed\n", cnt);
 }
 
-int
-main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-  /* Initialize the monitor. */
+    /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
-  am_init_monitor ();
-  printf("\n\n\n\n\n\nifdef CONFIG_TARGET_AM\n\n\n\n\n\n");
+    am_init_monitor();
 #else
-  init_monitor (argc, argv);
-  //expr_test ();
+    init_monitor(argc, argv);
+    expr_test();
 #endif
-  /* Start engine. */
-  engine_start ();
+    /* Start engine. */
+    engine_start();
 
-  return is_exit_status_bad ();
+    return is_exit_status_bad();
 }

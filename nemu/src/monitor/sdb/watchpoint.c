@@ -17,13 +17,12 @@
 
 #define NR_WP 32
 
-typedef struct watchpoint
-{
-  int NO;
-  struct watchpoint *next;
-  bool status;
-  char expr[32];
-  int value;
+typedef struct watchpoint {
+    int NO;
+    struct watchpoint *next;
+    bool status;
+    char expr[32];
+    int value;
 
 } WP;
 
@@ -31,17 +30,15 @@ static WP wp_pool[NR_WP] = { };
 
 static WP *head = NULL, *free_ = NULL;
 
-void
-init_wp_pool ()
+void init_wp_pool()
 {
-  for (int i = 0; i < NR_WP; i++)
-    {
-      wp_pool[i].NO = i;
-      wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
+    for (int i = 0; i < NR_WP; i++) {
+	wp_pool[i].NO = i;
+	wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
     }
 
-  head = NULL;
-  free_ = wp_pool;
+    head = NULL;
+    free_ = wp_pool;
 }
 
 /* aborted
@@ -49,71 +46,63 @@ WP *new_wp ();
 void free_wp (WP * wp);
 */
 
-void
-wp_exec ()
+void wp_exec()
 {
-  for (int i = 0; i < NR_WP; i++)
-    {
-      if (wp_pool[i].status == true)
-	{
-	  bool success = false;
-	  uint32_t ans = expr (wp_pool[i].expr, &success);
-	  if (success == true)
-	    {
-	      if (ans != wp_pool[i].value)
-		{
-		  printf ("------------------\nwatch point %s changed %d -> %d\n------------------\n",
-			  wp_pool[i].expr, wp_pool[i].value, ans);
-		  nemu_state.state = NEMU_STOP;
-		  break;
+    for (int i = 0; i < NR_WP; i++) {
+	if (wp_pool[i].status == true) {
+	    bool success = false;
+	    uint32_t ans = expr(wp_pool[i].expr, &success);
+	    if (success == true) {
+		if (ans != wp_pool[i].value) {
+		    printf("wp_NO%2d: %s changed [DEC] %010d -> %010d\n",
+			   wp_pool[i].NO, wp_pool[i].expr,
+			   wp_pool[i].value, ans);
+		    printf("wp_NO%2d: %s changed [HEX} " FMT_WORD " -> "
+			   FMT_WORD "\n", wp_pool[i].NO, wp_pool[i].expr,
+			   wp_pool[i].value, ans);
+		    nemu_state.state = NEMU_STOP;
+		    break;
 		}
-	    }
-	  else
-	    assert (0);
+	    } else
+		assert(0);
 
 	}
     }
 }
 
-void
-print_wp ()
+void print_wp()
 {
-  Log ("info w (print wp) begin");
-  for (int i = 0; i < NR_WP; i++)
-    {
-      if (wp_pool[i].status)
-	printf ("NO%02d: \texpr:%s \tvalue: [DEC] %d \t[HEX] 0x%08x\n",
-		wp_pool[i].NO, wp_pool[i].expr, wp_pool[i].value,
-		wp_pool[i].value);
+    Log("info w (print wp) begin");
+    for (int i = 0; i < NR_WP; i++) {
+	if (wp_pool[i].status)
+	    printf("NO%02d: \texpr:%s \tvalue: [DEC] %d \t[HEX] " FMT_WORD
+		   "\n", wp_pool[i].NO, wp_pool[i].expr, wp_pool[i].value,
+		   wp_pool[i].value);
     }
 }
 
-void
-set_wp (char *e)
+void set_wp(char *e)
 {
-  for (int i = 0; i < NR_WP; i++)
-    {
-      if (wp_pool[i].status == false)
-	{
-	  wp_pool[i].status = true;
-	  strcpy (wp_pool[i].expr, e);
-	  bool success = false;
-	  uint32_t value = expr (e, &success);
-	  if (success == false)
-	    assert (0);
-	  wp_pool[i].value = value;
-	  print_wp ();
-	  printf ("set_wp done\n");
-	  return;
+    for (int i = 0; i < NR_WP; i++) {
+	if (wp_pool[i].status == false) {
+	    wp_pool[i].status = true;
+	    strcpy(wp_pool[i].expr, e);
+	    bool success = false;
+	    word_t value = expr(e, &success);
+	    if (success == false)
+		assert(0);
+	    wp_pool[i].value = value;
+	    print_wp();
+	    printf("set_wp NO%2d done\n", wp_pool[i].NO);
+	    return;
 	}
     }
 
-  printf ("------watchpoint is full, set_wp failed------\n");
+    printf("------watchpoint is full, set_wp failed------\n");
 }
 
-void
-del_wp (int N)
+void del_wp(int N)
 {
-  wp_pool[N].status = false;
-  printf ("del_wp NO%2d\n", N);
+    wp_pool[N].status = false;
+    printf("del_wp NO%2d\n", N);
 }
