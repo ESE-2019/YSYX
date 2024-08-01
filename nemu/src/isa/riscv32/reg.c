@@ -33,16 +33,21 @@ const char *regs2[] = {
 
 void isa_reg_display()
 {
+    printf(" pc: "FMT_WORD"\n",cpu.pc);
     for (int i = 0; i < 32; i++)
-	printf("%s\t" FMT_WORD "\n", regs[i], cpu.gpr[i]);
+	printf("%3s: "FMT_WORD"\n", regs[i], cpu.gpr[i]);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)
 {
-    Log("[reg match] ready to strcmp %s", s);
+    //Log("[reg match] ready to strcmp %s", s);
+    if (strcmp("$pc", s) == 0) {
+	    //Log("matched cpu.pc");
+	    return cpu.pc;
+	}
     for (int i = 0; i < 32; i++) {
 	if (strcmp(regs2[i], s) == 0) {
-	    Log("matched reg %s", regs[i]);
+	    //Log("matched reg %s", regs[i]);
 	    return cpu.gpr[i];
 	}
 

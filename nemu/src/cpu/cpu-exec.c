@@ -35,6 +35,7 @@ void device_update();
 //iringbuf begin
 static char iringbuf[16][128];
 int iringbuf_index = 0;
+
 void print_iringbuf()
 {
 #ifdef CONFIG_ITRACE
@@ -51,7 +52,6 @@ void print_iringbuf()
 #endif
 #endif
 }
-
 //iringbuf end
 
 static void trace_and_difftest(Decode * _this, vaddr_t dnpc)
@@ -99,7 +99,8 @@ static void exec_once(Decode * s, vaddr_t pc)
     disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
 		MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc),
 		(uint8_t *) & s->isa.inst.val, ilen);
-    snprintf(iringbuf[iringbuf_index], 128, "0x%08x: 0x%08x %s", pc, s->isa.inst.val, p);	//iringbuf
+    //snprintf(iringbuf[iringbuf_index], 128, "0x%08x: 0x%08x %s", pc, s->isa.inst.val, p);	//iringbuf
+    strcpy(iringbuf[iringbuf_index], s->logbuf);
     if (iringbuf_index++ >= 15)
 	iringbuf_index = 0;	//iringbuf
     //print_iringbuf();//iringbuf

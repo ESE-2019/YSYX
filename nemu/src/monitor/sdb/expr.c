@@ -25,7 +25,7 @@ typedef struct token {
     char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = { };
+static Token tokens[256] __attribute__((used)) = { };
 
 static int nr_token __attribute__((used)) = 0;
 
@@ -94,9 +94,7 @@ word_t eval(int p, int q)
 {
     //Log("eval %d -> %d", p, q);
     if (p > q) {		// Bad expression
-	printf("eval_failed %d > %d\n", p, q);
-	panic();
-	return -1;
+	panic("eval_failed %d > %d\n", p, q);
     } else if (p == q) {
 	return strtol(tokens[p].str, NULL, 0);
     } else if (check_parentheses(p, q) == true) {
@@ -335,7 +333,7 @@ static bool make_token(char *e)
 word_t expr(char *e, bool *success)
 {
     *success = false;
-    for (int ii = 0; ii < 32; ii++)	// reset tokens
+    for (int ii = 0; ii < 256; ii++)	// reset tokens
     {
 	tokens[ii].type = 0;
 	memset(tokens[ii].str, 0, sizeof(tokens[ii].str));
@@ -345,7 +343,7 @@ word_t expr(char *e, bool *success)
 
     //Log ("------befoce process------");
     int tokens_len = 0;		// calc len
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 256; i++) {
 	if (tokens[i].type == 0)	//if == reset value
 	    break;
 	//Log ("token%d\ttype%d\tstr:%s", i, tokens[i].type, tokens[i].str);
@@ -428,7 +426,7 @@ word_t expr(char *e, bool *success)
 	    //sprintf (tokens[i + 1].str, "%d", *((int *) point));
 	    vaddr_t EXPR_DEREF;
 	    EXPR_DEREF = strtoul(tokens[i + 1].str, NULL, 0);
-	    sprintf(tokens[i + 1].str, "%d", vaddr_read(EXPR_DEREF, 4));
+	    sprintf(tokens[i + 1].str, "%d", (uint32_t)vaddr_read(EXPR_DEREF, 4));
 	    for (int k = i + 1; k < tokens_len; k++)
 		tokens[k - 1] = tokens[k];
 	    tokens_len--;

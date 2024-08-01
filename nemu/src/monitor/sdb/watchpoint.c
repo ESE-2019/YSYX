@@ -14,15 +14,18 @@
 ***************************************************************************************/
 
 #include "sdb.h"
+#include <cpu/cpu.h>
+#include <cpu/decode.h>
+extern CPU_state cpu;
 
 #define NR_WP 32
 
 typedef struct watchpoint {
     int NO;
     struct watchpoint *next;
-    bool status;
-    char expr[32];
-    int value;
+    bool status;//legacy
+    char expr[65536];
+    word_t value;
 
 } WP;
 
@@ -41,48 +44,129 @@ void init_wp_pool()
     free_ = wp_pool;
 }
 
-/* aborted
-WP *new_wp ();
-void free_wp (WP * wp);
-*/
+
+WP *new_wp ()
+{
+	WP * ret = NULL;
+	if (free_ != NULL)
+	{
+		ret = free_;//get from free
+		free_ = free_ -> next;
+		ret -> next = NULL;
+		if (head == NULL)//put to head
+			head = ret;
+		else
+		{
+			WP * i;
+			for (i = head; i -> next != NULL; i = i -> next);
+			i -> next = ret;
+		}
+		return ret; 
+	}
+	else
+		return NULL;
+}
+
+void free_wp (WP * wp)
+{
+	if (head == wp)
+	{
+		head = head -> next;//set head
+	}
+	else
+	{
+		for (WP * i = head; i != NULL; i = i -> next)
+		{
+			if (i -> next == wp)
+			{
+				i -> next = wp -> next;//get from head
+				break;	
+			}
+		}
+	}
+	wp -> next = free_;//put to free
+	free_ = wp;
+	return;
+}
+
 
 void wp_exec()
 {
+    for (WP * i = head; i != NULL; i = i -> next)
+    {
+    	bool success = false;
+	    word_t ans = expr(i->expr, &success);
+	    if (success == true) {
+		if (ans != i->value) {
+		    printf("wp_NO%2d: %s changed:\n[DEC] %010d -> %010d\n",
+			   i->NO, i->expr,
+			   i->value, ans);
+		    printf("[HEX] " FMT_WORD " -> "
+			   FMT_WORD "\n", i->value, ans);
+		    //nemu_state.state = NEMU_STOP;
+		    if (nemu_state.state == NEMU_RUNNING)
+		    	set_nemu_state( NEMU_STOP, cpu.pc, -1);
+		}
+	    } else
+		panic("[PANIC] set watchpoint failed, invalid expr");
+    
+    }
+    /* Legacy
     for (int i = 0; i < NR_WP; i++) {
 	if (wp_pool[i].status == true) {
 	    bool success = false;
 	    uint32_t ans = expr(wp_pool[i].expr, &success);
 	    if (success == true) {
 		if (ans != wp_pool[i].value) {
-		    printf("wp_NO%2d: %s changed [DEC] %010d -> %010d\n",
+		    printf("[Legacy] wp_NO%2d: %s changed [DEC] %010d -> %010d\n",
 			   wp_pool[i].NO, wp_pool[i].expr,
 			   wp_pool[i].value, ans);
-		    printf("wp_NO%2d: %s changed [HEX} " FMT_WORD " -> "
+		    printf("[Legacy] wp_NO%2d: %s changed [HEX] " FMT_WORD " -> "
 			   FMT_WORD "\n", wp_pool[i].NO, wp_pool[i].expr,
 			   wp_pool[i].value, ans);
 		    nemu_state.state = NEMU_STOP;
 		    break;
 		}
 	    } else
-		assert(0);
+		panic("[PANIC] set watchpoint failed, invalid expr");
 
 	}
-    }
+    }*/
 }
 
 void print_wp()
 {
-    Log("info w (print wp) begin");
+    Log("begin");
+    /* Legacy
     for (int i = 0; i < NR_WP; i++) {
 	if (wp_pool[i].status)
-	    printf("NO%02d: \texpr:%s \tvalue: [DEC] %d \t[HEX] " FMT_WORD
+	    printf("[Legacy] NO%02d: \texpr:%s \tvalue: [DEC] %d \t[HEX] " FMT_WORD
 		   "\n", wp_pool[i].NO, wp_pool[i].expr, wp_pool[i].value,
 		   wp_pool[i].value);
+    }*/
+    for (WP * i = head; i != NULL; i = i -> next)
+    {
+    	printf("[print_wp] NO%02d: %10s [DEC] %010d [HEX] " FMT_WORD
+		   "\n", i->NO, i->expr, i->value, i->value);
     }
 }
 
 void set_wp(char *e)
 {
+    WP * set = new_wp ();
+    if ( set != NULL)
+    {
+	strcpy(set -> expr, e);
+	    bool success = false;
+	    word_t value = expr(e, &success);
+	    if (success == false)
+		panic("[PANIC] set watchpoint failed, invalid expr");
+	    set->value = value;
+	    printf("[set_wp] NO%02d: %10s [DEC] %010d [HEX] " FMT_WORD
+		   "\n", set->NO, set->expr, set->value, set->value);
+	    return;
+    }
+    /* Legacy
     for (int i = 0; i < NR_WP; i++) {
 	if (wp_pool[i].status == false) {
 	    wp_pool[i].status = true;
@@ -93,16 +177,25 @@ void set_wp(char *e)
 		assert(0);
 	    wp_pool[i].value = value;
 	    print_wp();
-	    printf("set_wp NO%2d done\n", wp_pool[i].NO);
+	    printf("[Legacy] set_wp NO%2d done\n", wp_pool[i].NO);
 	    return;
 	}
-    }
+    }*/
 
     printf("------watchpoint is full, set_wp failed------\n");
 }
 
 void del_wp(int N)
 {
-    wp_pool[N].status = false;
-    printf("del_wp NO%2d\n", N);
+    //wp_pool[N].status = false;
+    //printf("[Legacy] del_wp NO%2d\n", N);
+    for (WP * i = head; i != NULL; i = i -> next)
+    {
+    	if ( i -> NO == N)
+    	{
+    		printf("[del_wp] NO%02d: %10s [DEC] %010d [HEX] " FMT_WORD
+		   "\n", i->NO, i->expr, i->value, i->value);
+    		free_wp (i);
+    	}
+    }
 }

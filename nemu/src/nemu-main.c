@@ -28,7 +28,24 @@ void expr_test()
     word_t ans, ret;
     bool success;
     int cnt = 0;
-    char str[65536];
+    char str[65536] = { };
+    char line[65536 + 128] = { };
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        if (sscanf(line, "%d %[^\n]", &ans, str) == 2) {
+            cnt++;
+            Log("tc%d exp = %s\n\tans = %d", cnt, str, ans);
+		success = false;
+		ret = expr(str, &success);
+		if (success != true || ret != ans) {
+	    	printf
+			("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n",
+		 	str, ans, ret, ans, ret);
+	    	break;
+	}
+        } else {
+            panic("Error parsing line\n");
+        }
+    }/*
     while (fscanf(fp, "%d %s", &ans, str) != EOF) {
 	Log("exp = %s\n\tans = %d", str, ans);
 	success = false;
@@ -40,7 +57,7 @@ void expr_test()
 	    break;
 	}
 	cnt++;
-    }
+    }*/
     printf("expr_test end with %d tc passed\n", cnt);
 }
 

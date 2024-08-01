@@ -20,31 +20,32 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <stdint.h>
 // this should be enough
 static char buf[65536] = { };
 static char code_buf[65536 + 128] = { };	// a little larger than `buf`
 
 static char *code_format =
   "#include <stdio.h>\n"
+  "#include <stdint.h>\n"
   "int main() { "
-  "  unsigned result = %s; " "  printf(\"%%u\", result); " "  return 0; " "}";
+  "  uint32_t result = %s; " "  printf(\"%%u\", result); " "  return 0; " "}";
 
 //my code
 static int cnt = 0;
 unsigned int buff;		//index of buf
 
-unsigned int
-choose (unsigned int in)
+uint8_t
+choose (uint8_t in)
 {
-  unsigned int out = rand () % in;
-  return out;
+  return rand () % in;
 }
 
+/*
 void
 gen_num2 ()
 {
-  switch (choose (5))
+  switch (choose (3))
     {
     case 0:
       gen_num2 ();
@@ -82,6 +83,34 @@ gen_num ()
       break;
     }
 }
+*/
+
+void
+gen_num ()
+{
+  uint32_t num = (choose(3)==0)?rand():choose(-1);
+  char str[20] = { };
+  switch (choose (10))
+    {
+    case 0:
+      sprintf(str, "0x%x", num);
+      break;
+    case 1:
+      sprintf(str, "0x%X", num);
+      break;
+    case 2:
+      sprintf(str, "0X%x", num);
+      break;
+    case 3:
+      sprintf(str, "0X%X", num);
+      break;
+    default:
+      sprintf(str, "%u", num);
+      break;
+    }
+  for(int i=0; str[i] != '\0'; i++)
+    buf[buff++] = str[i];
+}
 
 void
 gen (char in)
@@ -100,7 +129,7 @@ gen_rand_op2 ()
 void
 gen_rand_op ()
 {
-  switch (choose (14))
+  switch (choose (16))
     {
     case 0:
       buf[buff++] = '=';
@@ -129,29 +158,47 @@ gen_rand_op ()
 }
 
 static void
-gen_rand_expr (bool * flag)
+gen_space ()
 {
-if(cnt>32 || *flag==false) {*flag=false; return;}
-  switch (choose (3))
+switch (choose (5))
     {
     case 0:
-      cnt++;
+      buf[buff++] = ' ';
+      gen_space ();
+      break;
+    default:
+      break;
+    }
+}
+
+static void
+gen_rand_expr (bool * flag)
+{
+  if(cnt>256 || *flag==false || buff>65500) {*flag=false; return;}
+  gen_space ();
+  cnt++;
+  switch (choose (4))
+    {
+    case 0:
       gen_num ();
       break;
     case 1:
       cnt++;
-      cnt++;
       gen ('(');
+      gen_space ();
       gen_rand_expr (flag);
+      gen_space ();
       gen (')');
       break;
     default:
-      cnt++;
       gen_rand_expr (flag);
+      gen_space ();
       gen_rand_op ();
+      gen_space ();
       gen_rand_expr (flag);
       break;
     }
+    gen_space ();
 }
 
 
@@ -175,7 +222,7 @@ main (int argc, char *argv[])
       cnt = 0;
       bool flag=true;
       gen_rand_expr (&flag);
-      if (cnt > 32)
+      if (cnt > 256 || buff > 65534)
 	continue;
       buf[buff] = '\0';
 

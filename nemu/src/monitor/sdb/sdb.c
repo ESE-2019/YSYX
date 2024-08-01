@@ -74,7 +74,7 @@ static int cmd_si(char *args)
 	if (i >= 1) {
 	    cpu_exec(i);
 	} else {
-	    printf("Unknown command");
+	    printf("Unknown command\n");
 	}
     }
     return 0;
@@ -95,6 +95,10 @@ static int cmd_info(char *args)
 
 static int cmd_x(char *args)
 {
+    if (args == NULL) {
+	printf("No args\n");
+	return 0;
+    }
     char *arg_N = strtok(NULL, " ");
     char *arg_EXPR = strtok(NULL, " ");
 
@@ -127,6 +131,29 @@ static int cmd_p(char *args)
     return 0;
 }
 
+//merge of x and p
+static int cmd_xp(char *args)
+{
+    if (args == NULL) {
+	printf("No args\n");
+	return 0;
+    }
+    char *arg_N = strtok(NULL, " ");
+    char *arg_EXPR = strtok(NULL, " ");
+
+    int N;
+    bool flag = false;
+    vaddr_t ans = expr(arg_EXPR, &flag);
+
+    if (sscanf(arg_N, "%d", &N) == 1 && flag)
+	for (int i = 0; i < N; i++) {
+	    printf(FMT_WORD ": " FMT_WORD "\n", ans, vaddr_read(ans, 4));
+	    ans += 4;
+    } else
+	printf("Unknown command");
+    return 0;
+}
+
 static int cmd_w(char *args)
 {
     MUXDEF(CONFIG_WATCHPOINT,, printf("undef CONFIG_WATCHPOINT\n");
@@ -136,6 +163,29 @@ static int cmd_w(char *args)
 	return 0;
     }
     set_wp(args);
+    return 0;
+}
+
+//merge of x and w
+static int cmd_xw(char *args)
+{
+    MUXDEF(CONFIG_WATCHPOINT,, printf("undef CONFIG_WATCHPOINT\n");
+	   return 0;);
+    if (args == NULL) {
+	printf("No args\n");
+	return 0;
+    }
+
+    bool flag = false;
+    word_t ans = expr(args, &flag);
+
+    if (flag)
+    {
+	char prepro [65536] = { };
+	sprintf(prepro, "*"FMT_WORD, ans);
+	set_wp(prepro);
+    } else
+	printf("Unknown command");
     return 0;
 }
 
@@ -166,7 +216,9 @@ static struct {
      cmd_info },
     { "x", "sao miao nei cun, e.g., x 10 $esp", cmd_x },
     { "p", "biao da shi qiu zhi, e.g., p $eax + 1", cmd_p },
+    { "xp", "merge of x and p", cmd_xp },
     { "w", "she zhi jian shi dian, e.g., w *0x2000", cmd_w },
+    { "xw", "merge of x and w", cmd_xw },
     { "d", "shan chu jian shi dian, e.g., d 2", cmd_d },
 
 };
@@ -210,7 +262,7 @@ void sdb_mainloop()
 	return;
     }
 
-    for (char *str; (str = rl_gets()) != NULL;) {
+    for (char *str; (str = rl_gets()) != NULL;) {//endless loop
 	char *str_end = str + strlen(str);
 
 	/* extract the first token as the command */
@@ -235,7 +287,7 @@ void sdb_mainloop()
 	for (i = 0; i < NR_CMD; i++) {
 	    if (strcmp(cmd, cmd_table[i].name) == 0) {
 		if (cmd_table[i].handler(args) < 0) {
-		    return;
+		    return;//if cmd return -1 then return
 		}
 		break;
 	    }

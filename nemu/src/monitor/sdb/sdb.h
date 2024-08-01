@@ -23,5 +23,4 @@ void wp_exec();
 void print_wp();
 void set_wp(char *e);
 void del_wp(int N);
-
 #endif
