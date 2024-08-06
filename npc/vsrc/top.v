@@ -115,18 +115,20 @@ seg seg(
 //ex7
 wire [31:0] dout;
 wire douten;
-wire [7:0] seg00, seg11;
+wire [7:0] seg00, seg11, seg22, seg33;
 ps2_display dut(clk, rst, ps2_clk, ps2_data, dout, douten);
 assign seg0 = douten?seg00:8'hff;
 assign seg1 = douten?seg11:8'hff;
+assign seg2 = douten?seg22:8'hff;
+assign seg3 = douten?seg33:8'hff;
 seg seg(
     .clk(clk),
     .rst(rst),
     .data(dout),
     .o_seg0(seg00),
     .o_seg1(seg11),
-    .o_seg2(seg2),
-    .o_seg3(seg3),
+    .o_seg2(seg22),
+    .o_seg3(seg33),
     .o_seg4(seg4),
     .o_seg5(seg5),
     .o_seg6(seg6),

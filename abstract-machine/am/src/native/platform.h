@@ -2,10 +2,10 @@
 #define __PLATFORM_H__
 
 #include <am.h>
-#include <unistd.h>
-#include <signal.h>
-#include <klib.h>
 #include <klib-macros.h>
+#include <klib.h>
+#include <signal.h>
+#include <unistd.h>
 
 void __am_get_example_uc(Context *r);
 void __am_get_intr_sigmask(sigset_t *s);

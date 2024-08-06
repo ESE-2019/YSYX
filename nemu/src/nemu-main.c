@@ -1,77 +1,34 @@
 /***************************************************************************************
-* Copyright (c) 2014-2022 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
+ * Copyright (c) 2014-2022 Zihao Yu, Nanjing University
+ *
+ * NEMU is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan
+ *PSL v2. You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ *KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ *NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the Mulan PSL v2 for more details.
+ ***************************************************************************************/
 
 #include <common.h>
-#include "monitor/sdb/sdb.h"
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
 
-void expr_test()
-{
-    FILE *fp = fopen("./tools/gen-expr/input", "r");
-    assert(fp != NULL);
-    word_t ans, ret;
-    bool success;
-    int cnt = 0;
-    char str[65536] = { };
-    char line[65536 + 128] = { };
-    while (fgets(line, sizeof(line), fp) != NULL) {
-        if (sscanf(line, "%d %[^\n]", &ans, str) == 2) {
-            cnt++;
-            Log("tc%d exp = %s\n\tans = %d", cnt, str, ans);
-		success = false;
-		ret = expr(str, &success);
-		if (success != true || ret != ans) {
-	    	printf
-			("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n",
-		 	str, ans, ret, ans, ret);
-	    	break;
-	}
-        } else {
-            panic("Error parsing line\n");
-        }
-    }/*
-    while (fscanf(fp, "%d %s", &ans, str) != EOF) {
-	Log("exp = %s\n\tans = %d", str, ans);
-	success = false;
-	ret = expr(str, &success);
-	if (success != true || ret != ans) {
-	    printf
-		("[fail_case]expr_test%s\nans should be %d but %d\nans should be %08x but %08x\n",
-		 str, ans, ret, ans, ret);
-	    break;
-	}
-	cnt++;
-    }*/
-    printf("expr_test end with %d tc passed\n", cnt);
-}
-
-int main(int argc, char *argv[])
-{
-    /* Initialize the monitor. */
+int main(int argc, char *argv[]) {
+  /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
-    am_init_monitor();
+  am_init_monitor();
 #else
-    init_monitor(argc, argv);
-    expr_test();
+  init_monitor(argc, argv);
 #endif
-    /* Start engine. */
-    engine_start();
+  /* Start engine. */
+  engine_start();
 
-    return is_exit_status_bad();
+  return is_exit_status_bad();
 }
