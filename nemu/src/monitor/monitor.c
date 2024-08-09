@@ -35,12 +35,17 @@ static void welcome() {
   printf("Welcome to %s-NEMU!\n",
          ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("For help, type \"help\"\n");
-  // Log("Exercise: Please remove me in the source code and compile NEMU
-  // again."); assert(0);
 }
 
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <elf.h>
+#include <sys/mman.h>
+#include <string.h>
 
 void sdb_set_batch_mode();
 
@@ -49,12 +54,87 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
+
+#define NR_FT 256
+
+char FT_name [NR_FT][256] = {};
+uint32_t FT_addr [NR_FT] = {};
+
+void get_elf_function(const char *filename) {
+    int index = 0;
+    int fd = open(filename, O_RDONLY);
+    if (fd < 0) {
+        Log(ANSI_FMT("Open elf failed %s", ANSI_FG_YELLOW ANSI_BG_RED), filename);
+        return;
+    }
+    off_t file_size = lseek(fd, 0, SEEK_END);
+    if (file_size == -1) {
+        perror("lseek");
+        close(fd);
+        return;
+    }
+    void *map = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (map == MAP_FAILED) {
+        perror("mmap");
+        close(fd);
+        return;
+    }
+    Elf32_Ehdr *ehdr = (Elf32_Ehdr *)map;
+    if (memcmp(ehdr->e_ident, ELFMAG, SELFMAG) != 0) {
+        fprintf(stderr, "Not an ELF file\n");
+        munmap(map, file_size);
+        close(fd);
+        return;
+    }
+    Elf32_Shdr *shdr = (Elf32_Shdr *)(map + ehdr->e_shoff);
+    for (int i = 0; i < ehdr->e_shnum; i++) {
+        if (shdr[i].sh_type == SHT_SYMTAB || shdr[i].sh_type == SHT_DYNSYM) {
+            Elf32_Sym *sym = (Elf32_Sym *)(map + shdr[i].sh_offset);
+            char *strtab = (char *)(map + shdr[shdr[i].sh_link].sh_offset);
+            for (int j = 0; j < shdr[i].sh_size / shdr[i].sh_entsize; j++) {
+                if (ELF32_ST_TYPE(sym[j].st_info) == STT_FUNC) {
+                    Log("Function: %s, Address: "FMT_WORD, strtab + sym[j].st_name, sym[j].st_value);
+                    strncpy(FT_name[index], strtab + sym[j].st_name, 256);
+                    FT_addr[index] = sym[j].st_value;
+                    index++;
+                }
+            }
+        }
+    }
+    munmap(map, file_size);
+    close(fd);
+    strncpy(FT_name[index], "UNKNOWN", 256);
+    FT_addr[index] = 0;
+}
+
+char* bin2elf(const char* input) {
+    const char* bin_suffix = ".bin";
+    const char* elf_suffix = ".elf";
+    size_t bin_len = strlen(bin_suffix);
+    size_t input_len = strlen(input);
+    if (input_len < bin_len || strcmp(input + input_len - bin_len, bin_suffix) != 0) {
+        return NULL;
+    }
+    size_t new_len = input_len - bin_len + strlen(elf_suffix) + 1;
+    char* result = (char*)malloc(new_len);
+    if (result == NULL) {
+        return NULL;
+    }
+    strncpy(result, input, input_len - bin_len);
+    strcpy(result + input_len - bin_len, elf_suffix);
+    return result;
+}
+
 static long load_img() {
   if (img_file == NULL) {
     Log("No image is given. Use the default build-in image.");
     return 4096; // built-in image size
   }
-
+  
+  char * img_elf = bin2elf(img_file);
+  get_elf_function(img_elf);
+  free(img_elf);
+  
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
 

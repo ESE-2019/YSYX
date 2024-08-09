@@ -1,4 +1,4 @@
-STUID = ysyx_22040000
+STUID = ysyx_24070022
 STUNAME = Qi Xuesong
 
 # DO NOT modify the following code!!!

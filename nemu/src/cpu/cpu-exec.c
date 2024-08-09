@@ -26,7 +26,6 @@
 #define MAX_INST_TO_PRINT 10
 
 CPU_state cpu = {};
-
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
@@ -42,10 +41,9 @@ void print_iringbuf() {
   // Log("print_iringbuf begin");
   for (int i = 0; i < 16; i++) {
     if (i == iringbuf_index)
-      printf("--> ");
+      Log(ANSI_FMT("^^^^^^^^^^^ ^^ ^^ ^^ ^^", ANSI_FG_YELLOW));
     else
-      printf("    ");
-    printf("%s\n", iringbuf[i]);
+    Log("%s", iringbuf[i]);
   }
   // Log("print_iringbuf end");
 #endif
@@ -56,7 +54,7 @@ void print_iringbuf() {
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) {
+  if (CONFIG_ITRACE_COND) {//ITRACE_COND TODO
     log_write("%s\n", _this->logbuf);
   }
 #endif

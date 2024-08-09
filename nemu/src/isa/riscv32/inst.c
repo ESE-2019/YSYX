@@ -22,81 +22,115 @@
 #define Mr vaddr_read
 #define Mw vaddr_write
 
-enum { TYPE_I, TYPE_U, TYPE_S, TYPE_B, TYPE_N, TYPE_J, TYPE_R };
+enum
+{
+  TYPE_I,
+  TYPE_U,
+  TYPE_S,
+  TYPE_B,
+  TYPE_N,
+  TYPE_J,
+  TYPE_R
+};
 
-#define src1R()                                                                \
-  do {                                                                         \
-    *src1 = R(rs1);                                                            \
+#define src1R()     \
+  do                \
+  {                 \
+    *src1 = R(rs1); \
   } while (0)
-#define src2R()                                                                \
-  do {                                                                         \
-    *src2 = R(rs2);                                                            \
+#define src2R()     \
+  do                \
+  {                 \
+    *src2 = R(rs2); \
   } while (0)
-#define immI()                                                                 \
-  do {                                                                         \
-    *imm = SEXT(BITS(i, 31, 20), 12);                                          \
+#define immI()                        \
+  do                                  \
+  {                                   \
+    *imm = SEXT(BITS(i, 31, 20), 12); \
   } while (0)
-#define immU()                                                                 \
-  do {                                                                         \
-    *imm = SEXT(BITS(i, 31, 12), 20) << 12;                                    \
+#define immU()                              \
+  do                                        \
+  {                                         \
+    *imm = SEXT(BITS(i, 31, 12), 20) << 12; \
   } while (0)
-#define immS()                                                                 \
-  do {                                                                         \
-    *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7);                   \
+#define immS()                                               \
+  do                                                         \
+  {                                                          \
+    *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); \
   } while (0)
-#define immJ()                                                                 \
-  do {                                                                         \
-    *imm = (SEXT(BITS(i, 31, 31), 1) << 20) | (BITS(i, 19, 12) << 12) |        \
-           (BITS(i, 20, 20) << 11) | (BITS(i, 30, 21) << 1);                   \
+#define immJ()                                                          \
+  do                                                                    \
+  {                                                                     \
+    *imm = (SEXT(BITS(i, 31, 31), 1) << 20) | (BITS(i, 19, 12) << 12) | \
+           (BITS(i, 20, 20) << 11) | (BITS(i, 30, 21) << 1);            \
   } while (0)
-#define immB()                                                                 \
-  do {                                                                         \
-    *imm = (SEXT(BITS(i, 31, 31), 1) << 12) | (BITS(i, 7, 7) << 11) |          \
-           (BITS(i, 30, 25) << 5) | (BITS(i, 11, 8) << 1);                     \
+#define immB()                                                        \
+  do                                                                  \
+  {                                                                   \
+    *imm = (SEXT(BITS(i, 31, 31), 1) << 12) | (BITS(i, 7, 7) << 11) | \
+           (BITS(i, 30, 25) << 5) | (BITS(i, 11, 8) << 1);            \
   } while (0)
-int32_t sign_extend_20_to_32(int32_t data) { // will be aborted
+int32_t sign_extend_20_to_32(int32_t data)
+{ // will be aborted
   data &= 0xFFFFF;
-  if (data & 0x80000) {
+  if (data & 0x80000)
+  {
     return data | 0xFFF00000;
-  } else {
+  }
+  else
+  {
     return data;
   }
 }
 
-int32_t sign_extend_13_to_32(int32_t data) {
+int32_t sign_extend_13_to_32(int32_t data)
+{
   data &= 0x1FFF;
-  if (data & 0x1000) {
+  if (data & 0x1000)
+  {
     return data | 0xFFFFE000;
-  } else {
+  }
+  else
+  {
     return data;
   }
 }
 
-int32_t sign_extend_12_to_32(int32_t data) {
+int32_t sign_extend_12_to_32(int32_t data)
+{
   data &= 0xFFF;
-  if (data & 0x800) {
+  if (data & 0x800)
+  {
     return data | 0xFFFFF000;
-  } else {
+  }
+  else
+  {
     return data;
   }
 }
 
-int32_t sign_extend(uint32_t data, int bit_width) {
+int32_t sign_extend(uint32_t data, int bit_width)
+{
   data &= (1 << bit_width) - 1;
-  if (data & (1 << (bit_width - 1))) {
+  if (data & (1 << (bit_width - 1)))
+  {
     return data | ~((1 << bit_width) - 1);
-  } else {
+  }
+  else
+  {
     return data;
   }
 }
 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2,
-                           word_t *imm, int type) {
+                           word_t *imm, int type)
+{
   uint32_t i = s->isa.inst.val;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
   *rd = BITS(i, 11, 7);
-  switch (type) {
+  switch (type)
+  {
   case TYPE_I:
     src1R();
     immI();
@@ -124,31 +158,92 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2,
   }
 }
 
-int32_t mulh(int32_t a, int32_t b) {
+int32_t mulh(int32_t a, int32_t b)
+{
   int64_t result = (int64_t)a * (int64_t)b;
   return (int32_t)(result >> 32);
 }
 
-uint32_t mulhu(uint32_t a, uint32_t b) {
+uint32_t mulhu(uint32_t a, uint32_t b)
+{
   uint64_t result = (uint64_t)a * (uint64_t)b;
   return (uint32_t)(result >> 32);
 }
 
-int32_t mulhsu(int32_t a, uint32_t b) {
+int32_t mulhsu(int32_t a, uint32_t b)
+{
   int64_t result = (int64_t)a * (uint64_t)b;
   return (int32_t)(result >> 32);
 }
 
-static int decode_exec(Decode *s) {
+#ifndef CONFIG_TARGET_AM
+extern char FT_name[][256];
+extern uint32_t FT_addr[];
+static uint32_t FT_local[4096] = {};
+static uint32_t FT_ret[4096] = {};
+static uint16_t FT_index = 0;
+char ftrace_buf[16*65536] = "";
+#endif
+//jump to addr, curr pc, store to reg
+static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t reg)
+{
+#ifndef CONFIG_TARGET_AM
+  for (int i = 0; FT_addr[i] != 0; i++)//add
+  {
+    if (FT_addr[i] == addr)
+    {
+      FT_ret[FT_index] = reg;
+      FT_local[FT_index++] = i;
+      char tmp[4096] = "";
+      for (int j = 0; j < FT_index - 1; j++)
+      {
+        strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
+      }
+      char tmp2[1024];
+      snprintf(tmp2, 1024, FMT_WORD": call [%s@"FMT_WORD"]\n", pc, FT_name[i], FT_addr[i]);
+      strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
+      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf)-1);
+      return;
+    }
+  }
+  for (int i = FT_index-1; i >= 0; i--)
+  {
+    if (FT_ret[i] == addr)
+    {
+      FT_index = i;
+      char tmp[4096] = "";
+      for (int j = 0; j < FT_index - 1; j++)
+      {
+        strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
+      }
+      char tmp2[1024];
+      snprintf(tmp2, 1024, FMT_WORD": ret [%s]\n", pc, FT_name[FT_local[i]]);
+      strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
+      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf)-1);
+      return;
+    }
+    
+  }
+#endif
+}
+static void ftrace_ret(const uint32_t addr)
+{
+#ifndef CONFIG_TARGET_AM
+  printf("%s", ftrace_buf);
+#endif
+}
+
+static int decode_exec(Decode *s)
+{
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
-#define INSTPAT_MATCH(s, name, type, ... /* execute body */)                   \
-  {                                                                            \
-    decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type));           \
-    __VA_ARGS__;                                                               \
+#define INSTPAT_MATCH(s, name, type, ... /* execute body */)         \
+  {                                                                  \
+    decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
+    __VA_ARGS__;                                                     \
   }
 
   INSTPAT_START();
@@ -159,7 +254,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S,
           Mw(src1 + sign_extend(imm, 12), 1, src2) /*; Log("sb") */);
 
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N,
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N,ftrace_ret(0);
           NEMUTRAP(s->pc, R(10))); // R(10) is $a0
 
   // my code start
@@ -167,10 +262,11 @@ static int decode_exec(Decode *s) {
           R(rd) = imm /*; Log("lui") */);
   // auipc
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(rd) = s->snpc;
-          s->dnpc = s->pc + imm /*; Log("jal") */);
+          s->dnpc = s->pc + imm; ftrace_jump(s->dnpc, s->pc, R(rd)) /*; Log("jal") */);
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(rd) = s->snpc;
           s->dnpc = (src1 + sign_extend_12_to_32(imm)) &
-                    (int32_t)-2 /*; Log("jalr") */);
+                    (int32_t)-2; ftrace_jump(s->dnpc, s->pc, R(rd))
+           /*; Log("jalr") */);
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq, B,
           if (src1 == src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("beq") */);
@@ -209,7 +305,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi, I,
           R(rd) = src1 + sign_extend(imm, 12) /*; Log("addi") */);
   INSTPAT("??????? ????? ????? 010 ????? 00100 11", slti, I,
-          R(rd) = (src1 < sign_extend(imm, 12)) ? 1 : 0 /*; Log("slti") */);
+          R(rd) = ((int32_t)src1 < (int32_t)sign_extend(imm, 12)) ? 1 : 0 /*; Log("slti") */);
   INSTPAT("??????? ????? ????? 011 ????? 00100 11", sltiu, I,
           R(rd) = (src1 < (uint32_t)sign_extend(imm, 12))
                       ? 1
@@ -288,7 +384,8 @@ static int decode_exec(Decode *s) {
   return 0;
 }
 
-int isa_exec_once(Decode *s) {
+int isa_exec_once(Decode *s)
+{
   s->isa.inst.val = inst_fetch(&s->snpc, 4);
   return decode_exec(s);
 }
