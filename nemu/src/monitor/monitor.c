@@ -54,12 +54,10 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
-
+#ifdef CONFIG_FTRACE
 #define NR_FT 256
-
 char FT_name [NR_FT][256] = {};
 uint32_t FT_addr [NR_FT] = {};
-
 void get_elf_function(const char *filename) {
     int index = 0;
     int fd = open(filename, O_RDONLY);
@@ -106,7 +104,6 @@ void get_elf_function(const char *filename) {
     strncpy(FT_name[index], "UNKNOWN", 256);
     FT_addr[index] = 0;
 }
-
 char* bin2elf(const char* input) {
     const char* bin_suffix = ".bin";
     const char* elf_suffix = ".elf";
@@ -124,6 +121,7 @@ char* bin2elf(const char* input) {
     strcpy(result + input_len - bin_len, elf_suffix);
     return result;
 }
+#endif
 
 static long load_img() {
   if (img_file == NULL) {
@@ -131,9 +129,11 @@ static long load_img() {
     return 4096; // built-in image size
   }
   
+  #ifdef CONFIG_FTRACE
   char * img_elf = bin2elf(img_file);
   get_elf_function(img_elf);
   free(img_elf);
+  #endif
   
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
@@ -145,7 +145,7 @@ static long load_img() {
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
-  assert(ret == 1);
+  Assert(ret == 1, "ret = %d", ret);
 
   fclose(fp);
   return size;

@@ -80,7 +80,7 @@ extern void print_iringbuf();
 static int cmd_info(char *args) {
   char *arg = strtok(NULL, " ");
   if (arg == NULL)
-    printf("Unknown command\n");
+    printf("Unknown command '%s'\n", arg);
   else if (strcmp(arg, "r") == 0)
     isa_reg_display();
   else if (strcmp(arg, "w") == 0)

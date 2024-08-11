@@ -32,8 +32,12 @@ static bool g_print_step = false;
 void device_update();
 
 // iringbuf begin
+#ifdef CONFIG_ITRACE
+#ifndef CONFIG_ISA_loongarch32r
 static char iringbuf[16][128];
 int iringbuf_index = 0;
+#endif
+#endif
 
 void print_iringbuf() {
 #ifdef CONFIG_ITRACE
@@ -54,7 +58,7 @@ void print_iringbuf() {
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (CONFIG_ITRACE_COND) {//ITRACE_COND TODO
+  if (ITRACE_COND) {
     log_write("%s\n", _this->logbuf);
   }
 #endif

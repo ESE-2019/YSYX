@@ -13,8 +13,6 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include <isa.h>
-#include <memory/vaddr.h>
 #include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -367,7 +365,7 @@ word_t expr(char *e, bool *success) {
     if ((tokens[i].type == '-' && i > 0 && tokens[i - 1].type != DEC &&
          tokens[i - 1].type != ')' && tokens[i + 1].type == DEC) ||
         (tokens[i].type == '-' && i == 0 && tokens[i + 1].type == DEC)) {
-      for (int j = 31; j > 0; j--) // set minus
+      for (int j = 31; j >= 0; j--) // set minus
         tokens[i + 1].str[j] = tokens[i + 1].str[j - 1];
       tokens[i + 1].str[0] = '-';
       for (int k = i + 1; k < tokens_len; k++)

@@ -1,8 +1,9 @@
 #define _GNU_SOURCE
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include <fcntl.h>
 #include <klib.h>
-#include <unistd.h>
+
 
 static int rfd = -1, wfd = -1;
 static volatile int count = 0;

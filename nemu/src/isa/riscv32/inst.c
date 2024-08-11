@@ -176,18 +176,16 @@ int32_t mulhsu(int32_t a, uint32_t b)
   return (int32_t)(result >> 32);
 }
 
-#ifndef CONFIG_TARGET_AM
+#ifdef CONFIG_FTRACE
 extern char FT_name[][256];
 extern uint32_t FT_addr[];
 static uint32_t FT_local[4096] = {};
 static uint32_t FT_ret[4096] = {};
 static uint16_t FT_index = 0;
 char ftrace_buf[16*65536] = "";
-#endif
 //jump to addr, curr pc, store to reg
 static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t reg)
 {
-#ifndef CONFIG_TARGET_AM
   for (int i = 0; FT_addr[i] != 0; i++)//add
   {
     if (FT_addr[i] == addr)
@@ -224,14 +222,12 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
     }
     
   }
-#endif
 }
-static void ftrace_ret(const uint32_t addr)
+static void ftrace_print(const uint32_t addr)
 {
-#ifndef CONFIG_TARGET_AM
-  printf("%s", ftrace_buf);
-#endif
+  Log("%s", ftrace_buf);
 }
+#endif
 
 static int decode_exec(Decode *s)
 {
@@ -254,7 +250,7 @@ static int decode_exec(Decode *s)
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S,
           Mw(src1 + sign_extend(imm, 12), 1, src2) /*; Log("sb") */);
 
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N,ftrace_ret(0);
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_ret(0));
           NEMUTRAP(s->pc, R(10))); // R(10) is $a0
 
   // my code start
@@ -262,10 +258,10 @@ static int decode_exec(Decode *s)
           R(rd) = imm /*; Log("lui") */);
   // auipc
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(rd) = s->snpc;
-          s->dnpc = s->pc + imm; ftrace_jump(s->dnpc, s->pc, R(rd)) /*; Log("jal") */);
+          s->dnpc = s->pc + imm; IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd))) /*; Log("jal") */);
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(rd) = s->snpc;
           s->dnpc = (src1 + sign_extend_12_to_32(imm)) &
-                    (int32_t)-2; ftrace_jump(s->dnpc, s->pc, R(rd))
+                    (int32_t)-2; IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd)))
            /*; Log("jalr") */);
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq, B,
           if (src1 == src2) s->dnpc =

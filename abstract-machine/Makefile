@@ -1,8 +1,3 @@
-# my code
-#include /home/ubuntu/Desktop/PA0/ysyx-workbench/nemu/configs/riscv32-am_defconfig
-#CFLAGS += $(shell sed -n 's/^\(CONFIG_[A-Z_]*\)=\(.*\)/-D\1=\2/p' /home/ubuntu/Desktop/PA0/ysyx-workbench/nemu/configs/riscv32-am_defconfig)
-#CONFIG_TARGET_AM=y
-
 # Makefile for AbstractMachine Kernels and Libraries
 
 ### *Get a more readable version of this Makefile* by `make html` (requires python-markdown)
