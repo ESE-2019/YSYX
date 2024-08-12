@@ -75,42 +75,36 @@ always_ff @(posedge clk) begin
 			if (rd_addr != 0) regmap[rd_addr] <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b000 && opcode == 7'b11000_11) begin//beq
-			$display("beq %08X %08X",rs1_val,rs2_val);
 			if (rs1_val == rs2_val)
 				pc <= pc + immB;
 			else
 				pc <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b001 && opcode == 7'b11000_11) begin//bne
-			$display("bne %08X %08X",rs1_val,rs2_val);
 			if (rs1_val != rs2_val)
 				pc <= pc + immB;
 			else
 				pc <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b100 && opcode == 7'b11000_11) begin//blt
-			$display("blt %08X %08X",rs1_val,rs2_val);
 			if (rs1_s < rs2_s)
 				pc <= pc + immB;
 			else
 				pc <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b101 && opcode == 7'b11000_11) begin//bge
-			$display("bge %08X %08X",rs1_val,rs2_val);
 			if (rs1_s >= rs2_s)
 				pc <= pc + immB;
 			else
 				pc <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b110 && opcode == 7'b11000_11) begin//bltu
-			$display("bltu %08X %08X",rs1_val,rs2_val);
 			if (rs1_val < rs2_val)
 				pc <= pc + immB;
 			else
 				pc <= pc + 32'h4;
 		end
 		else if(funct3 ==3'b111 && opcode == 7'b11000_11) begin//bgeu
-			$display("bgeu %08X %08X",rs1_val,rs2_val);
 			if (rs1_val >= rs2_val)
 				pc <= pc + immB;
 			else
@@ -141,6 +135,7 @@ always_ff @(posedge clk) begin
 			if (rd_addr != 0) regmap[rd_addr] <= {16'b0, Mr(rs1_val + immI)[15:0]}; 
 		end*/
 		else if(funct3 == 3'b000 && opcode == 7'b01000_11) begin//sb
+		//$display("%c", rs2_val[7:0]);
 			pc <= pc + 32'h4;
 			pmem_write( rs1_val + immS, rs2_val, 1);
 		end

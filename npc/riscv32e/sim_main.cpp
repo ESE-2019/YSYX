@@ -9,10 +9,14 @@
 #include "verilated_fst_c.h"
 //#include "verilated_vcd_c.h"
 #include "svdpi.h"
-//#include "Vour__Dpi.h"
 #include <getopt.h>
+#include <time.h>
+
+    struct timespec start_time, end_time;
+    uint64_t start_microseconds, end_microseconds;
 #define MAX_IMG 0x8000000
-#define ABORT_NUM 1000000
+#define MEM_BASE 0x80000000
+#define ABORT_NUM 0x8000000
 bool ebreak_n = true;
 VerilatedContext *contextp;
 Vtop *top;
@@ -38,10 +42,9 @@ uint32_t mem [MAX_IMG]={
 
 uint32_t pmem_readC(uint32_t addr)
 {
-	uint32_t add = (((addr & ~0x3u)- 0x80000000)/0x4)%MAX_IMG;
-	printf("read] ");
+	uint32_t add = (((addr & ~0x3u)- MEM_BASE)/0x4)%MAX_IMG;
 	uint32_t ret = mem[add];
-	printf("addr: 0x%08x value: 0x%08x\n", addr & ~0x3u, ret);
+	//printf("read] addr: 0x%08x value: 0x%08x\n\033[0m", addr & ~0x3u, ret);
 	return ret;
 }
 
@@ -69,26 +72,61 @@ static long load_img()
   return index;
 }
 
+#define MMIO_BASE 0xa0000000
+#define MMIO_MAX 0x1300000
+uint32_t mmio [MMIO_MAX]={};
+uint32_t mmio_read(uint32_t addr)
+{
+	uint32_t ret;
+	clock_gettime(CLOCK_MONOTONIC, &end_time);
+    end_microseconds = (uint64_t)end_time.tv_sec * 1000000 + (uint64_t)end_time.tv_nsec / 1000;
+    uint64_t elapsed_microseconds = end_microseconds - start_microseconds;
+	switch (addr) {
+	case 0xa0000048: return elapsed_microseconds;
+	case 0xa000004c: return elapsed_microseconds >> 32;
+        default:             
+	uint32_t add = (((addr & ~0x3u)- MMIO_BASE)/0x4)%MMIO_MAX;
+	ret = mmio[add];
+	//printf("[MMIOread]addr: 0x%08x value: 0x%08x\n\033[0m", addr & ~0x3u, ret);
+	}
+	return ret;
+}
+
+void mmio_write(uint32_t addr, uint32_t data)
+{
+	//printf("SERIAL_PORT write: 0x%08x  %c\n\033[0m", data, (char)data);
+	if (addr == (MMIO_BASE + 0x00003f8))
+	{
+		//printf("SERIAL_PORT write: 0x%08x  %c\n\033[0m", data, (char)data);
+		putchar(data);
+	}
+}
+
 extern "C" int pmem_read(uint32_t raddr) {
-  // 总是读取地址为`raddr & ~0x3u`的4字节返回
-  printf("[CPU");
+  if (raddr >= MMIO_BASE)
+  {
+  	return mmio_read(raddr);
+  }
+  //printf("[CPU");
   return pmem_readC(raddr & ~0x3u);
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mask: 1 2 4
-  // 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
-  // `wmask`中每比特表示`wdata`中1个字节的掩码,
-  // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  uint32_t add = (((waddr & ~0x3u)- 0x80000000)/0x4)%MAX_IMG;
+  if (waddr >= MMIO_BASE)
+  {
+  	mmio_write(waddr, wdata);
+  	return;
+  }
+  uint32_t add = (((waddr & ~0x3u)- MEM_BASE)/0x4)%MAX_IMG;
   uint32_t data1, data2;
   switch (wmask) {
   case 1:
-  	printf("[lb-");
+  	//printf("[lb-");
   	data1 = pmem_readC (waddr) & 0xFFFFFF00;
   	data2 = wdata              & 0x000000FF;
   	mem[add] = data1 | data2;
 	break;
   case 2:
-  	printf("[lh-");
+  	//printf("[lh-");
   	data1 = pmem_readC (waddr) & 0xFFFF0000;
   	data2 = wdata              & 0x0000FFFF;
   	mem[add] = data1 | data2;
@@ -96,14 +134,16 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mas
   case 4:
   	mem[add] = wdata;
 	break;
-  default: printf("pmem_write err\n");assert(0);break;
+  default: printf("[]pmem_write err\n");assert(0);break;
   }
-  printf("[WRITE%d] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u, mem[add]);
+  //printf("[WRITE-%d] addr: 0x%08x value: 0x%08x\n", wmask, waddr & ~0x3u, mem[add]);
 }
 
  
 int main(int argc, char **argv)
 {
+   clock_gettime(CLOCK_MONOTONIC, &start_time);
+    start_microseconds = (uint64_t)start_time.tv_sec * 1000000 + (uint64_t)start_time.tv_nsec / 1000;
    const char *prefix = "-IMG=";
    bool sdb_mode = false;
    for (int i_argc = 1; i_argc < argc; i_argc++)
@@ -167,7 +207,7 @@ int main(int argc, char **argv)
                 top->rst = 0;  // Deassert reset
             }
             // Assign some other inputs
-            printf("[IFU");
+            //printf("\033[34m[IFU");
             top->inst = pmem_readC((uint32_t)top->pc);
         }
     top->eval();

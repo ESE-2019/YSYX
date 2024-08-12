@@ -8,18 +8,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-// 辅助函数：将整数转换为字符串
 static void itoa(int value, char *str) {
   char buffer[20];
   int i = 0, j = 0, is_negative = 0;
-
-  // 处理负数
   if (value < 0) {
     is_negative = 1;
     value = -value;
   }
-
-  // 生成数字字符
   do {
     buffer[i++] = (char)('0' + (value % 10));
     value /= 10;
@@ -28,22 +23,18 @@ static void itoa(int value, char *str) {
   if (is_negative) {
     buffer[i++] = '-';
   }
-
-  // 反转字符串
   while (i > 0) {
     str[j++] = buffer[--i];
   }
   str[j] = '\0';
 }
 
-// 辅助函数：输出字符串
 static void put_str(const char *str) {
   while (*str) {
     putch(*str++);
   }
 }
 
-// 简化版 printf 实现
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -81,7 +72,6 @@ int printf(const char *fmt, ...) {
         break;
       }
       default:
-        // 不支持的格式符，直接输出
         putch('%');
         putch(*f);
         count += 2;
@@ -95,41 +85,13 @@ int printf(const char *fmt, ...) {
   }
 
   va_end(args);
-  return count; // 返回输出的字符数
+  return count;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
-/*
-static void itoa(int value, char *str) {
-    char buffer[20];
-    int i = 0, j = 0, is_negative = 0;
 
-    // 处理负数
-    if (value < 0) {
-        is_negative = 1;
-        value = -value;
-    }
-
-    // 生成数字字符
-    do {
-        buffer[i++] = (char)('0' + (value % 10));
-        value /= 10;
-    } while (value > 0);
-
-    if (is_negative) {
-        buffer[i++] = '-';
-    }
-
-    // 反转字符串
-    while (i > 0) {
-        str[j++] = buffer[--i];
-    }
-    str[j] = '\0';
-}
-*/
-// 简化版 sprintf 实现
 int sprintf(char *out, const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -167,7 +129,6 @@ int sprintf(char *out, const char *fmt, ...) {
         break;
       }
       default:
-        // 不支持的格式符，直接输出
         *p++ = '%';
         *p++ = *f;
         break;
@@ -178,9 +139,9 @@ int sprintf(char *out, const char *fmt, ...) {
     f++;
   }
 
-  *p = '\0'; // 终止字符串
+  *p = '\0';
   va_end(args);
-  return p - out; // 返回写入的字符数
+  return p - out;
 }
 int snprintf(char *out, size_t n, const char *fmt, ...) {
   panic("Not implemented");
