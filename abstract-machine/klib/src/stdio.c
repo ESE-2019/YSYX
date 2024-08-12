@@ -29,12 +29,6 @@ static void itoa(int value, char *str) {
   str[j] = '\0';
 }
 
-static void put_str(const char *str) {
-  while (*str) {
-    putch(*str++);
-  }
-}
-
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -50,13 +44,13 @@ int printf(const char *fmt, ...) {
         int value = va_arg(args, int);
         char buffer[20];
         itoa(value, buffer);
-        put_str(buffer);
+        putstr(buffer);
         count += strlen(buffer);
         break;
       }
       case 's': {
         const char *value = va_arg(args, const char *);
-        put_str(value);
+        putstr(value);
         count += strlen(value);
         break;
       }

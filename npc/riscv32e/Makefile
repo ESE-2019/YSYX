@@ -36,7 +36,7 @@ VERILATOR_FLAGS += -cc --exe
 # Generate makefile dependencies (not shown as complicates the Makefile)
 #VERILATOR_FLAGS += -MMD
 # Optimize
-VERILATOR_FLAGS += -x-assign fast
+#VERILATOR_FLAGS += -x-assign fast
 # Warn abount lint issues; may not want this on less solid designs
 VERILATOR_FLAGS += -Wall
 # Make waveforms
@@ -74,7 +74,7 @@ run:
 	@echo "-- RUN ---------------------"
 	@rm -rf logs
 	@mkdir -p logs
-	obj_dir/Vtop +trace
+	obj_dir/Vtop
 
 	#@echo
 	#@echo "-- COVERAGE ----------------"

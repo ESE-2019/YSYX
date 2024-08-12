@@ -250,7 +250,7 @@ static int decode_exec(Decode *s)
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S,
           Mw(src1 + sign_extend(imm, 12), 1, src2) /*; Log("sb") */);
 
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_ret(0));
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_print(0));
           NEMUTRAP(s->pc, R(10))); // R(10) is $a0
 
   // my code start

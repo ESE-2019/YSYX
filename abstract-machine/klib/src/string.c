@@ -25,11 +25,14 @@ char *strcpy(char *dst, const char *src) {
 char *strncpy(char *dst, const char *src, size_t n) {
   char *d = dst;
   const char *s = src;
-  while (n-- > 0 && (*d++ = *s++))
-    ;
-  while (n-- > 0) {
-    *d++ = '\0';
-  }
+  while (n > 0 && *s != '\0') {
+        *d++ = *s++;
+        n--;
+    }
+    while (n > 0) {
+        *d++ = '\0';
+        n--;
+    }
   return dst;
 }
 

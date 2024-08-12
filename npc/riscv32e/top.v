@@ -35,8 +35,17 @@ assign funct7 = inst[31:25];
 logic [4:0] shamt;//shamt[5] == 0
 assign shamt = inst[24:20];
 function automatic logic [31:0] Mr(input logic [31:0] Mr_addr, input logic [2:0] funct_3);
-	logic [31:0] tmp = pmem_read(Mr_addr);
-	case (funct_3)
+	logic [4:0] Mr_shamt;
+	logic [31:0] tmp, temp;
+	unique case (Mr_addr[1:0])
+		2'b00: Mr_shamt = 0;
+		2'b01: Mr_shamt = 8;
+		2'b10: Mr_shamt = 16;
+		2'b11: Mr_shamt = 24;
+	endcase
+	temp = pmem_read(Mr_addr);
+	tmp = temp >> Mr_shamt;
+	unique case (funct_3)
 		3'b000: Mr = { {24{tmp[7]}}, tmp[7:0]};
 		3'b001: Mr = { {16{tmp[15]}}, tmp[15:0]};
 		3'b010: Mr = tmp[31:0];

@@ -109,8 +109,12 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
     __Vfunc_top__DOT__Mr__0__Mr_addr = 0;
     CData/*2:0*/ __Vfunc_top__DOT__Mr__0__funct_3;
     __Vfunc_top__DOT__Mr__0__funct_3 = 0;
+    CData/*4:0*/ __Vfunc_top__DOT__Mr__0__Mr_shamt;
+    __Vfunc_top__DOT__Mr__0__Mr_shamt = 0;
     IData/*31:0*/ __Vfunc_top__DOT__Mr__0__tmp;
     __Vfunc_top__DOT__Mr__0__tmp = 0;
+    IData/*31:0*/ __Vfunc_top__DOT__Mr__0__temp;
+    __Vfunc_top__DOT__Mr__0__temp = 0;
     IData/*31:0*/ __Vfunc_top__DOT__pmem_read__1__Vfuncout;
     __Vfunc_top__DOT__pmem_read__1__Vfuncout = 0;
     IData/*31:0*/ __Vdly__pc;
@@ -570,13 +574,21 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                     (7U & (vlSelfRef.inst >> 0xcU));
                 __Vfunc_top__DOT__Mr__0__Mr_addr = 
                     (vlSelfRef.top__DOT__rs1_s + vlSelfRef.top__DOT__immI);
+                __Vfunc_top__DOT__Mr__0__Mr_shamt = 
+                    ((2U & __Vfunc_top__DOT__Mr__0__Mr_addr)
+                      ? ((1U & __Vfunc_top__DOT__Mr__0__Mr_addr)
+                          ? 0x18U : 0x10U) : ((1U & __Vfunc_top__DOT__Mr__0__Mr_addr)
+                                               ? 8U
+                                               : 0U));
                 Vtop___024root____Vdpiimwrap_top__DOT__pmem_read_TOP(__Vfunc_top__DOT__Mr__0__Mr_addr, __Vfunc_top__DOT__pmem_read__1__Vfuncout);
-                __Vfunc_top__DOT__Mr__0__tmp = __Vfunc_top__DOT__pmem_read__1__Vfuncout;
+                __Vfunc_top__DOT__Mr__0__temp = __Vfunc_top__DOT__pmem_read__1__Vfuncout;
+                __Vfunc_top__DOT__Mr__0__tmp = (__Vfunc_top__DOT__Mr__0__temp 
+                                                >> (IData)(__Vfunc_top__DOT__Mr__0__Mr_shamt));
                 if ((4U & (IData)(__Vfunc_top__DOT__Mr__0__funct_3))) {
                     if (VL_UNLIKELY((2U & (IData)(__Vfunc_top__DOT__Mr__0__funct_3)))) {
                         __Vfunc_top__DOT__Mr__0__Vfuncout = 0U;
                         VL_WRITEF_NX("unknown type\n",0);
-                        VL_FINISH_MT("top.v", 45, "");
+                        VL_FINISH_MT("top.v", 54, "");
                     } else {
                         __Vfunc_top__DOT__Mr__0__Vfuncout 
                             = ((1U & (IData)(__Vfunc_top__DOT__Mr__0__funct_3))
@@ -587,7 +599,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                     if (VL_UNLIKELY((1U & (IData)(__Vfunc_top__DOT__Mr__0__funct_3)))) {
                         __Vfunc_top__DOT__Mr__0__Vfuncout = 0U;
                         VL_WRITEF_NX("unknown type\n",0);
-                        VL_FINISH_MT("top.v", 45, "");
+                        VL_FINISH_MT("top.v", 54, "");
                     } else {
                         __Vfunc_top__DOT__Mr__0__Vfuncout 
                             = __Vfunc_top__DOT__Mr__0__tmp;
@@ -824,7 +836,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
         } else {
             VL_WRITEF_NX("invalid instruction 0x%08x: 0x%08x\n",0,
                          32,vlSelfRef.pc,32,vlSelfRef.inst);
-            VL_FINISH_MT("top.v", 231, "");
+            VL_FINISH_MT("top.v", 240, "");
         }
     }
     vlSelfRef.pc = __Vdly__pc;
