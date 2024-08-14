@@ -14,11 +14,12 @@
 #include <math.h>
 
 bool LOG = false;
+bool WAVE = false;
     struct timespec start_time, end_time;
     uint64_t start_microseconds, end_microseconds;
-#define MAX_IMG 0x8000000
-#define MEM_BASE 0x80000000
-#define ABORT_NUM 0x8000000
+#define MAX_IMG   0xFFFFFFF
+#define MEM_BASE  0x80000000
+#define ABORT_NUM 0xFFFFFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
 Vtop *top;
@@ -27,7 +28,7 @@ extern "C" void ebreak()
   ebreak_n = false;
 }
 
-static volatile uint32_t mem [MAX_IMG] __attribute((aligned(4096))) ={
+static uint32_t mem [MAX_IMG] ={
 0x00000093,
 0xFFF00093,
 0xFFE08113,
@@ -76,7 +77,7 @@ static long load_img()
 
 #define MMIO_BASE 0xa0000000
 #define MMIO_MAX 0x1300000
-static volatile uint32_t mmio [MMIO_MAX] __attribute((aligned(4096))) = {};
+static uint32_t mmio [MMIO_MAX] = {};
 uint32_t mmio_read(uint32_t addr)
 {
 	uint32_t ret;//printf("MMIO%08x\n",addr);
@@ -155,7 +156,7 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mas
 int main(int argc, char **argv)
 {
    clock_gettime(CLOCK_MONOTONIC, &start_time);
-    start_microseconds = (uint64_t)start_time.tv_sec * 1000000 + (uint64_t)start_time.tv_nsec / 1000;
+   start_microseconds = (uint64_t)start_time.tv_sec * 1000000 + (uint64_t)start_time.tv_nsec / 1000;
    const char *prefix = "-IMG=";
    bool sdb_mode = false;
    for (int i_argc = 1; i_argc < argc; i_argc++)
@@ -186,9 +187,9 @@ int main(int argc, char **argv)
   top = new Vtop { contextp };
   
   VerilatedFstC *tfp = new VerilatedFstC;
-  contextp->traceEverOn(true);
-  top->trace(tfp, 0);
-  tfp->open("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/wave.fst");
+  if (WAVE) contextp->traceEverOn(true);
+  if (WAVE) top->trace(tfp, 0);
+  if (WAVE) tfp->open("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/wave.fst");
   // Simulate until $finish
   ebreak_n = true;
   uint64_t wave = 0;
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
             top->inst = pmem_readC((uint32_t)top->pc);
         }
     top->eval();
-    tfp->dump(wave++);	//dump wave  //need ii++
+    if (WAVE) tfp->dump(wave++);	//dump wave  //need ii++
     for (int i = 0; i<16; i++)
     if (top->rootp->top__DOT__regmap[i] != 0 && top->clk)
     if(LOG) printf("\treg[%02d]: 0x%08x\n", i, top->rootp->top__DOT__regmap[i]);
@@ -234,12 +235,12 @@ int main(int argc, char **argv)
 
   // Destroy model
   delete top;
-  tfp->close();
+  if (WAVE) tfp->close();
   free(img_file);
   // Return good completion status
   if (ebreak_n)
   {
-  	printf("\033[1;31mabort_endless_loop = %d / %d\033[0m\n", abort_endless_loop, ABORT_NUM);
+  	printf("\033[1;31mabort_endless_loop = %d / %d\033[0m\n", abort_endless_loop, (uint32_t)ABORT_NUM);
   	printf("\033[1;31mHIT BAD TRAP\033[0m\n");  
   	return -1;
   	}

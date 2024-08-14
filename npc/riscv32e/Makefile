@@ -32,11 +32,11 @@ VERILATOR_COVERAGE = $(VERILATOR_ROOT)/bin/verilator_coverage
 endif
 
 # Generate C++ in executable form
-VERILATOR_FLAGS += -cc --exe
+VERILATOR_FLAGS += -cc --exe --build
 # Generate makefile dependencies (not shown as complicates the Makefile)
-#VERILATOR_FLAGS += -MMD
+VERILATOR_FLAGS += -MMD --x-initial fast --noassert
 # Optimize
-#VERILATOR_FLAGS += -x-assign fast
+VERILATOR_FLAGS += -x-assign fast -O3
 # Warn abount lint issues; may not want this on less solid designs
 VERILATOR_FLAGS += -Wall
 # Make waveforms

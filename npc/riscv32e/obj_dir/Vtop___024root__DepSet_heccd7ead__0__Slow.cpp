@@ -165,19 +165,19 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___ctor_var_reset\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
-    vlSelf->clk = VL_RAND_RESET_I(1);
-    vlSelf->rst = VL_RAND_RESET_I(1);
-    vlSelf->inst = VL_RAND_RESET_I(32);
-    vlSelf->pc = VL_RAND_RESET_I(32);
+    vlSelf->clk = 0;
+    vlSelf->rst = 0;
+    vlSelf->inst = 0;
+    vlSelf->pc = 0;
     for (int __Vi0 = 0; __Vi0 < 32; ++__Vi0) {
-        vlSelf->top__DOT__regmap[__Vi0] = VL_RAND_RESET_I(32);
+        vlSelf->top__DOT__regmap[__Vi0] = 0;
     }
-    vlSelf->top__DOT__immI = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__immS = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__immB = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__rs2_val = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__rs1_s = VL_RAND_RESET_I(32);
-    vlSelf->__Vtrigprevexpr___TOP__clk__0 = VL_RAND_RESET_I(1);
+    vlSelf->top__DOT__immI = 0;
+    vlSelf->top__DOT__immS = 0;
+    vlSelf->top__DOT__immB = 0;
+    vlSelf->top__DOT__rs2_val = 0;
+    vlSelf->top__DOT__rs1_s = 0;
+    vlSelf->__Vtrigprevexpr___TOP__clk__0 = 0;
     for (int __Vi0 = 0; __Vi0 < 3; ++__Vi0) {
         vlSelf->__Vm_traceActivity[__Vi0] = 0;
     }

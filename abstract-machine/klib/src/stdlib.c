@@ -28,7 +28,7 @@ int atoi(const char *nptr) {
 }
 
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-#define HEAP_SIZE 0xFFFFF
+#define HEAP_SIZE 0xFFFFFF
 static char my_heap[HEAP_SIZE];
 static char *addr = my_heap;
 #endif
