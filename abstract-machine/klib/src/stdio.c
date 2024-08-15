@@ -66,6 +66,7 @@ int printf(const char *fmt, ...) {
         break;
       }
       default:
+        putstr("[unsupported]");
         putch('%');
         putch(*f);
         count += 2;

@@ -14,6 +14,7 @@
  ***************************************************************************************/
 
 #include "local-include/reg.h"
+#include <isa.h>
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/ifetch.h>
@@ -123,12 +124,13 @@ int32_t sign_extend(uint32_t data, int bit_width)
 }
 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2,
-                           word_t *imm, int type)
+                           word_t *imm, word_t *uimm,int type)
 {
   uint32_t i = s->isa.inst.val;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
   *rd = BITS(i, 11, 7);
+  *uimm = BITS(i, 19, 15);
   switch (type)
   {
   case TYPE_I:
@@ -176,17 +178,74 @@ int32_t mulhsu(int32_t a, uint32_t b)
   return (int32_t)(result >> 32);
 }
 
+uint32_t CSR_r(uint32_t imm)
+{
+  int csr = imm & 0xFFF;
+  vaddr_t * addr;
+  switch (csr)
+  {
+  case 0x300:
+    addr = &cpu.mstatus;
+    break;
+  case 0x305:
+    addr = &cpu.mtvec;
+    break;
+  case 0x341:
+    addr = &cpu.mepc;
+    break;
+  case 0x342:
+    addr = &cpu.mcause;
+    break;
+  default:
+    panic();
+    break;
+  }
+  #ifdef CONFIG_ETRACE
+  Log("CSR_r csr%03X data"FMT_WORD"\n", imm, *addr);
+  #endif
+  return *addr;
+}
+
+bool CSR_w(uint32_t imm, uint32_t data)
+{
+  int csr = imm & 0xFFF;
+  vaddr_t * addr;
+  switch (csr)
+  {
+  case 0x300:
+    addr = &cpu.mstatus;
+    break;
+  case 0x305:
+    addr = &cpu.mtvec;
+    break;
+  case 0x341:
+    addr = &cpu.mepc;
+    break;
+  case 0x342:
+    addr = &cpu.mcause;
+    break;
+  default:
+    panic();
+    break;
+  }
+  *addr = data;
+  #ifdef CONFIG_ETRACE
+  Log("CSR_w csr%03X data"FMT_WORD"\n", imm, *addr);
+  #endif
+  return true;
+}
+
 #ifdef CONFIG_FTRACE
 extern char FT_name[][256];
 extern uint32_t FT_addr[];
 static uint32_t FT_local[4096] = {};
 static uint32_t FT_ret[4096] = {};
 static uint16_t FT_index = 0;
-char ftrace_buf[16*65536] = "";
-//jump to addr, curr pc, store to reg
+char ftrace_buf[16 * 65536] = "";
+// jump to addr, curr pc, store to reg
 static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t reg)
 {
-  for (int i = 0; FT_addr[i] != 0; i++)//add
+  for (int i = 0; FT_addr[i] != 0; i++) // add
   {
     if (FT_addr[i] == addr)
     {
@@ -198,13 +257,13 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
         strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
       }
       char tmp2[1024];
-      snprintf(tmp2, 1024, FMT_WORD": call [%s@"FMT_WORD"]\n", pc, FT_name[i], FT_addr[i]);
+      snprintf(tmp2, 1024, FMT_WORD ": call [%s@" FMT_WORD "]\n", pc, FT_name[i], FT_addr[i]);
       strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
-      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf)-1);
+      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
       return;
     }
   }
-  for (int i = FT_index-1; i >= 0; i--)
+  for (int i = FT_index - 1; i >= 0; i--)
   {
     if (FT_ret[i] == addr)
     {
@@ -215,12 +274,11 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
         strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
       }
       char tmp2[1024];
-      snprintf(tmp2, 1024, FMT_WORD": ret [%s]\n", pc, FT_name[FT_local[i]]);
+      snprintf(tmp2, 1024, FMT_WORD ": ret [%s]\n", pc, FT_name[FT_local[i]]);
       strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
-      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf)-1);
+      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
       return;
     }
-    
   }
 }
 static void ftrace_print(const uint32_t addr)
@@ -228,17 +286,17 @@ static void ftrace_print(const uint32_t addr)
   Log("%s", ftrace_buf);
 }
 #endif
-
+extern void print_iringbuf();
 static int decode_exec(Decode *s)
 {
   int rd = 0;
-  word_t src1 = 0, src2 = 0, imm = 0;
+  word_t src1 = 0, src2 = 0, imm = 0, uimm = 0, tmp = 0;
   s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */)         \
   {                                                                  \
-    decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
+    decode_operand(s, &rd, &src1, &src2, &imm, &uimm, concat(TYPE_, type)); \
     __VA_ARGS__;                                                     \
   }
 
@@ -250,7 +308,7 @@ static int decode_exec(Decode *s)
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S,
           Mw(src1 + sign_extend(imm, 12), 1, src2) /*; Log("sb") */);
 
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_print(0));
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_print(0)); IFDEF(CONFIG_ITRACE, print_iringbuf());
           NEMUTRAP(s->pc, R(10))); // R(10) is $a0
 
   // my code start
@@ -261,8 +319,9 @@ static int decode_exec(Decode *s)
           s->dnpc = s->pc + imm; IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd))) /*; Log("jal") */);
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(rd) = s->snpc;
           s->dnpc = (src1 + sign_extend_12_to_32(imm)) &
-                    (int32_t)-2; IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd)))
-           /*; Log("jalr") */);
+                    (int32_t)-2;
+          IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd)))
+          /*; Log("jalr") */);
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq, B,
           if (src1 == src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("beq") */);
@@ -304,8 +363,7 @@ static int decode_exec(Decode *s)
           R(rd) = ((int32_t)src1 < (int32_t)sign_extend(imm, 12)) ? 1 : 0 /*; Log("slti") */);
   INSTPAT("??????? ????? ????? 011 ????? 00100 11", sltiu, I,
           R(rd) = (src1 < (uint32_t)sign_extend(imm, 12))
-                      ? 1
-                      : 0 /*; Log("sltiu") */);
+                      ? 1 : 0 /*; Log("sltiu") */);
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori, I,
           R(rd) = src1 ^ sign_extend(imm, 12) /*; Log("xori") */);
   INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori, I,
@@ -339,29 +397,28 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and, R,
           R(rd) = src1 & src2 /*; Log("and") */);
   // fence TODO
-  // ecall TODO
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N,
+    bool flag = false; tmp = isa_reg_str2val("$a7", &flag); if(flag) s->dnpc = isa_raise_intr( tmp, s->pc); else panic(););
+        /*void yield() {
+        #ifdef __riscv_e
+          asm volatile("li a5, -1; ecall");
+        #else
+          asm volatile("li a7, -1; ecall");
+        #endif
+        }*/
   // ebreak
   // RV32M Standard Extension
   INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul, R,
           R(rd) = (int64_t)src1 * (int64_t)src2 /*; Log("mul") */);
   INSTPAT(
       "0000001 ????? ????? 001 ????? 01100 11", mulh, R,
-      R(rd) = mulh(
-          src1,
-          src2)); // R (rd) = (uint32_t)(((int64_t)src1*(int64_t)src2)>>32)/*;
-                  // Log("mulh")*/);
+      R(rd) = mulh(src1, src2));
   INSTPAT(
       "0000001 ????? ????? 010 ????? 01100 11", mulhsu, R,
-      R(rd) = mulhsu(
-          src1,
-          src2)); // R (rd) = (uint32_t)(((int64_t)src1*(uint64_t)src2)>>32)/*;
-                  // Log("mulhsu")*/);
+      R(rd) = mulhsu(src1, src2));
   INSTPAT(
       "0000001 ????? ????? 011 ????? 01100 11", mulhu, R,
-      R(rd) = mulhu(
-          src1,
-          src2)); // R (rd) = (uint32_t)(((uint64_t)src1*(uint64_t)src2)>>32)/*;
-                  // Log("mulhu")*/);
+      R(rd) = mulhu(src1, src2));
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div, R,
           R(rd) = (int32_t)src1 / (int32_t)src2 /*; Log("div") */);
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R,
@@ -370,6 +427,22 @@ static int decode_exec(Decode *s)
           R(rd) = (int32_t)src1 % (int32_t)src2 /*; Log("rem") */);
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R,
           R(rd) = (int32_t)src1 % src2 /*; Log("remu") */);
+  //Zicsr
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw, I,
+    IFDEF(CONFIG_ETRACE, Log("csrrw")); R(rd) = CSR_r(imm); CSR_w(imm, src1););
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs, I, 
+    IFDEF(CONFIG_ETRACE, Log("csrrs")); tmp = CSR_r(imm); R(rd) = tmp; CSR_w(imm, src1 | tmp););
+  INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc, I,
+    IFDEF(CONFIG_ETRACE, Log("csrrc")); tmp = CSR_r(imm); R(rd) = tmp; CSR_w(imm, (~src1) | tmp););
+  INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi, I,
+    IFDEF(CONFIG_ETRACE, Log("csrrwi")); R(rd) = CSR_r(imm); CSR_w(imm, uimm););
+  INSTPAT("??????? ????? ????? 110 ????? 11100 11", csrrsi, I, 
+    IFDEF(CONFIG_ETRACE, Log("csrrsi")); R(rd) = tmp; CSR_w(imm, uimm | tmp););
+  INSTPAT("??????? ????? ????? 111 ????? 11100 11", csrrci, I,
+    IFDEF(CONFIG_ETRACE, Log("csrrci")); R(rd) = tmp; CSR_w(imm, (~uimm) | tmp););
+  //others
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, 
+    s->dnpc = cpu.mepc + 4; IFDEF(CONFIG_ETRACE, Log("mret")););
   // my code end
 
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));

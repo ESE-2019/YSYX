@@ -45,7 +45,7 @@ void print_iringbuf() {
   // Log("print_iringbuf begin");
   for (int i = 0; i < 16; i++) {
     if (i == iringbuf_index)
-      Log(ANSI_FMT("^^^^^^^^^^^ ^^ ^^ ^^ ^^", ANSI_FG_YELLOW));
+      Log(ANSI_FMT("^^^^^^^^^^^-^^-^^-^^-^^", ANSI_FG_YELLOW));
     else
     Log("%s", iringbuf[i]);
   }

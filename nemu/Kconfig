@@ -149,18 +149,23 @@ config ITRACE
 config MTRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable memory tracer"
-  default y
+  default n
 
 config FTRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
-  bool "Enable memory tracer"
-  default y
+  bool "Enable function tracer"
+  default n
 
 config DTRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
-  bool "Enable memory tracer"
-  default y
+  bool "Enable device tracer"
+  default n
 
+config ETRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable exception tracer"
+  default y
+  
 config ITRACE_COND
   depends on ITRACE
   string "Only trace instructions when the condition is true"
