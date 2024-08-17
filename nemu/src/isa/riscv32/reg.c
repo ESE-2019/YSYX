@@ -17,33 +17,42 @@
 #include <isa.h>
 #include <string.h>
 
-const char *regs[] = {"$0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
-                      "s0", "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
-                      "a6", "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
+const char *regs[] = {"$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+                      "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+                      "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
                       "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
-const char *regs2[] = {"$0",  "$ra", "$sp", "$gp", "$tp", "$t0",  "$t1",
-                       "$t2", "$s0", "$s1", "$a0", "$a1", "$a2",  "$a3",
-                       "$a4", "$a5", "$a6", "$a7", "$s2", "$s3",  "$s4",
+const char *regs2[] = {"$0", "$ra", "$sp", "$gp", "$tp", "$t0", "$t1",
+                       "$t2", "$s0", "$s1", "$a0", "$a1", "$a2", "$a3",
+                       "$a4", "$a5", "$a6", "$a7", "$s2", "$s3", "$s4",
                        "$s5", "$s6", "$s7", "$s8", "$s9", "$s10", "$s11",
                        "$t3", "$t4", "$t5", "$t6"};
 
-void isa_reg_display() {
+void isa_reg_display()
+{
   printf(" pc: " FMT_WORD "\n", cpu.pc);
   for (int i = 0; i < 32; i++)
     printf("%3s: " FMT_WORD " %d\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
+  printf("mepc:    " FMT_WORD " %d\n", cpu.mepc, cpu.mepc);
+  printf("mstatus: " FMT_WORD " %d\n", cpu.mstatus, cpu.mstatus);
+  printf("mcause:  " FMT_WORD " %d\n", cpu.mcause, cpu.mcause);
+  printf("mtvec:   " FMT_WORD " %d\n", cpu.mtvec, cpu.mtvec);
 }
 
-word_t isa_reg_str2val(const char *s, bool *success) {
+word_t isa_reg_str2val(const char *s, bool *success)
+{
   // Log("[reg match] ready to strcmp %s", s);
   *success = false;
-  if (strcmp("$pc", s) == 0) {
+  if (strcmp("$pc", s) == 0)
+  {
     // Log("matched cpu.pc");
     *success = true;
     return cpu.pc;
   }
-  for (int i = 0; i < 32; i++) {
-    if (strcmp(regs2[i], s) == 0) {
+  for (int i = 0; i < 32; i++)
+  {
+    if (strcmp(regs2[i], s) == 0)
+    {
       // Log("matched reg %s", regs[i]);
       *success = true;
       return cpu.gpr[i];

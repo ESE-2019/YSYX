@@ -177,6 +177,7 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     vlSelf->top__DOT__immB = 0;
     vlSelf->top__DOT__rs2_val = 0;
     vlSelf->top__DOT__rs1_s = 0;
+    vlSelf->top__DOT__csr_reg = 0;
     vlSelf->__Vtrigprevexpr___TOP__clk__0 = 0;
     for (int __Vi0 = 0; __Vi0 < 3; ++__Vi0) {
         vlSelf->__Vm_traceActivity[__Vi0] = 0;

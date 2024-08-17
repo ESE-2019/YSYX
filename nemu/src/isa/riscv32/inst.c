@@ -201,7 +201,7 @@ uint32_t CSR_r(uint32_t imm)
     break;
   }
   #ifdef CONFIG_ETRACE
-  Log("CSR_r csr%03X data"FMT_WORD"\n", imm, *addr);
+  Log(FMT_WORD"CSR_r csr%03X data"FMT_WORD, cpu.pc, imm, *addr);
   #endif
   return *addr;
 }
@@ -230,7 +230,7 @@ bool CSR_w(uint32_t imm, uint32_t data)
   }
   *addr = data;
   #ifdef CONFIG_ETRACE
-  Log("CSR_w csr%03X data"FMT_WORD"\n", imm, *addr);
+  Log(FMT_WORD"CSR_w csr%03X data"FMT_WORD, cpu.pc, imm, *addr);
   #endif
   return true;
 }
@@ -429,9 +429,11 @@ static int decode_exec(Decode *s)
           R(rd) = (int32_t)src1 % src2 /*; Log("remu") */);
   //Zicsr
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw, I,
-    IFDEF(CONFIG_ETRACE, Log("csrrw")); R(rd) = CSR_r(imm); CSR_w(imm, src1););
+     R(rd) = CSR_r(imm); CSR_w(imm, src1); 
+     IFDEF(CONFIG_ETRACE, Log(FMT_WORD"csrrw, R(%d) = "FMT_WORD" src"FMT_WORD, cpu.pc, rd, R(rd), src1)););
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs, I, 
-    IFDEF(CONFIG_ETRACE, Log("csrrs")); tmp = CSR_r(imm); R(rd) = tmp; CSR_w(imm, src1 | tmp););
+    tmp = CSR_r(imm); R(rd) = tmp; CSR_w(imm, src1 | tmp);
+    IFDEF(CONFIG_ETRACE, Log(FMT_WORD"csrrs, R(%d) = "FMT_WORD" src"FMT_WORD" tmp"FMT_WORD, cpu.pc, rd, R(rd), src1, tmp)););
   INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc, I,
     IFDEF(CONFIG_ETRACE, Log("csrrc")); tmp = CSR_r(imm); R(rd) = tmp; CSR_w(imm, (~src1) | tmp););
   INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi, I,

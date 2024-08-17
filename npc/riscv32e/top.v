@@ -55,6 +55,17 @@ function automatic logic [31:0] Mr(input logic [31:0] Mr_addr, input logic [2:0]
 	endcase
 endfunction
 
+logic [4:0] csr_reg;//use reg_map 16, 17, 18, 19
+
+always_comb begin
+	unique case(inst[31:20])
+	12'h300: csr_reg = 5'b10000;//mstatus
+	12'h305: csr_reg = 5'b10001;//mtvec
+	12'h341: csr_reg = 5'b10010;//mepc
+	12'h342: csr_reg = 5'b10011;//mcause
+	default: csr_reg = 5'b0;
+	endcase
+end
 
 
 always_ff @(posedge clk) begin
@@ -144,7 +155,6 @@ always_ff @(posedge clk) begin
 			if (rd_addr != 0) regmap[rd_addr] <= {16'b0, Mr(rs1_val + immI)[15:0]}; 
 		end*/
 		else if(funct3 == 3'b000 && opcode == 7'b01000_11) begin//sb
-		//$display("%c", rs2_val[7:0]);
 			pc <= pc + 32'h4;
 			pmem_write( rs1_val + immS, rs2_val, 1);
 		end
@@ -234,6 +244,25 @@ always_ff @(posedge clk) begin
 		end
 		else if (inst == 32'b0000000_00001_00000_000_00000_11100_11) begin//ebreak
 			ebreak();
+		end
+		else  if (funct3 == 3'b001 && opcode == 7'b11100_11) begin//csrrw
+			pc <= pc + 32'h4;
+			if (rd_addr != 0) regmap[rd_addr] <= regmap[csr_reg];
+			regmap[csr_reg] <= rs1_val;
+		end
+		else if (funct3 == 3'b010 && opcode == 7'b11100_11) begin//csrrs
+			pc <= pc + 32'h4;
+			if (rd_addr != 0) regmap[rd_addr] <= regmap[csr_reg];
+			regmap[csr_reg] <= regmap[csr_reg] | rs1_val;
+		end
+		else if (inst == 32'b0000000_00000_00000_000_00000_11100_11) begin//ecall
+			pc <= regmap[17];
+			regmap[18] <= pc;
+			regmap[19] <= regmap[15];
+		end
+		else if (inst == 32'b0011000_00010_00000_000_00000_11100_11) begin//mret
+			pc <= regmap[18] + 32'h4;
+			$display("thispc 0x%08x retpc 0x%08x", pc, regmap[18] + 4);
 		end
 		else begin
 			$display("invalid instruction 0x%08x: 0x%08x", pc, inst);

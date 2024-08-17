@@ -24,7 +24,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
     {
         if (ref_r->gpr[i] != cpu.gpr[i])
         {
-            Log(ANSI_FMT("%d",ANSI_FG_RED), i);
+            Log(ANSI_FMT("gpr[%d]",ANSI_FG_RED), i);
             return false;
         }
         

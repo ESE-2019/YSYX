@@ -12,7 +12,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <math.h>
-
+FILE *log_file;
 bool LOG = false;
 bool WAVE = false;
     struct timespec start_time, end_time;
@@ -47,7 +47,7 @@ uint32_t pmem_readC(uint32_t addr)
 {
 	uint32_t add = (((addr & ~0x3u)- MEM_BASE)/0x4)%MAX_IMG;
 	uint32_t ret = mem[add];
-	if(LOG) printf("read] addr: 0x%08x value: 0x%08x\n\033[0m", addr & ~0x3u, ret);
+	if(LOG) fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u, ret);
 	return ret;
 }
 
@@ -90,7 +90,7 @@ uint32_t mmio_read(uint32_t addr)
         default:             
 	uint32_t add = (((addr & ~0x3u)- MMIO_BASE)/0x4)%MMIO_MAX;
 	ret = mmio[add];
-	if(LOG) printf("[MMIOread]addr: 0x%08x value: 0x%08x\n\033[0m", addr & ~0x3u, ret);
+	if(LOG) fprintf(log_file, "[MMIOread]addr: 0x%08x value: 0x%08x\n", addr & ~0x3u, ret);
 	}
 	return ret;
 }
@@ -110,7 +110,7 @@ extern "C" int pmem_read(uint32_t raddr) {
   {
   	return mmio_read(raddr);
   }
-  if(LOG) printf("[CPU");
+  if(LOG) fprintf(log_file, "[CPU");
   return pmem_readC(raddr & ~0x3u);
 }
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mask: 1 2 4
@@ -131,14 +131,14 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mas
   uint32_t data1, data2;
   switch (wmask) {
   case 1:
-  	if(LOG) printf("[lb-");
+  	if(LOG) fprintf(log_file, "[lb-");
   	data1 = pmem_readC (waddr);
   	data1 = data1 & (~(0x000000FF << shamt));
   	data2 = (wdata & 0x000000FF) << shamt;
   	mem[add] = data1 | data2;
 	break;
   case 2:
-  	if(LOG) printf("[lh-");
+  	if(LOG) fprintf(log_file, "[lh-");
   	data1 = pmem_readC (waddr);
   	data1 = data1 & (~(0x0000FFFF << shamt));
   	data2 = (wdata & 0x0000FFFF) << shamt;
@@ -149,7 +149,7 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask) {//mas
 	break;
   default: printf("[1]pmem_write err\n");assert(0);break;
   }
-  if(LOG) printf("\033[32m[WRITE-%d] addr: 0x%08x value: 0x%08x\n\033[0m", wmask, waddr & ~0x3u, mem[add]);
+  if(LOG) fprintf(log_file, "[WRITE-%d] addr: 0x%08x value: 0x%08x\n", wmask, waddr & ~0x3u, mem[add]);
 }
 
  
@@ -170,6 +170,11 @@ int main(int argc, char **argv)
 	    }
     }
     load_img();
+    log_file = fopen("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/npcdebug.log", "w");
+    if (log_file == NULL) {
+        perror("Failed to open log file");
+        return -1;
+    }
   // See a similar example walkthrough in the verilator manpage.
 
   // This is intended to be a minimal example.  Before copying this to start a
@@ -220,19 +225,20 @@ int main(int argc, char **argv)
                 top->rst = 0;  // Deassert reset
             }
             // Assign some other inputs
-            if(LOG) printf("\033[34m[IFU");
+            if(LOG) fprintf(log_file, "\t\t\t[IFU");
             top->inst = pmem_readC((uint32_t)top->pc);
         }
     top->eval();
     if (WAVE) tfp->dump(wave++);	//dump wave  //need ii++
-    for (int i = 0; i<16; i++)
+    /*for (int i = 0; i<16; i++)
     if (top->rootp->top__DOT__regmap[i] != 0 && top->clk)
-    if(LOG) printf("\treg[%02d]: 0x%08x\n", i, top->rootp->top__DOT__regmap[i]);
+    if(LOG) fprintf(log_file, "\treg[%02d]: 0x%08x\n", i, top->rootp->top__DOT__regmap[i]);
+    */
   }
 
   // Final model cleanup
   top->final();
-
+fclose(log_file); 
   // Destroy model
   delete top;
   if (WAVE) tfp->close();
