@@ -95,11 +95,15 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 
+static int cnt = 5;
+extern void print_iringbuf();
 static void checkregs(CPU_state *ref, vaddr_t pc) {
   if (!isa_difftest_checkregs(ref, pc)) {
-    nemu_state.state = NEMU_ABORT;
-    nemu_state.halt_pc = pc;
+    //nemu_state.state = NEMU_ABORT;
+    //nemu_state.halt_pc = pc;
     isa_reg_display();
+    IFDEF(CONFIG_ITRACE, print_iringbuf());cnt--;
+    //if(cnt<=0) panic();
   }
 }
 

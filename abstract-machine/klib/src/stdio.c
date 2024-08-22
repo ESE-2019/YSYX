@@ -89,8 +89,139 @@ static char *utoa(unsigned value, char *string, int radix) {
     return ultoa((unsigned long)value, string, radix);
 }*/
 
+// int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
+//     //char *out_start = out;
+//     const char *f = fmt;
+//     int count = 0;
+
+//     while (*f != '\0' && count < n - 1) {
+//         if (*f == '%') {
+//             f++;
+//             int width = 0;
+//             int zero_pad = 0;
+
+//             // 处理宽度说明符，如 %08x
+//             if (*f >= '0' && *f <= '9') {
+//                 zero_pad = (*f == '0');
+//                 while (*f >= '0' && *f <= '9') {
+//                     width = width * 10 + (*f - '0');
+//                     f++;
+//                 }
+//             }
+
+//             switch (*f) {
+//             case 'd': {
+//                 int value = va_arg(ap, int);
+//                 char buffer[20];
+//                 itoa(value, buffer, 10);
+//                 int len = strlen(buffer);
+//                 if (zero_pad && width > len) {
+//                     while (len < width && count < n - 1) {
+//                         *out++ = '0';
+//                         len++;
+//                         count++;
+//                     }
+//                 }
+//                 strncpy(out, buffer, n - count - 1);
+//                 out += len;
+//                 count += len;
+//                 break;
+//             }
+//             case 'l':
+//                 f++;
+//                 if (*f == 'd') {
+//                     long value = va_arg(ap, long);
+//                     char buffer[30];
+//                     ltoa(value, buffer, 10);
+//                     int len = strlen(buffer);
+//                     if (zero_pad && width > len) {
+//                         while (len < width && count < n - 1) {
+//                             *out++ = '0';
+//                             len++;
+//                             count++;
+//                         }
+//                     }
+//                     strncpy(out, buffer, n - count - 1);
+//                     out += len;
+//                     count += len;
+//                     break;
+//                 }
+//                 // 如果 'l' 后面不是 'd'，则视为无效格式
+//                 *out++ = '%';
+//                 *out++ = 'l';
+//                 count += 2;
+//                 break;
+//             case 'x':
+//             case 'X': {
+//                 unsigned int value = va_arg(ap, unsigned int);
+//                 char buffer[20];
+//                 itoa(value, buffer, 16);
+//                 int len = strlen(buffer);
+//                 if (zero_pad && width > len) {
+//                     while (len < width && count < n - 1) {
+//                         *out++ = '0';
+//                         len++;
+//                         count++;
+//                     }
+//                 }
+//                 strncpy(out, buffer, n - count - 1);
+//                 out += len;
+//                 count += len;
+//                 break;
+//             }
+//             case '0':
+//                 if (*(f + 1) >= '0' && *(f + 1) <= '9') {
+//                     f++;
+//                     width = 0;
+//                     while (*f >= '0' && *f <= '9') {
+//                         width = width * 10 + (*f - '0');
+//                         f++;
+//                     }
+//                     zero_pad = 1;
+//                     f--;
+//                 } else {
+//                     *out++ = '%';
+//                     *out++ = '0';
+//                     count += 2;
+//                 }
+//                 break;
+//             case 's': {
+//                 const char *value = va_arg(ap, const char *);
+//                 int len = strlen(value);
+//                 strncpy(out, value, n - count - 1);
+//                 out += len;
+//                 count += len;
+//                 break;
+//             }
+//             case 'c': {
+//                 char value = (char)va_arg(ap, int);
+//                 *out++ = value;
+//                 count++;
+//                 break;
+//             }
+//             case '%': {
+//                 *out++ = '%';
+//                 count++;
+//                 break;
+//             }
+//             default:
+//                 *out++ = '%';
+//                 *out++ = *f;
+//                 count += 2;
+//                 break;
+//             }
+//         } else {
+//             *out++ = *f;
+//             count++;
+//         }
+//         f++;
+//     }
+
+//     *out = '\0';
+//     return count;
+// }
+
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-    //char *out_start = out;
     const char *f = fmt;
     int count = 0;
 
@@ -100,7 +231,6 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
             int width = 0;
             int zero_pad = 0;
 
-            // 处理宽度说明符，如 %08x
             if (*f >= '0' && *f <= '9') {
                 zero_pad = (*f == '0');
                 while (*f >= '0' && *f <= '9') {
@@ -116,13 +246,19 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
                 itoa(value, buffer, 10);
                 int len = strlen(buffer);
                 if (zero_pad && width > len) {
-                    while (len < width && count < n - 1) {
+                    int pad_len = width - len;
+                    if (pad_len > n - count - 1) {
+                        pad_len = n - count - 1;
+                    }
+                    while (pad_len-- > 0) {
                         *out++ = '0';
-                        len++;
                         count++;
                     }
                 }
-                strncpy(out, buffer, n - count - 1);
+                if (len > n - count - 1) {
+                    len = n - count - 1;
+                }
+                strncpy(out, buffer, len);
                 out += len;
                 count += len;
                 break;
@@ -135,18 +271,23 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
                     ltoa(value, buffer, 10);
                     int len = strlen(buffer);
                     if (zero_pad && width > len) {
-                        while (len < width && count < n - 1) {
+                        int pad_len = width - len;
+                        if (pad_len > n - count - 1) {
+                            pad_len = n - count - 1;
+                        }
+                        while (pad_len-- > 0) {
                             *out++ = '0';
-                            len++;
                             count++;
                         }
                     }
-                    strncpy(out, buffer, n - count - 1);
+                    if (len > n - count - 1) {
+                        len = n - count - 1;
+                    }
+                    strncpy(out, buffer, len);
                     out += len;
                     count += len;
                     break;
                 }
-                // 如果 'l' 后面不是 'd'，则视为无效格式
                 *out++ = '%';
                 *out++ = 'l';
                 count += 2;
@@ -158,68 +299,75 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
                 itoa(value, buffer, 16);
                 int len = strlen(buffer);
                 if (zero_pad && width > len) {
-                    while (len < width && count < n - 1) {
+                    int pad_len = width - len;
+                    if (pad_len > n - count - 1) {
+                        pad_len = n - count - 1;
+                    }
+                    while (pad_len-- > 0) {
                         *out++ = '0';
-                        len++;
                         count++;
                     }
                 }
-                strncpy(out, buffer, n - count - 1);
+                if (len > n - count - 1) {
+                    len = n - count - 1;
+                }
+                strncpy(out, buffer, len);
                 out += len;
                 count += len;
                 break;
             }
-            case '0':
-                if (*(f + 1) >= '0' && *(f + 1) <= '9') {
-                    f++;
-                    width = 0;
-                    while (*f >= '0' && *f <= '9') {
-                        width = width * 10 + (*f - '0');
-                        f++;
-                    }
-                    zero_pad = 1;
-                    f--;
-                } else {
-                    *out++ = '%';
-                    *out++ = '0';
-                    count += 2;
-                }
-                break;
             case 's': {
                 const char *value = va_arg(ap, const char *);
                 int len = strlen(value);
-                strncpy(out, value, n - count - 1);
+                if (len > n - count - 1) {
+                    len = n - count - 1;
+                }
+                strncpy(out, value, len);
                 out += len;
                 count += len;
                 break;
             }
             case 'c': {
                 char value = (char)va_arg(ap, int);
-                *out++ = value;
-                count++;
+                if (count < n - 1) {
+                    *out++ = value;
+                    count++;
+                }
                 break;
             }
             case '%': {
-                *out++ = '%';
-                count++;
+                if (count < n - 1) {
+                    *out++ = '%';
+                    count++;
+                }
                 break;
             }
             default:
-                *out++ = '%';
-                *out++ = *f;
-                count += 2;
+                if (count < n - 2) {
+                    *out++ = '%';
+                    *out++ = *f;
+                    count += 2;
+                }
                 break;
             }
         } else {
-            *out++ = *f;
-            count++;
+            if (count < n - 1) {
+                *out++ = *f;
+                count++;
+            }
         }
         f++;
     }
 
-    *out = '\0';
+    if (count < n) {
+        *out = '\0';
+    } else {
+        out[n-1] = '\0';
+    }
+
     return count;
 }
+
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
     return vsnprintf(out, 512, fmt, ap);

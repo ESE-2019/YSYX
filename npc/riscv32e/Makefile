@@ -32,9 +32,9 @@ VERILATOR_COVERAGE = $(VERILATOR_ROOT)/bin/verilator_coverage
 endif
 
 # Generate C++ in executable form
-VERILATOR_FLAGS += -cc --exe --build
+VERILATOR_FLAGS += -cc --exe --build --autoflush --timescale "1ns/1ns" --no-timing
 # Generate makefile dependencies (not shown as complicates the Makefile)
-VERILATOR_FLAGS += -MMD --x-initial fast --noassert
+VERILATOR_FLAGS += -MMD --x-initial fast 
 # Optimize
 VERILATOR_FLAGS += -x-assign fast -O3
 # Warn abount lint issues; may not want this on less solid designs
@@ -42,7 +42,7 @@ VERILATOR_FLAGS += -Wall
 # Make waveforms
 VERILATOR_FLAGS += --trace-fst
 # Check SystemVerilog assertions
-#VERILATOR_FLAGS += --assert
+VERILATOR_FLAGS += --assert
 # Generate coverage analysis
 #VERILATOR_FLAGS += --coverage
 # Run Verilator in debug mode
@@ -50,8 +50,8 @@ VERILATOR_FLAGS += --trace-fst
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
 
-# Input files for Verilator
-VERILATOR_INPUT = -f input.vc top.v sim_main.cpp
+# Input files for Verilator   
+VERILATOR_INPUT = -f input.vc top.v sim_main.cpp   ysyx_24080006_imm.sv  ysyx_24080006_alu.sv 
 
 ######################################################################
 default: run

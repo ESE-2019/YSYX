@@ -18,13 +18,15 @@ Vtop__Syms::Vtop__Syms(VerilatedContext* contextp, const char* namep, Vtop* mode
     , TOP{this, namep}
 {
         // Check resources
-        Verilated::stackCheck(469);
+        Verilated::stackCheck(257);
     // Configure time unit / time precision
-    _vm_contextp__->timeunit(-12);
-    _vm_contextp__->timeprecision(-12);
+    _vm_contextp__->timeunit(-9);
+    _vm_contextp__->timeprecision(-9);
     // Setup each module's pointers to their submodules
     // Setup each module's pointer back to symbol table (for public functions)
     TOP.__Vconfigure(true);
+    // Setup scopes
+    __Vscope_top.configure(this, name(), "top", "top", -9, VerilatedScope::SCOPE_OTHER);
     // Setup export functions
     for (int __Vfinal = 0; __Vfinal < 2; ++__Vfinal) {
     }

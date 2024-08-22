@@ -99,6 +99,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
               (uint8_t *)&s->isa.inst.val, ilen);
   // snprintf(iringbuf[iringbuf_index], 128, "0x%08x: 0x%08x %s", pc,
   // s->isa.inst.val, p);     //iringbuf
+  Log(ANSI_FMT(FMT_WORD, ANSI_BG_WHITE)" %s", cpu.pc, s->logbuf);
   strcpy(iringbuf[iringbuf_index], s->logbuf);
   if (iringbuf_index++ >= 15)
     iringbuf_index = 0; // iringbuf

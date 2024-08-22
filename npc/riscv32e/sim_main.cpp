@@ -2,6 +2,7 @@
 #include <verilated.h>
 // Include model header, generated from Verilating "top.v"
 #include "Vtop.h"
+
 #include "Vtop___024root.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,19 +14,22 @@
 #include <time.h>
 #include <math.h>
 FILE *log_file;
-bool LOG = false;
+bool LOG = true;
 bool WAVE = false;
+bool TRAP = false;
     struct timespec start_time, end_time;
     uint64_t start_microseconds, end_microseconds;
 #define MAX_IMG   0xFFFFFFF
 #define MEM_BASE  0x80000000
-#define ABORT_NUM 0xFFFFFFFF
+#define ABORT_NUM 0xFFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
 Vtop *top;
 extern "C" void ebreak()
 {
+  
   ebreak_n = false;
+  if(0 == top->rootp->top__DOT__regmap[10]) TRAP=true;
 }
 
 static uint32_t mem [MAX_IMG] ={
@@ -244,7 +248,7 @@ fclose(log_file);
   if (WAVE) tfp->close();
   free(img_file);
   // Return good completion status
-  if (ebreak_n)
+  if (!TRAP)
   {
   	printf("\033[1;31mabort_endless_loop = %d / %d\033[0m\n", abort_endless_loop, (uint32_t)ABORT_NUM);
   	printf("\033[1;31mHIT BAD TRAP\033[0m\n");  

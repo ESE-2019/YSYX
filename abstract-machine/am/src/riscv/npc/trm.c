@@ -21,7 +21,7 @@ outb(0xa00003f8, ch);
 }
 
 void halt(int code) {
-  __asm__ volatile("ebreak");
+  __asm__ volatile("mv a0, %0; ebreak" : :"r"(code));
   while(1)
   ;
 }

@@ -50,7 +50,7 @@ VL_ATTR_COLD void Vtop___024root___eval_settle(Vtop___024root* vlSelf) {
 #ifdef VL_DEBUG
             Vtop___024root___dump_triggers__stl(vlSelf);
 #endif
-            VL_FATAL_MT("top.v", 1, "", "Settle region did not converge.");
+            VL_FATAL_MT("top.v", 2, "", "Settle region did not converge.");
         }
         __VstlIterCount = ((IData)(1U) + __VstlIterCount);
         __VstlContinue = 0U;
@@ -172,12 +172,19 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     for (int __Vi0 = 0; __Vi0 < 32; ++__Vi0) {
         vlSelf->top__DOT__regmap[__Vi0] = 0;
     }
-    vlSelf->top__DOT__immI = 0;
-    vlSelf->top__DOT__immS = 0;
-    vlSelf->top__DOT__immB = 0;
     vlSelf->top__DOT__rs2_val = 0;
+    vlSelf->top__DOT__imm = 0;
     vlSelf->top__DOT__rs1_s = 0;
     vlSelf->top__DOT__csr_reg = 0;
+    vlSelf->top__DOT__alu_2 = 0;
+    vlSelf->top__DOT__alu_3 = 0;
+    vlSelf->top__DOT__alu_c = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__add_res_t = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__srcB = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__comp_res = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__shift_res = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__bit_res = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT____VdfgRegularize_h8cb9263b_0_2 = 0;
     vlSelf->__Vtrigprevexpr___TOP__clk__0 = 0;
     for (int __Vi0 = 0; __Vi0 < 3; ++__Vi0) {
         vlSelf->__Vm_traceActivity[__Vi0] = 0;
