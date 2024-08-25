@@ -31,14 +31,14 @@ VERILATOR = $(VERILATOR_ROOT)/bin/verilator
 VERILATOR_COVERAGE = $(VERILATOR_ROOT)/bin/verilator_coverage
 endif
 
-# Generate C++ in executable form
+# Generate C++ in executable form            --timing #  no-
 VERILATOR_FLAGS += -cc --exe --build --autoflush --timescale "1ns/1ns" --no-timing
 # Generate makefile dependencies (not shown as complicates the Makefile)
 VERILATOR_FLAGS += -MMD --x-initial fast 
 # Optimize
 VERILATOR_FLAGS += -x-assign fast -O3
 # Warn abount lint issues; may not want this on less solid designs
-VERILATOR_FLAGS += -Wall
+#VERILATOR_FLAGS += -Wall
 # Make waveforms
 VERILATOR_FLAGS += --trace-fst
 # Check SystemVerilog assertions
@@ -61,13 +61,7 @@ run:
 	@echo "-- VERILATE ----------------"
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 
-	@echo
-	@echo "-- BUILD -------------------"
-# To compile, we can either
-# 1. Pass --build to Verilator by editing VERILATOR_FLAGS above.
-# 2. Or, run the make rules Verilator does:
-#	$(MAKE) -j -C obj_dir -f Vtop.mk
-# 3. Or, call a submakefile where we can override the rules ourselves:
+
 	$(MAKE) -j -C obj_dir -f ../Makefile_obj
 
 	@echo
@@ -76,20 +70,6 @@ run:
 	@mkdir -p logs
 	obj_dir/Vtop
 
-	#@echo
-	#@echo "-- COVERAGE ----------------"
-	#@rm -rf logs/annotated
-	#$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
-
-	@echo
-	@echo "-- DONE --------------------"
-
-
-######################################################################
-# Other targets
-
-show-config:
-	$(VERILATOR) -V
 
 maintainer-copy::
 clean mostlyclean distclean maintainer-clean::

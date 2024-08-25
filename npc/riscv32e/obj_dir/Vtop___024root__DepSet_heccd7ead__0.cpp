@@ -15,7 +15,6 @@ void Vtop___024root___eval_ico(Vtop___024root* vlSelf) {
     // Body
     if ((1ULL & vlSelfRef.__VicoTriggered.word(0U))) {
         Vtop___024root___ico_sequent__TOP__0(vlSelf);
-        vlSelfRef.__Vm_traceActivity[1U] = 1U;
     }
 }
 
@@ -45,6 +44,10 @@ void Vtop___024root___eval_act(Vtop___024root* vlSelf) {
 }
 
 void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf);
+void Vtop___024root___nba_sequent__TOP__1(Vtop___024root* vlSelf);
+void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf);
+void Vtop___024root___nba_sequent__TOP__3(Vtop___024root* vlSelf);
+void Vtop___024root___nba_comb__TOP__0(Vtop___024root* vlSelf);
 
 void Vtop___024root___eval_nba(Vtop___024root* vlSelf) {
     (void)vlSelf;  // Prevent unused variable warning
@@ -54,7 +57,22 @@ void Vtop___024root___eval_nba(Vtop___024root* vlSelf) {
     // Body
     if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
         Vtop___024root___nba_sequent__TOP__0(vlSelf);
+    }
+    if ((2ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        Vtop___024root___nba_sequent__TOP__1(vlSelf);
+        vlSelfRef.__Vm_traceActivity[1U] = 1U;
+    }
+    if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        Vtop___024root___nba_sequent__TOP__2(vlSelf);
         vlSelfRef.__Vm_traceActivity[2U] = 1U;
+    }
+    if ((2ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        Vtop___024root___nba_sequent__TOP__3(vlSelf);
+        vlSelfRef.__Vm_traceActivity[3U] = 1U;
+    }
+    if ((3ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
+        Vtop___024root___nba_comb__TOP__0(vlSelf);
+        vlSelfRef.__Vm_traceActivity[4U] = 1U;
     }
 }
 
@@ -66,7 +84,7 @@ bool Vtop___024root___eval_phase__act(Vtop___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___eval_phase__act\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Init
-    VlTriggerVec<1> __VpreTriggered;
+    VlTriggerVec<2> __VpreTriggered;
     CData/*0:0*/ __VactExecute;
     // Body
     Vtop___024root___eval_triggers__act(vlSelf);
@@ -124,7 +142,7 @@ void Vtop___024root___eval(Vtop___024root* vlSelf) {
 #ifdef VL_DEBUG
             Vtop___024root___dump_triggers__ico(vlSelf);
 #endif
-            VL_FATAL_MT("top.v", 2, "", "Input combinational region did not converge.");
+            VL_FATAL_MT("top.v", 1, "", "Input combinational region did not converge.");
         }
         __VicoIterCount = ((IData)(1U) + __VicoIterCount);
         __VicoContinue = 0U;
@@ -140,7 +158,7 @@ void Vtop___024root___eval(Vtop___024root* vlSelf) {
 #ifdef VL_DEBUG
             Vtop___024root___dump_triggers__nba(vlSelf);
 #endif
-            VL_FATAL_MT("top.v", 2, "", "NBA region did not converge.");
+            VL_FATAL_MT("top.v", 1, "", "NBA region did not converge.");
         }
         __VnbaIterCount = ((IData)(1U) + __VnbaIterCount);
         __VnbaContinue = 0U;
@@ -151,7 +169,7 @@ void Vtop___024root___eval(Vtop___024root* vlSelf) {
 #ifdef VL_DEBUG
                 Vtop___024root___dump_triggers__act(vlSelf);
 #endif
-                VL_FATAL_MT("top.v", 2, "", "Active region did not converge.");
+                VL_FATAL_MT("top.v", 1, "", "Active region did not converge.");
             }
             vlSelfRef.__VactIterCount = ((IData)(1U) 
                                          + vlSelfRef.__VactIterCount);

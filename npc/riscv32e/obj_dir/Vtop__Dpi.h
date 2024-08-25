@@ -16,12 +16,12 @@ extern "C" {
 
 
     // DPI IMPORTS
-    // DPI import at top.v:8:30
+    // DPI import at top.v:6:30
     extern void ebreak();
-    // DPI import at top.v:9:29
+    // DPI import at sram.sv:3:29
     extern int pmem_read(int raddr);
-    // DPI import at top.v:10:30
-    extern void pmem_write(int waddr, int wdata, char wmask);
+    // DPI import at sram.sv:4:30
+    extern void pmem_write(int waddr, int wdata, int wmask);
 
 #ifdef __cplusplus
 }
