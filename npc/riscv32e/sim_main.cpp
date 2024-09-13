@@ -21,7 +21,7 @@ struct timespec start_time, end_time;
 uint64_t start_microseconds, end_microseconds;
 #define MAX_IMG   0xFFFFFFF
 #define MEM_BASE  0x80000000
-#define ABORT_NUM 0xFFFFFF
+#define ABORT_NUM 0xFFFFFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
 Vtop *top;

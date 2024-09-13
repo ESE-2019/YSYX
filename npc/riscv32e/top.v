@@ -99,9 +99,9 @@ end
 //alu end
 
 //axi
-axi_if axi_ifu (clk, !rst);
-axi_if axi_lsu (clk, !rst);
-axi_if axi_sram (clk, !rst);
+axi_if axi_ifu (.aclk(clk), .aresetn(!rst));
+axi_if axi_lsu (.aclk(clk), .aresetn(!rst));
+axi_if axi_sram (.aclk(clk), .aresetn(!rst));
 arb arb(axi_ifu, axi_lsu, axi_sram);
 sram sram(axi_sram);
 
