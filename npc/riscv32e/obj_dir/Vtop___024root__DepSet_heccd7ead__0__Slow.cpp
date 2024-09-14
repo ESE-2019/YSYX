@@ -209,7 +209,10 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     vlSelf->top__DOT__ysyx_24080006_alu__DOT__srcB = 0;
     vlSelf->top__DOT__ysyx_24080006_alu__DOT__comp_res = 0;
     vlSelf->top__DOT__ysyx_24080006_alu__DOT__shift_res = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__shift_src = 0;
     vlSelf->top__DOT__ysyx_24080006_alu__DOT__bit_res = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__unnamedblk1__DOT__i = 0;
+    vlSelf->top__DOT__ysyx_24080006_alu__DOT__unnamedblk2__DOT__i = 0;
     vlSelf->top__DOT__arb__DOT__arbiter_state = 0;
     vlSelf->top__DOT__sram__DOT__en = 0;
     vlSelf->__Vdly__top__DOT__dv = 0;
