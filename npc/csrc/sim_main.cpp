@@ -1,9 +1,9 @@
 // Include common routines
 #include <verilated.h>
 // Include model header, generated from Verilating "top.v"
-#include "Vtop.h"
+#include "VysyxSoCFull.h"
 
-#include "Vtop___024root.h"
+#include "VysyxSoCFull___024root.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -17,46 +17,21 @@ FILE *log_file;
 bool LOG = true;
 bool WAVE = true;
 bool TRAP = false;
-struct timespec start_time, end_time;
-uint64_t start_microseconds, end_microseconds;
-#define MAX_IMG   0xFFFFFFF
+
+#define MAX_IMG   0xFFFFFF
 #define MEM_BASE  0x80000000
 #define ABORT_NUM 0xFFFFFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
-Vtop *top;
+VysyxSoCFull *top;
 extern "C" void ebreak()
 {
 
     ebreak_n = false;
-    if (0 == top->rootp->top__DOT__regmap[10])
         TRAP = true;
 }
 
-static uint32_t mem[MAX_IMG] = {
-    0x00000413,
-    0x00009117,
-    0xffc10113,
-    0x00c000ef,
-    0x00000513,
-    0x00008067,
-    0xff410113,
-    0x00000517,
-    0x01c50513,
-    0x00112423,
-    0xfe9ff0ef,
-    0x00050513,
-    0x00100073};
-
-uint32_t pmem_readC(uint32_t addr)
-{
-    uint32_t add = (((addr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
-    uint32_t ret = mem[add];
-    if (LOG)
-        fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u,
-                ret);
-    return ret;
-}
+static uint32_t mem[MAX_IMG] = {};
 
 static char *img_file = NULL;
 static long load_img()
@@ -88,78 +63,19 @@ static long load_img()
 }
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) { 
+uint32_t add = (((addr & ~0x3u) - 0x20000000) / 0x4) % MAX_IMG;
+    uint32_t ret = mem[add];
+    //printf("\taddr=0x%08x: value=0x%08x\n", addr, ret);
+    *data=ret; }
 
-extern "C" int pmem_read(uint32_t raddr)
-{
 
-    if (LOG)
-        fprintf(log_file, "[CPU");
-    return pmem_readC(raddr & ~0x3u);
-}
-
-extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)
-{ // mask: 1 3 15
-    uint32_t shamt = waddr & 0x3;
-    switch (shamt)
-    {
-    case 0:
-        shamt = 0;
-        break;
-    case 1:
-        shamt = 8;
-        break;
-    case 2:
-        shamt = 16;
-        break;
-    case 3:
-        shamt = 24;
-        break;
-    default:
-        printf("[0]pmem_write err\n");
-        assert(0);
-        break;
-    }
-
-    uint32_t add = (((waddr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
-    uint32_t data1, data2;
-    switch (wmask)
-    {
-    case 1:
-        if (LOG)
-            fprintf(log_file, "[lb-");
-        data1 = pmem_readC(waddr);
-        data1 = data1 & (~(0x000000FF << shamt));
-        data2 = (wdata & 0x000000FF) << shamt;
-        mem[add] = data1 | data2;
-        break;
-    case 3:
-        if (LOG)
-            fprintf(log_file, "[lh-");
-        data1 = pmem_readC(waddr);
-        data1 = data1 & (~(0x0000FFFF << shamt));
-        data2 = (wdata & 0x0000FFFF) << shamt;
-        mem[add] = data1 | data2;
-        break;
-    case 15:
-        mem[add] = wdata;
-        break;
-    default:
-        printf("[1]pmem_write err\n");
-        assert(0);
-        break;
-    }
-    if (LOG)
-        fprintf(log_file, "[WRITE-%d] addr: 0x%08x value: 0x%08x\n", wmask,
-                waddr & ~0x3u, mem[add]);
-}
 
 int main(int argc, char **argv)
 {
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
-    start_microseconds =
-        (uint64_t)start_time.tv_sec * 1000000 +
-        (uint64_t)start_time.tv_nsec / 1000;
+    for(int i=0; i<MAX_IMG; i++) {
+    	mem[i] = 0x00100073;
+    }
     const char *prefix = "-IMG=";
     bool sdb_mode = false;
     for (int i_argc = 1; i_argc < argc; i_argc++)
@@ -174,6 +90,8 @@ int main(int argc, char **argv)
             sdb_mode = true;
         }
     }
+    img_file="/home/ubuntu/Desktop/PA0/pre_study/SoC_UART/char-test.bin";
+    //strcpy(img_file, chartest);
     load_img();
     log_file =
         fopen("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/debug.log",
@@ -186,7 +104,7 @@ int main(int argc, char **argv)
     Verilated::commandArgs(argc, argv);
     contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
-    top = new Vtop{
+    top = new VysyxSoCFull{
         contextp};
 
     VerilatedFstC *tfp = new VerilatedFstC;
@@ -207,26 +125,17 @@ int main(int argc, char **argv)
     {
 
         contextp->timeInc(1);
-        top->clk = !top->clk;
+        top->clock = !top->clock;
 
-        if (!top->clk)
+        if (!top->clock)
         {
             if (contextp->time() > 1 && contextp->time() < 4)
             {
-                top->rst = 1; // Assert reset
+                top->reset = 1; // Assert reset
             }
             else
             {
-                top->rst = 0; // Deassert reset
-                // if(LOG) fprintf(log_file, "\t\t\t[IFU");
-                // top->inst = pmem_readC((uint32_t)top->pc);
-                if (LOG)
-                {
-                    for (int i = 0; i < 16; i++)
-                        if (top->rootp->top__DOT__regmap[i] != 0 && top->clk)
-                            fprintf(log_file, "\treg[%02d]: 0x%08x\n", i,
-                                    top->rootp->top__DOT__regmap[i]);
-                }
+                top->reset = 0; // Deassert reset
                 abort_endless_loop++;
             }
             // Assign some other inputs
@@ -243,7 +152,7 @@ int main(int argc, char **argv)
     delete top;
     if (WAVE)
         tfp->close();
-    free(img_file);
+    //free(img_file);
     // Return good completion status
     printf("\033[1;33mLOOP / MAX_LOOP = %d / %d\033[0m\n", abort_endless_loop,
            (uint32_t)ABORT_NUM);

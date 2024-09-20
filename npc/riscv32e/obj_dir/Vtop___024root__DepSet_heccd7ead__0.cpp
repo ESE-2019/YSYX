@@ -46,7 +46,6 @@ void Vtop___024root___eval_act(Vtop___024root* vlSelf) {
 void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf);
 void Vtop___024root___nba_sequent__TOP__1(Vtop___024root* vlSelf);
 void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf);
-void Vtop___024root___nba_sequent__TOP__3(Vtop___024root* vlSelf);
 void Vtop___024root___nba_comb__TOP__0(Vtop___024root* vlSelf);
 
 void Vtop___024root___eval_nba(Vtop___024root* vlSelf) {
@@ -55,19 +54,16 @@ void Vtop___024root___eval_nba(Vtop___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___eval_nba\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
-    if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
-        Vtop___024root___nba_sequent__TOP__0(vlSelf);
-    }
     if ((2ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
-        Vtop___024root___nba_sequent__TOP__1(vlSelf);
+        Vtop___024root___nba_sequent__TOP__0(vlSelf);
         vlSelfRef.__Vm_traceActivity[1U] = 1U;
     }
     if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
-        Vtop___024root___nba_sequent__TOP__2(vlSelf);
+        Vtop___024root___nba_sequent__TOP__1(vlSelf);
         vlSelfRef.__Vm_traceActivity[2U] = 1U;
     }
     if ((2ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
-        Vtop___024root___nba_sequent__TOP__3(vlSelf);
+        Vtop___024root___nba_sequent__TOP__2(vlSelf);
         vlSelfRef.__Vm_traceActivity[3U] = 1U;
     }
     if ((3ULL & vlSelfRef.__VnbaTriggered.word(0U))) {

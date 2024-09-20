@@ -99,27 +99,235 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
     Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__0\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
+    // Init
+    IData/*31:0*/ __Vfunc_top__DOT__sram__DOT__pmem_read__2__Vfuncout;
+    __Vfunc_top__DOT__sram__DOT__pmem_read__2__Vfuncout = 0;
+    CData/*1:0*/ __Vdly__top__DOT__arb__DOT__arbiter_state;
+    __Vdly__top__DOT__arb__DOT__arbiter_state = 0;
     // Body
-    vlSelfRef.__Vdly__top__DOT__lv = vlSelfRef.top__DOT__lv;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v0 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v1 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v2 = 0U;
-    vlSelfRef.__Vdly__top__DOT__dr = vlSelfRef.top__DOT__dr;
-    vlSelfRef.__Vdly__top__DOT__dv = vlSelfRef.top__DOT__dv;
-    vlSelfRef.__Vdly__top__DOT__pc = vlSelfRef.top__DOT__pc;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v3 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v4 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v5 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v6 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v7 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v8 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v9 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v10 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v11 = 0U;
-    vlSelfRef.__VdlySet__top__DOT__regmap__v12 = 0U;
+    vlSymsp->TOP__top__DOT__axi_sram.__Vdly__rdata 
+        = vlSymsp->TOP__top__DOT__axi_sram.rdata;
+    __Vdly__top__DOT__arb__DOT__arbiter_state = vlSelfRef.top__DOT__arb__DOT__arbiter_state;
+    if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
+        vlSelfRef.top__DOT__sram__DOT__mtime = (1ULL 
+                                                + vlSelfRef.top__DOT__sram__DOT__mtime);
+        if ((0U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
+            if (((IData)(vlSymsp->TOP__top__DOT__axi_ifu.awvalid) 
+                 | (IData)(vlSymsp->TOP__top__DOT__axi_ifu.arvalid))) {
+                __Vdly__top__DOT__arb__DOT__arbiter_state = 1U;
+            } else if (((IData)(vlSymsp->TOP__top__DOT__axi_lsu.awvalid) 
+                        | (IData)(vlSymsp->TOP__top__DOT__axi_lsu.arvalid))) {
+                __Vdly__top__DOT__arb__DOT__arbiter_state = 2U;
+            }
+        } else if ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
+            if ((((IData)(vlSymsp->TOP__top__DOT__axi_ifu.bvalid) 
+                  & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.bready)) 
+                 | ((IData)(vlSymsp->TOP__top__DOT__axi_ifu.rready) 
+                    & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.rvalid)))) {
+                __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
+            }
+        } else if ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
+            if ((((IData)(vlSymsp->TOP__top__DOT__axi_lsu.bvalid) 
+                  & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bready)) 
+                 | ((IData)(vlSymsp->TOP__top__DOT__axi_lsu.rready) 
+                    & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.rvalid)))) {
+                __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
+            }
+        } else {
+            __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
+        }
+    } else {
+        vlSelfRef.top__DOT__sram__DOT__mtime = 0ULL;
+        __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
+    }
+    if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
+        if (((((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.arvalid)
+                : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                   & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.arvalid))) 
+              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.arready)) 
+             & (~ (IData)(vlSymsp->TOP__top__DOT__axi_sram.rvalid)))) {
+            vlSymsp->TOP__top__DOT__axi_sram.arready = 0U;
+            vlSymsp->TOP__top__DOT__axi_sram.__Vdly__rdata 
+                = ((0xa0000000U <= vlSymsp->TOP__top__DOT__axi_sram.araddr)
+                    ? vlSelfRef.top__DOT__sram__DOT__dout
+                    : ([&]() {
+                        Vtop___024root____Vdpiimwrap_top__DOT__sram__DOT__pmem_read_TOP(vlSymsp->TOP__top__DOT__axi_sram.araddr, __Vfunc_top__DOT__sram__DOT__pmem_read__2__Vfuncout);
+                    }(), __Vfunc_top__DOT__sram__DOT__pmem_read__2__Vfuncout));
+            vlSymsp->TOP__top__DOT__axi_sram.rvalid = 1U;
+            vlSymsp->TOP__top__DOT__axi_sram.rresp = 0U;
+        } else if (((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                     ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.rready)
+                     : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                        & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.rready)))) {
+            vlSymsp->TOP__top__DOT__axi_sram.arready = 1U;
+            vlSymsp->TOP__top__DOT__axi_sram.rvalid = 0U;
+        }
+    } else {
+        vlSymsp->TOP__top__DOT__axi_sram.arready = 1U;
+        vlSymsp->TOP__top__DOT__axi_sram.rvalid = 0U;
+    }
+    if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
+        if (((((((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                  ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.awvalid)
+                  : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                     & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.awvalid))) 
+                & ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                    ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.wvalid)
+                    : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                       & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.wvalid)))) 
+               & (IData)(vlSymsp->TOP__top__DOT__axi_sram.awready)) 
+              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.wready)) 
+             & (~ (IData)(vlSymsp->TOP__top__DOT__axi_sram.bvalid)))) {
+            if (VL_UNLIKELY((0xa00003f8U == vlSymsp->TOP__top__DOT__axi_sram.awaddr))) {
+                VL_WRITEF_NX("%c",0,8,(0xffU & vlSymsp->TOP__top__DOT__axi_sram.wdata));
+                Verilated::runFlushCallbacks();
+            } else {
+                Vtop___024root____Vdpiimwrap_top__DOT__sram__DOT__pmem_write_TOP(vlSymsp->TOP__top__DOT__axi_sram.awaddr, vlSymsp->TOP__top__DOT__axi_sram.wdata, 
+                                                                                ((1U 
+                                                                                == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                                                                                 ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.wstrb)
+                                                                                 : 
+                                                                                ((2U 
+                                                                                == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                                                                                 ? (IData)(vlSymsp->TOP__top__DOT__axi_lsu.wstrb)
+                                                                                 : 0U)));
+            }
+            vlSymsp->TOP__top__DOT__axi_sram.awready = 0U;
+            vlSymsp->TOP__top__DOT__axi_sram.wready = 0U;
+            vlSymsp->TOP__top__DOT__axi_sram.bvalid = 1U;
+            vlSymsp->TOP__top__DOT__axi_sram.bresp = 0U;
+        } else if (((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
+                     ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.bready)
+                     : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                        & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bready)))) {
+            vlSymsp->TOP__top__DOT__axi_sram.awready = 1U;
+            vlSymsp->TOP__top__DOT__axi_sram.wready = 1U;
+            vlSymsp->TOP__top__DOT__axi_sram.bvalid = 0U;
+        }
+    } else {
+        vlSymsp->TOP__top__DOT__axi_sram.awready = 1U;
+        vlSymsp->TOP__top__DOT__axi_sram.wready = 1U;
+        vlSymsp->TOP__top__DOT__axi_sram.bvalid = 0U;
+    }
+    vlSelfRef.top__DOT__arb__DOT__arbiter_state = __Vdly__top__DOT__arb__DOT__arbiter_state;
+    vlSymsp->TOP__top__DOT__axi_ifu.bvalid = ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                                              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.bvalid));
+}
+
+VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__1(Vtop___024root* vlSelf) {
+    (void)vlSelf;  // Prevent unused variable warning
+    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__1\n"); );
+    auto &vlSelfRef = std::ref(*vlSelf).get();
+    // Init
+    CData/*0:0*/ __Vdly__top__DOT__dv;
+    __Vdly__top__DOT__dv = 0;
+    CData/*0:0*/ __Vdly__top__DOT__dr;
+    __Vdly__top__DOT__dr = 0;
+    CData/*0:0*/ __Vdly__top__DOT__lv;
+    __Vdly__top__DOT__lv = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v0;
+    __VdlyVal__top__DOT__regmap__v0 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v0;
+    __VdlyDim0__top__DOT__regmap__v0 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v1;
+    __VdlyVal__top__DOT__regmap__v1 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v1;
+    __VdlyDim0__top__DOT__regmap__v1 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v2;
+    __VdlyVal__top__DOT__regmap__v2 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v2;
+    __VdlyDim0__top__DOT__regmap__v2 = 0;
+    IData/*31:0*/ __Vdly__top__DOT__pc;
+    __Vdly__top__DOT__pc = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v3;
+    __VdlyVal__top__DOT__regmap__v3 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v3;
+    __VdlyDim0__top__DOT__regmap__v3 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v4;
+    __VdlyVal__top__DOT__regmap__v4 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v4;
+    __VdlyDim0__top__DOT__regmap__v4 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v5;
+    __VdlyVal__top__DOT__regmap__v5 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v5;
+    __VdlyDim0__top__DOT__regmap__v5 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v6;
+    __VdlyVal__top__DOT__regmap__v6 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v6;
+    __VdlyDim0__top__DOT__regmap__v6 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v7;
+    __VdlyVal__top__DOT__regmap__v7 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v7;
+    __VdlyDim0__top__DOT__regmap__v7 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v8;
+    __VdlyVal__top__DOT__regmap__v8 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v8;
+    __VdlyDim0__top__DOT__regmap__v8 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v9;
+    __VdlyVal__top__DOT__regmap__v9 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v9;
+    __VdlyDim0__top__DOT__regmap__v9 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v10;
+    __VdlyVal__top__DOT__regmap__v10 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v10;
+    __VdlyDim0__top__DOT__regmap__v10 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v11;
+    __VdlyVal__top__DOT__regmap__v11 = 0;
+    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v11;
+    __VdlyDim0__top__DOT__regmap__v11 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v12;
+    __VdlyVal__top__DOT__regmap__v12 = 0;
+    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v13;
+    __VdlyVal__top__DOT__regmap__v13 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v0;
+    __VdlySet__top__DOT__regmap__v0 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v1;
+    __VdlySet__top__DOT__regmap__v1 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v2;
+    __VdlySet__top__DOT__regmap__v2 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v3;
+    __VdlySet__top__DOT__regmap__v3 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v4;
+    __VdlySet__top__DOT__regmap__v4 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v5;
+    __VdlySet__top__DOT__regmap__v5 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v6;
+    __VdlySet__top__DOT__regmap__v6 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v7;
+    __VdlySet__top__DOT__regmap__v7 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v8;
+    __VdlySet__top__DOT__regmap__v8 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v9;
+    __VdlySet__top__DOT__regmap__v9 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v10;
+    __VdlySet__top__DOT__regmap__v10 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v11;
+    __VdlySet__top__DOT__regmap__v11 = 0;
+    CData/*0:0*/ __VdlySet__top__DOT__regmap__v12;
+    __VdlySet__top__DOT__regmap__v12 = 0;
+    // Body
+    __Vdly__top__DOT__lv = vlSelfRef.top__DOT__lv;
+    __VdlySet__top__DOT__regmap__v0 = 0U;
+    __VdlySet__top__DOT__regmap__v1 = 0U;
+    __VdlySet__top__DOT__regmap__v2 = 0U;
+    __Vdly__top__DOT__dr = vlSelfRef.top__DOT__dr;
+    __Vdly__top__DOT__dv = vlSelfRef.top__DOT__dv;
+    __Vdly__top__DOT__pc = vlSelfRef.top__DOT__pc;
+    __VdlySet__top__DOT__regmap__v3 = 0U;
+    __VdlySet__top__DOT__regmap__v4 = 0U;
+    __VdlySet__top__DOT__regmap__v5 = 0U;
+    __VdlySet__top__DOT__regmap__v6 = 0U;
+    __VdlySet__top__DOT__regmap__v7 = 0U;
+    __VdlySet__top__DOT__regmap__v8 = 0U;
+    __VdlySet__top__DOT__regmap__v9 = 0U;
+    __VdlySet__top__DOT__regmap__v10 = 0U;
+    __VdlySet__top__DOT__regmap__v11 = 0U;
+    __VdlySet__top__DOT__regmap__v12 = 0U;
     if (vlSelfRef.rst) {
-        vlSelfRef.__Vdly__top__DOT__dv = 0U;
-        vlSelfRef.__Vdly__top__DOT__dr = 1U;
+        __Vdly__top__DOT__dv = 0U;
+        __Vdly__top__DOT__dr = 1U;
     } else {
         if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__dc)) 
                                    << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
@@ -141,28 +349,28 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
         }
         if ((0U == (IData)(vlSelfRef.top__DOT__dc))) {
             if (vlSelfRef.top__DOT__iv) {
-                vlSelfRef.__Vdly__top__DOT__dv = 1U;
-                vlSelfRef.__Vdly__top__DOT__dr = 0U;
+                __Vdly__top__DOT__dv = 1U;
+                __Vdly__top__DOT__dr = 0U;
             } else {
-                vlSelfRef.__Vdly__top__DOT__dv = 0U;
-                vlSelfRef.__Vdly__top__DOT__dr = 1U;
+                __Vdly__top__DOT__dv = 0U;
+                __Vdly__top__DOT__dr = 1U;
             }
         } else if (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
                     || (2U == (IData)(vlSelfRef.top__DOT__dc)))) {
             if (vlSelfRef.top__DOT__lr) {
-                vlSelfRef.__Vdly__top__DOT__dv = 0U;
-                vlSelfRef.__Vdly__top__DOT__dr = 1U;
+                __Vdly__top__DOT__dv = 0U;
+                __Vdly__top__DOT__dr = 1U;
             } else {
-                vlSelfRef.__Vdly__top__DOT__dv = 1U;
-                vlSelfRef.__Vdly__top__DOT__dr = 0U;
+                __Vdly__top__DOT__dv = 1U;
+                __Vdly__top__DOT__dr = 0U;
             }
         } else {
-            vlSelfRef.__Vdly__top__DOT__dv = 0U;
-            vlSelfRef.__Vdly__top__DOT__dr = 1U;
+            __Vdly__top__DOT__dv = 0U;
+            __Vdly__top__DOT__dr = 1U;
         }
     }
     if (vlSelfRef.rst) {
-        vlSelfRef.__Vdly__top__DOT__pc = 0x80000000U;
+        __Vdly__top__DOT__pc = 0x80000000U;
     } else if ((1U == (IData)(vlSelfRef.top__DOT__dc))) {
         if (VL_ONEHOT0_I((((0x30200073U == vlSelfRef.top__DOT__inst) 
                            << 0xcU) | (((0x73U == vlSelfRef.top__DOT__inst) 
@@ -223,66 +431,63 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                                                                 (0x7fU 
                                                                  & vlSelfRef.top__DOT__inst)))))))))))))))) {
             if ((0x37U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v3 
+                    __VdlyVal__top__DOT__regmap__v3 
                         = vlSelfRef.top__DOT__imm;
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v3 
+                    __VdlyDim0__top__DOT__regmap__v3 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v3 = 1U;
+                    __VdlySet__top__DOT__regmap__v3 = 1U;
                 }
             } else if ((0x17U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v4 
+                    __VdlyVal__top__DOT__regmap__v4 
                         = (vlSelfRef.top__DOT__pc + vlSelfRef.top__DOT__imm);
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v4 
+                    __VdlyDim0__top__DOT__regmap__v4 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v4 = 1U;
+                    __VdlySet__top__DOT__regmap__v4 = 1U;
                 }
             } else if ((0x6fU == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = (vlSelfRef.top__DOT__pc 
-                                                  + vlSelfRef.top__DOT__imm);
+                __Vdly__top__DOT__pc = (vlSelfRef.top__DOT__pc 
+                                        + vlSelfRef.top__DOT__imm);
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v5 
+                    __VdlyVal__top__DOT__regmap__v5 
                         = vlSelfRef.top__DOT__alu_3;
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v5 
+                    __VdlyDim0__top__DOT__regmap__v5 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v5 = 1U;
+                    __VdlySet__top__DOT__regmap__v5 = 1U;
                 }
             } else if ((0x67U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = (0xfffffffeU 
-                                                  & (vlSelfRef.top__DOT__rs1_val 
-                                                     + vlSelfRef.top__DOT__imm));
+                __Vdly__top__DOT__pc = (0xfffffffeU 
+                                        & (vlSelfRef.top__DOT__rs1_val 
+                                           + vlSelfRef.top__DOT__imm));
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v6 
+                    __VdlyVal__top__DOT__regmap__v6 
                         = vlSelfRef.top__DOT__alu_3;
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v6 
+                    __VdlyDim0__top__DOT__regmap__v6 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v6 = 1U;
+                    __VdlySet__top__DOT__regmap__v6 = 1U;
                 }
             } else if ((0x63U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((1U 
-                                                   & vlSelfRef.top__DOT__alu_out)
-                                                   ? 
-                                                  (vlSelfRef.top__DOT__pc 
-                                                   + vlSelfRef.top__DOT__imm)
-                                                   : 
-                                                  ((IData)(4U) 
-                                                   + vlSelfRef.top__DOT__pc));
+                __Vdly__top__DOT__pc = ((1U & vlSelfRef.top__DOT__alu_out)
+                                         ? (vlSelfRef.top__DOT__pc 
+                                            + vlSelfRef.top__DOT__imm)
+                                         : ((IData)(4U) 
+                                            + vlSelfRef.top__DOT__pc));
             } else if ((3U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
                 vlSelfRef.top__DOT__rshamt = ((2U & vlSelfRef.top__DOT__mem_addr)
                                                ? ((1U 
                                                    & vlSelfRef.top__DOT__mem_addr)
@@ -293,20 +498,20 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                                                    ? 8U
                                                    : 0U));
             } else if ((0x23U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
             } else if (((0x13U == (0x7fU & vlSelfRef.top__DOT__inst)) 
                         | (0x33U == (0x7fU & vlSelfRef.top__DOT__inst)))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v7 
+                    __VdlyVal__top__DOT__regmap__v7 
                         = vlSelfRef.top__DOT__alu_out;
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v7 
+                    __VdlyDim0__top__DOT__regmap__v7 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v7 = 1U;
+                    __VdlySet__top__DOT__regmap__v7 = 1U;
                 }
             } else if ((0x100073U == vlSelfRef.top__DOT__inst)) {
                 Vtop___024root____Vdpiimwrap_top__DOT__ebreak_TOP();
@@ -314,51 +519,47 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                                             & vlSelfRef.top__DOT__inst)))) {
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v8 
+                    __VdlyVal__top__DOT__regmap__v8 
                         = vlSelfRef.top__DOT__regmap
                         [vlSelfRef.top__DOT__csr_reg];
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v8 
+                    __VdlyDim0__top__DOT__regmap__v8 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v8 = 1U;
+                    __VdlySet__top__DOT__regmap__v8 = 1U;
                 }
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
-                vlSelfRef.__VdlyVal__top__DOT__regmap__v9 
-                    = vlSelfRef.top__DOT__rs1_val;
-                vlSelfRef.__VdlyDim0__top__DOT__regmap__v9 
-                    = vlSelfRef.top__DOT__csr_reg;
-                vlSelfRef.__VdlySet__top__DOT__regmap__v9 = 1U;
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
+                __VdlyVal__top__DOT__regmap__v9 = vlSelfRef.top__DOT__rs1_val;
+                __VdlyDim0__top__DOT__regmap__v9 = vlSelfRef.top__DOT__csr_reg;
+                __VdlySet__top__DOT__regmap__v9 = 1U;
             } else if ((IData)((0x2073U == (0x707fU 
                                             & vlSelfRef.top__DOT__inst)))) {
-                vlSelfRef.__Vdly__top__DOT__pc = ((IData)(4U) 
-                                                  + vlSelfRef.top__DOT__pc);
+                __Vdly__top__DOT__pc = ((IData)(4U) 
+                                        + vlSelfRef.top__DOT__pc);
                 if ((0U != (0x1fU & (vlSelfRef.top__DOT__inst 
                                      >> 7U)))) {
-                    vlSelfRef.__VdlyVal__top__DOT__regmap__v10 
+                    __VdlyVal__top__DOT__regmap__v10 
                         = vlSelfRef.top__DOT__regmap
                         [vlSelfRef.top__DOT__csr_reg];
-                    vlSelfRef.__VdlyDim0__top__DOT__regmap__v10 
+                    __VdlyDim0__top__DOT__regmap__v10 
                         = (0x1fU & (vlSelfRef.top__DOT__inst 
                                     >> 7U));
-                    vlSelfRef.__VdlySet__top__DOT__regmap__v10 = 1U;
+                    __VdlySet__top__DOT__regmap__v10 = 1U;
                 }
-                vlSelfRef.__VdlyVal__top__DOT__regmap__v11 
-                    = (vlSelfRef.top__DOT__regmap[vlSelfRef.top__DOT__csr_reg] 
-                       | vlSelfRef.top__DOT__rs1_val);
-                vlSelfRef.__VdlyDim0__top__DOT__regmap__v11 
-                    = vlSelfRef.top__DOT__csr_reg;
-                vlSelfRef.__VdlySet__top__DOT__regmap__v11 = 1U;
+                __VdlyVal__top__DOT__regmap__v11 = 
+                    (vlSelfRef.top__DOT__regmap[vlSelfRef.top__DOT__csr_reg] 
+                     | vlSelfRef.top__DOT__rs1_val);
+                __VdlyDim0__top__DOT__regmap__v11 = vlSelfRef.top__DOT__csr_reg;
+                __VdlySet__top__DOT__regmap__v11 = 1U;
             } else if ((0x73U == vlSelfRef.top__DOT__inst)) {
-                vlSelfRef.__Vdly__top__DOT__pc = vlSelfRef.top__DOT__regmap
+                __Vdly__top__DOT__pc = vlSelfRef.top__DOT__regmap
                     [0x11U];
-                vlSelfRef.__VdlyVal__top__DOT__regmap__v12 
-                    = vlSelfRef.top__DOT__pc;
-                vlSelfRef.__VdlySet__top__DOT__regmap__v12 = 1U;
-                vlSelfRef.__VdlyVal__top__DOT__regmap__v13 
-                    = vlSelfRef.top__DOT__regmap[0xfU];
+                __VdlyVal__top__DOT__regmap__v12 = vlSelfRef.top__DOT__pc;
+                __VdlySet__top__DOT__regmap__v12 = 1U;
+                __VdlyVal__top__DOT__regmap__v13 = 
+                    vlSelfRef.top__DOT__regmap[0xfU];
             } else if (VL_LIKELY((0x30200073U == vlSelfRef.top__DOT__inst))) {
-                vlSelfRef.__Vdly__top__DOT__pc = vlSelfRef.top__DOT__regmap
+                __Vdly__top__DOT__pc = vlSelfRef.top__DOT__regmap
                     [0x12U];
             } else {
                 VL_WRITEF_NX("invalid instruction 0x%08x: 0x%08x\n",0,
@@ -375,182 +576,9 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
             VL_STOP_MT("top.v", 409, "");
         }
     }
-    vlSelfRef.top__DOT__dc = ((IData)(vlSelfRef.rst)
-                               ? 0U : (IData)(vlSelfRef.top__DOT__dn));
-    if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__dc)) 
-                               << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
-                                          << 1U) | 
-                                         (0U == (IData)(vlSelfRef.top__DOT__dc)))))))) {
-        if ((0U != (((2U == (IData)(vlSelfRef.top__DOT__dc)) 
-                     << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
-                                << 1U) | (0U == (IData)(vlSelfRef.top__DOT__dc)))))) {
-            if (VL_UNLIKELY(vlSymsp->_vm_contextp__->assertOn())) {
-                VL_WRITEF_NX("[%0t] %%Error: top.v:207: Assertion failed in %Ntop: unique case, but multiple matches found for '2'h%x'\n",0,
-                             64,VL_TIME_UNITED_Q(1),
-                             -9,vlSymsp->name(),2,(IData)(vlSelfRef.top__DOT__dc));
-                Verilated::runFlushCallbacks();
-                VL_STOP_MT("top.v", 207, "");
-            }
-        }
-    }
-}
-
-VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__1(Vtop___024root* vlSelf) {
-    (void)vlSelf;  // Prevent unused variable warning
-    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__1\n"); );
-    auto &vlSelfRef = std::ref(*vlSelf).get();
-    // Init
-    IData/*31:0*/ __Vfunc_top__DOT__sram__DOT__pmem_read__1__Vfuncout;
-    __Vfunc_top__DOT__sram__DOT__pmem_read__1__Vfuncout = 0;
-    CData/*1:0*/ __Vdly__top__DOT__arb__DOT__arbiter_state;
-    __Vdly__top__DOT__arb__DOT__arbiter_state = 0;
-    CData/*0:0*/ __Vdly__top__DOT__sram__DOT__en;
-    __Vdly__top__DOT__sram__DOT__en = 0;
-    // Body
-    __Vdly__top__DOT__sram__DOT__en = vlSelfRef.top__DOT__sram__DOT__en;
-    vlSymsp->TOP__top__DOT__axi_sram.__Vdly__rdata 
-        = vlSymsp->TOP__top__DOT__axi_sram.rdata;
-    __Vdly__top__DOT__arb__DOT__arbiter_state = vlSelfRef.top__DOT__arb__DOT__arbiter_state;
-    __Vdly__top__DOT__sram__DOT__en = (1U & (~ (IData)(vlSelfRef.top__DOT__sram__DOT__en)));
-    if (((((IData)(vlSymsp->TOP__top__DOT__axi_sram.awvalid) 
-           & (IData)(vlSymsp->TOP__top__DOT__axi_sram.wvalid)) 
-          & (IData)(vlSymsp->TOP__top__DOT__axi_sram.bready)) 
-         & (IData)(vlSelfRef.top__DOT__sram__DOT__en))) {
-        Vtop___024root____Vdpiimwrap_top__DOT__sram__DOT__pmem_write_TOP(
-                                                                         ((1U 
-                                                                           == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                           ? vlSymsp->TOP__top__DOT__axi_ifu.awaddr
-                                                                           : 
-                                                                          ((2U 
-                                                                            == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                            ? vlSymsp->TOP__top__DOT__axi_lsu.awaddr
-                                                                            : 0U)), 
-                                                                         ((1U 
-                                                                           == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                           ? vlSymsp->TOP__top__DOT__axi_ifu.wdata
-                                                                           : 
-                                                                          ((2U 
-                                                                            == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                            ? vlSymsp->TOP__top__DOT__axi_lsu.wdata
-                                                                            : 0U)), 
-                                                                         ((1U 
-                                                                           == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                           ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.wstrb)
-                                                                           : 
-                                                                          ((2U 
-                                                                            == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                            ? (IData)(vlSymsp->TOP__top__DOT__axi_lsu.wstrb)
-                                                                            : 0U)));
-    }
-    if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
-        if ((0U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
-            if (((IData)(vlSymsp->TOP__top__DOT__axi_ifu.awvalid) 
-                 | (IData)(vlSymsp->TOP__top__DOT__axi_ifu.arvalid))) {
-                __Vdly__top__DOT__arb__DOT__arbiter_state = 1U;
-            } else if (((IData)(vlSymsp->TOP__top__DOT__axi_lsu.awvalid) 
-                        | (IData)(vlSymsp->TOP__top__DOT__axi_lsu.arvalid))) {
-                __Vdly__top__DOT__arb__DOT__arbiter_state = 2U;
-            }
-        } else if ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
-            if ((((((IData)(vlSymsp->TOP__top__DOT__axi_ifu.awvalid) 
-                    & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.awready)) 
-                   & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.wvalid)) 
-                  & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.wready)) 
-                 | ((IData)(vlSymsp->TOP__top__DOT__axi_ifu.rready) 
-                    & (IData)(vlSymsp->TOP__top__DOT__axi_ifu.rvalid)))) {
-                __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
-            }
-        } else if ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
-            if ((((IData)(vlSymsp->TOP__top__DOT__axi_lsu.bvalid) 
-                  & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bready)) 
-                 | ((IData)(vlSymsp->TOP__top__DOT__axi_lsu.rready) 
-                    & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.rvalid)))) {
-                __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
-            }
-        } else {
-            __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
-        }
-    } else {
-        __Vdly__top__DOT__arb__DOT__arbiter_state = 0U;
-    }
-    if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
-        if ((((IData)(vlSymsp->TOP__top__DOT__axi_sram.awvalid) 
-              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.wvalid)) 
-             & (IData)(vlSymsp->TOP__top__DOT__axi_sram.bready))) {
-            vlSymsp->TOP__top__DOT__axi_sram.awready = 0U;
-            vlSymsp->TOP__top__DOT__axi_sram.wready = 0U;
-            vlSymsp->TOP__top__DOT__axi_sram.bvalid = 1U;
-            vlSymsp->TOP__top__DOT__axi_sram.bresp = 0U;
-        } else {
-            vlSymsp->TOP__top__DOT__axi_sram.awready = 1U;
-            vlSymsp->TOP__top__DOT__axi_sram.wready = 1U;
-            vlSymsp->TOP__top__DOT__axi_sram.bvalid = 0U;
-        }
-        if ((((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-               ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.arvalid)
-               : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                  & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.arvalid))) 
-             & ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                 ? (IData)(vlSymsp->TOP__top__DOT__axi_ifu.rready)
-                 : ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                    & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.rready))))) {
-            Vtop___024root____Vdpiimwrap_top__DOT__sram__DOT__pmem_read_TOP(
-                                                                            ((1U 
-                                                                              == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                              ? vlSelfRef.top__DOT__pc
-                                                                              : 
-                                                                             ((2U 
-                                                                               == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))
-                                                                               ? vlSymsp->TOP__top__DOT__axi_lsu.araddr
-                                                                               : 0U)), __Vfunc_top__DOT__sram__DOT__pmem_read__1__Vfuncout);
-            vlSymsp->TOP__top__DOT__axi_sram.arready = 0U;
-            vlSymsp->TOP__top__DOT__axi_sram.__Vdly__rdata 
-                = __Vfunc_top__DOT__sram__DOT__pmem_read__1__Vfuncout;
-            vlSymsp->TOP__top__DOT__axi_sram.rvalid = 1U;
-            vlSymsp->TOP__top__DOT__axi_sram.rresp = 0U;
-        } else {
-            vlSymsp->TOP__top__DOT__axi_sram.arready = 1U;
-            vlSymsp->TOP__top__DOT__axi_sram.rvalid = 0U;
-        }
-    } else {
-        vlSymsp->TOP__top__DOT__axi_sram.awready = 1U;
-        vlSymsp->TOP__top__DOT__axi_sram.wready = 1U;
-        vlSymsp->TOP__top__DOT__axi_sram.bvalid = 0U;
-        vlSymsp->TOP__top__DOT__axi_sram.arready = 1U;
-        vlSymsp->TOP__top__DOT__axi_sram.rvalid = 0U;
-    }
-    vlSelfRef.top__DOT__sram__DOT__en = __Vdly__top__DOT__sram__DOT__en;
-    vlSelfRef.top__DOT__arb__DOT__arbiter_state = __Vdly__top__DOT__arb__DOT__arbiter_state;
-    vlSymsp->TOP__top__DOT__axi_ifu.awready = ((1U 
-                                                == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                               & (IData)(vlSymsp->TOP__top__DOT__axi_sram.awready));
-    vlSymsp->TOP__top__DOT__axi_ifu.wready = ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.wready));
-}
-
-VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) {
-    (void)vlSelf;  // Prevent unused variable warning
-    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__2\n"); );
-    auto &vlSelfRef = std::ref(*vlSelf).get();
-    // Init
-    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v0;
-    __VdlyVal__top__DOT__regmap__v0 = 0;
-    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v0;
-    __VdlyDim0__top__DOT__regmap__v0 = 0;
-    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v1;
-    __VdlyVal__top__DOT__regmap__v1 = 0;
-    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v1;
-    __VdlyDim0__top__DOT__regmap__v1 = 0;
-    IData/*31:0*/ __VdlyVal__top__DOT__regmap__v2;
-    __VdlyVal__top__DOT__regmap__v2 = 0;
-    CData/*4:0*/ __VdlyDim0__top__DOT__regmap__v2;
-    __VdlyDim0__top__DOT__regmap__v2 = 0;
-    // Body
-    vlSelfRef.top__DOT__pc = vlSelfRef.__Vdly__top__DOT__pc;
+    vlSelfRef.top__DOT__pc = __Vdly__top__DOT__pc;
     if (vlSelfRef.rst) {
-        vlSelfRef.__Vdly__top__DOT__lv = 1U;
+        __Vdly__top__DOT__lv = 1U;
         vlSelfRef.top__DOT__lr = 1U;
         vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
         vlSymsp->TOP__top__DOT__axi_lsu.rready = 1U;
@@ -561,7 +589,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
         if ((0U == (IData)(vlSelfRef.top__DOT__lc))) {
             if (vlSelfRef.top__DOT__dv) {
                 if ((3U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                    vlSelfRef.__Vdly__top__DOT__lv = 0U;
+                    __Vdly__top__DOT__lv = 0U;
                     vlSelfRef.top__DOT__lr = 0U;
                     vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 1U;
                     vlSymsp->TOP__top__DOT__axi_lsu.rready = 1U;
@@ -571,7 +599,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                     vlSymsp->TOP__top__DOT__axi_lsu.araddr 
                         = vlSelfRef.top__DOT__mem_addr;
                 } else if ((0x23U == (0x7fU & vlSelfRef.top__DOT__inst))) {
-                    vlSelfRef.__Vdly__top__DOT__lv = 0U;
+                    __Vdly__top__DOT__lv = 0U;
                     vlSelfRef.top__DOT__lr = 0U;
                     vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                     vlSymsp->TOP__top__DOT__axi_lsu.rready = 0U;
@@ -594,7 +622,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                                               ? 0xfU
                                               : 0U)));
                 } else {
-                    vlSelfRef.__Vdly__top__DOT__lv = 1U;
+                    __Vdly__top__DOT__lv = 1U;
                     vlSelfRef.top__DOT__lr = 0U;
                     vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                     vlSymsp->TOP__top__DOT__axi_lsu.rready = 0U;
@@ -603,7 +631,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                     vlSymsp->TOP__top__DOT__axi_lsu.bready = 0U;
                 }
             } else {
-                vlSelfRef.__Vdly__top__DOT__lv = 0U;
+                __Vdly__top__DOT__lv = 0U;
                 vlSelfRef.top__DOT__lr = 1U;
                 vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.rready = 1U;
@@ -613,7 +641,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
             }
         } else if ((1U == (IData)(vlSelfRef.top__DOT__lc))) {
             if (vlSymsp->TOP__top__DOT__axi_lsu.rvalid) {
-                vlSelfRef.__Vdly__top__DOT__lv = 1U;
+                __Vdly__top__DOT__lv = 1U;
                 vlSelfRef.top__DOT__lr = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.rready = 0U;
@@ -635,7 +663,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                             __VdlyDim0__top__DOT__regmap__v0 
                                 = (0x1fU & (vlSelfRef.top__DOT__inst 
                                             >> 7U));
-                            vlSelfRef.__VdlySet__top__DOT__regmap__v0 = 1U;
+                            __VdlySet__top__DOT__regmap__v0 = 1U;
                         }
                     } else if ((0x2000U & vlSelfRef.top__DOT__inst)) {
                         if (VL_UNLIKELY((0x1000U & vlSelfRef.top__DOT__inst))) {
@@ -648,7 +676,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                             __VdlyDim0__top__DOT__regmap__v1 
                                 = (0x1fU & (vlSelfRef.top__DOT__inst 
                                             >> 7U));
-                            vlSelfRef.__VdlySet__top__DOT__regmap__v1 = 1U;
+                            __VdlySet__top__DOT__regmap__v1 = 1U;
                         }
                     } else {
                         __VdlyVal__top__DOT__regmap__v2 
@@ -666,11 +694,11 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                         __VdlyDim0__top__DOT__regmap__v2 
                             = (0x1fU & (vlSelfRef.top__DOT__inst 
                                         >> 7U));
-                        vlSelfRef.__VdlySet__top__DOT__regmap__v2 = 1U;
+                        __VdlySet__top__DOT__regmap__v2 = 1U;
                     }
                 }
             } else if (vlSymsp->TOP__top__DOT__axi_lsu.bvalid) {
-                vlSelfRef.__Vdly__top__DOT__lv = 1U;
+                __Vdly__top__DOT__lv = 1U;
                 vlSelfRef.top__DOT__lr = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.rready = 0U;
@@ -678,12 +706,12 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                 vlSymsp->TOP__top__DOT__axi_lsu.wvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.bready = 0U;
             } else {
-                vlSelfRef.__Vdly__top__DOT__lv = 0U;
+                __Vdly__top__DOT__lv = 0U;
                 vlSelfRef.top__DOT__lr = 0U;
             }
         } else if ((2U == (IData)(vlSelfRef.top__DOT__lc))) {
             if (vlSelfRef.top__DOT__ir) {
-                vlSelfRef.__Vdly__top__DOT__lv = 0U;
+                __Vdly__top__DOT__lv = 0U;
                 vlSelfRef.top__DOT__lr = 1U;
                 vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.rready = 1U;
@@ -691,7 +719,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                 vlSymsp->TOP__top__DOT__axi_lsu.wvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.bready = 1U;
             } else {
-                vlSelfRef.__Vdly__top__DOT__lv = 1U;
+                __Vdly__top__DOT__lv = 1U;
                 vlSelfRef.top__DOT__lr = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
                 vlSymsp->TOP__top__DOT__axi_lsu.rready = 0U;
@@ -700,7 +728,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
                 vlSymsp->TOP__top__DOT__axi_lsu.bready = 0U;
             }
         } else {
-            vlSelfRef.__Vdly__top__DOT__lv = 1U;
+            __Vdly__top__DOT__lv = 1U;
             vlSelfRef.top__DOT__lr = 1U;
             vlSymsp->TOP__top__DOT__axi_lsu.arvalid = 0U;
             vlSymsp->TOP__top__DOT__axi_lsu.rready = 1U;
@@ -727,61 +755,66 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
             }
         }
     }
-    vlSelfRef.top__DOT__dv = vlSelfRef.__Vdly__top__DOT__dv;
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v0) {
+    vlSelfRef.top__DOT__dv = __Vdly__top__DOT__dv;
+    if (__VdlySet__top__DOT__regmap__v0) {
         vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v0] 
             = __VdlyVal__top__DOT__regmap__v0;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v1) {
+    if (__VdlySet__top__DOT__regmap__v1) {
         vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v1] 
             = __VdlyVal__top__DOT__regmap__v1;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v2) {
+    if (__VdlySet__top__DOT__regmap__v2) {
         vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v2] 
             = __VdlyVal__top__DOT__regmap__v2;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v3) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v3] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v3;
+    if (__VdlySet__top__DOT__regmap__v3) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v3] 
+            = __VdlyVal__top__DOT__regmap__v3;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v4) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v4] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v4;
+    if (__VdlySet__top__DOT__regmap__v4) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v4] 
+            = __VdlyVal__top__DOT__regmap__v4;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v5) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v5] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v5;
+    if (__VdlySet__top__DOT__regmap__v5) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v5] 
+            = __VdlyVal__top__DOT__regmap__v5;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v6) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v6] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v6;
+    if (__VdlySet__top__DOT__regmap__v6) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v6] 
+            = __VdlyVal__top__DOT__regmap__v6;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v7) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v7] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v7;
+    if (__VdlySet__top__DOT__regmap__v7) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v7] 
+            = __VdlyVal__top__DOT__regmap__v7;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v8) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v8] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v8;
+    if (__VdlySet__top__DOT__regmap__v8) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v8] 
+            = __VdlyVal__top__DOT__regmap__v8;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v9) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v9] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v9;
+    if (__VdlySet__top__DOT__regmap__v9) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v9] 
+            = __VdlyVal__top__DOT__regmap__v9;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v10) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v10] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v10;
+    if (__VdlySet__top__DOT__regmap__v10) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v10] 
+            = __VdlyVal__top__DOT__regmap__v10;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v11) {
-        vlSelfRef.top__DOT__regmap[vlSelfRef.__VdlyDim0__top__DOT__regmap__v11] 
-            = vlSelfRef.__VdlyVal__top__DOT__regmap__v11;
+    if (__VdlySet__top__DOT__regmap__v11) {
+        vlSelfRef.top__DOT__regmap[__VdlyDim0__top__DOT__regmap__v11] 
+            = __VdlyVal__top__DOT__regmap__v11;
     }
-    if (vlSelfRef.__VdlySet__top__DOT__regmap__v12) {
-        vlSelfRef.top__DOT__regmap[0x12U] = vlSelfRef.__VdlyVal__top__DOT__regmap__v12;
-        vlSelfRef.top__DOT__regmap[0x13U] = vlSelfRef.__VdlyVal__top__DOT__regmap__v13;
+    if (__VdlySet__top__DOT__regmap__v12) {
+        vlSelfRef.top__DOT__regmap[0x12U] = __VdlyVal__top__DOT__regmap__v12;
+        vlSelfRef.top__DOT__regmap[0x13U] = __VdlyVal__top__DOT__regmap__v13;
     }
-    vlSelfRef.top__DOT__lc = ((IData)(vlSelfRef.rst)
-                               ? 0U : (IData)(vlSelfRef.top__DOT__ln));
+    if (vlSelfRef.rst) {
+        vlSelfRef.top__DOT__dc = 0U;
+        vlSelfRef.top__DOT__lc = 0U;
+    } else {
+        vlSelfRef.top__DOT__dc = vlSelfRef.top__DOT__dn;
+        vlSelfRef.top__DOT__lc = vlSelfRef.top__DOT__ln;
+    }
     if (vlSymsp->TOP__top__DOT__axi_ifu.aresetn) {
         if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__ic)) 
                                    << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__ic)) 
@@ -850,8 +883,24 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
         vlSymsp->TOP__top__DOT__axi_ifu.arvalid = 0U;
         vlSymsp->TOP__top__DOT__axi_ifu.rready = 1U;
     }
-    vlSelfRef.top__DOT__lv = vlSelfRef.__Vdly__top__DOT__lv;
-    vlSelfRef.top__DOT__dr = vlSelfRef.__Vdly__top__DOT__dr;
+    if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__dc)) 
+                               << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
+                                          << 1U) | 
+                                         (0U == (IData)(vlSelfRef.top__DOT__dc)))))))) {
+        if ((0U != (((2U == (IData)(vlSelfRef.top__DOT__dc)) 
+                     << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__dc)) 
+                                << 1U) | (0U == (IData)(vlSelfRef.top__DOT__dc)))))) {
+            if (VL_UNLIKELY(vlSymsp->_vm_contextp__->assertOn())) {
+                VL_WRITEF_NX("[%0t] %%Error: top.v:207: Assertion failed in %Ntop: unique case, but multiple matches found for '2'h%x'\n",0,
+                             64,VL_TIME_UNITED_Q(1),
+                             -9,vlSymsp->name(),2,(IData)(vlSelfRef.top__DOT__dc));
+                Verilated::runFlushCallbacks();
+                VL_STOP_MT("top.v", 207, "");
+            }
+        }
+    }
+    vlSelfRef.top__DOT__lv = __Vdly__top__DOT__lv;
+    vlSelfRef.top__DOT__dr = __Vdly__top__DOT__dr;
     if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__lc)) 
                                << 2U) | (((1U == (IData)(vlSelfRef.top__DOT__lc)) 
                                           << 1U) | 
@@ -1516,10 +1565,10 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) 
     }
 }
 
-VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__3(Vtop___024root* vlSelf) {
+VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__2(Vtop___024root* vlSelf) {
     (void)vlSelf;  // Prevent unused variable warning
     Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__3\n"); );
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___nba_sequent__TOP__2\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
     vlSymsp->TOP__top__DOT__axi_lsu.rvalid = ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
@@ -1538,21 +1587,17 @@ VL_INLINE_OPT void Vtop___024root___nba_comb__TOP__0(Vtop___024root* vlSelf) {
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
     if ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
-        vlSymsp->TOP__top__DOT__axi_sram.awvalid = vlSymsp->TOP__top__DOT__axi_ifu.awvalid;
-        vlSymsp->TOP__top__DOT__axi_sram.wvalid = vlSymsp->TOP__top__DOT__axi_ifu.wvalid;
-        vlSymsp->TOP__top__DOT__axi_sram.bready = vlSymsp->TOP__top__DOT__axi_ifu.bready;
+        vlSymsp->TOP__top__DOT__axi_sram.awaddr = vlSymsp->TOP__top__DOT__axi_ifu.awaddr;
+        vlSymsp->TOP__top__DOT__axi_sram.wdata = vlSymsp->TOP__top__DOT__axi_ifu.wdata;
+        vlSymsp->TOP__top__DOT__axi_sram.araddr = vlSelfRef.top__DOT__pc;
+    } else if ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
+        vlSymsp->TOP__top__DOT__axi_sram.awaddr = vlSymsp->TOP__top__DOT__axi_lsu.awaddr;
+        vlSymsp->TOP__top__DOT__axi_sram.wdata = vlSymsp->TOP__top__DOT__axi_lsu.wdata;
+        vlSymsp->TOP__top__DOT__axi_sram.araddr = vlSymsp->TOP__top__DOT__axi_lsu.araddr;
     } else {
-        vlSymsp->TOP__top__DOT__axi_sram.awvalid = 
-            ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-             & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.awvalid));
-        vlSymsp->TOP__top__DOT__axi_sram.wvalid = (
-                                                   (2U 
-                                                    == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                                   & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.wvalid));
-        vlSymsp->TOP__top__DOT__axi_sram.bready = (
-                                                   (2U 
-                                                    == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                                   & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bready));
+        vlSymsp->TOP__top__DOT__axi_sram.awaddr = 0U;
+        vlSymsp->TOP__top__DOT__axi_sram.wdata = 0U;
+        vlSymsp->TOP__top__DOT__axi_sram.araddr = 0U;
     }
     vlSelfRef.top__DOT__ln = ((0U == (IData)(vlSelfRef.top__DOT__lc))
                                ? ((IData)(vlSelfRef.top__DOT__dv)
@@ -1586,4 +1631,27 @@ VL_INLINE_OPT void Vtop___024root___nba_comb__TOP__0(Vtop___024root* vlSelf) {
                                                     ? 0U
                                                     : 2U)
                                                    : 0U)));
+    if ((1U & (~ VL_ONEHOT_I((((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr) 
+                               << 1U) | (0xa0000048U 
+                                         == vlSymsp->TOP__top__DOT__axi_sram.araddr)))))) {
+        if ((0U != (((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr) 
+                     << 1U) | (0xa0000048U == vlSymsp->TOP__top__DOT__axi_sram.araddr)))) {
+            if (VL_UNLIKELY(vlSymsp->_vm_contextp__->assertOn())) {
+                VL_WRITEF_NX("[%0t] %%Error: sram.sv:19: Assertion failed in %Ntop.sram: unique case, but multiple matches found for '32'h%x'\n",0,
+                             64,VL_TIME_UNITED_Q(1),
+                             -9,vlSymsp->name(),32,
+                             vlSymsp->TOP__top__DOT__axi_sram.araddr);
+                Verilated::runFlushCallbacks();
+                VL_STOP_MT("sram.sv", 19, "");
+            }
+        }
+    }
+    vlSelfRef.top__DOT__sram__DOT__dout = 0U;
+    if ((0xa0000048U == vlSymsp->TOP__top__DOT__axi_sram.araddr)) {
+        vlSelfRef.top__DOT__sram__DOT__dout = (IData)(vlSelfRef.top__DOT__sram__DOT__mtime);
+    } else if ((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr)) {
+        vlSelfRef.top__DOT__sram__DOT__dout = (IData)(
+                                                      (vlSelfRef.top__DOT__sram__DOT__mtime 
+                                                       >> 0x20U));
+    }
 }

@@ -22,7 +22,7 @@ Vtop__Syms::Vtop__Syms(VerilatedContext* contextp, const char* namep, Vtop* mode
     , TOP__top__DOT__axi_sram{this, Verilated::catName(namep, "top.axi_sram")}
 {
         // Check resources
-        Verilated::stackCheck(139);
+        Verilated::stackCheck(259);
     // Configure time unit / time precision
     _vm_contextp__->timeunit(-9);
     _vm_contextp__->timeprecision(-9);
@@ -37,6 +37,7 @@ Vtop__Syms::Vtop__Syms(VerilatedContext* contextp, const char* namep, Vtop* mode
     TOP__top__DOT__axi_sram.__Vconfigure(false);
     // Setup scopes
     __Vscope_top.configure(this, name(), "top", "top", -9, VerilatedScope::SCOPE_OTHER);
+    __Vscope_top__sram.configure(this, name(), "top.sram", "sram", -9, VerilatedScope::SCOPE_OTHER);
     // Setup export functions
     for (int __Vfinal = 0; __Vfinal < 2; ++__Vfinal) {
     }

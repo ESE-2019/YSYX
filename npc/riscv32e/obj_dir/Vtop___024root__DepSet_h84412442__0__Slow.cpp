@@ -153,11 +153,8 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                (~ (IData)(vlSelfRef.rst)));
     vlSelfRef.top__DOT__ldata = (vlSymsp->TOP__top__DOT__axi_sram.rdata 
                                  >> (IData)(vlSelfRef.top__DOT__rshamt));
-    vlSymsp->TOP__top__DOT__axi_ifu.awready = ((1U 
-                                                == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                               & (IData)(vlSymsp->TOP__top__DOT__axi_sram.awready));
-    vlSymsp->TOP__top__DOT__axi_ifu.wready = ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.wready));
+    vlSymsp->TOP__top__DOT__axi_ifu.bvalid = ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
+                                              & (IData)(vlSymsp->TOP__top__DOT__axi_sram.bvalid));
     vlSelfRef.top__DOT__dn = ((0U == (IData)(vlSelfRef.top__DOT__dc))
                                ? ((IData)(vlSelfRef.top__DOT__iv)
                                    ? 1U : 0U) : (((1U 
@@ -170,22 +167,23 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                    : 2U)
                                                   : 0U));
     if ((1U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
-        vlSymsp->TOP__top__DOT__axi_sram.awvalid = vlSymsp->TOP__top__DOT__axi_ifu.awvalid;
-        vlSymsp->TOP__top__DOT__axi_sram.wvalid = vlSymsp->TOP__top__DOT__axi_ifu.wvalid;
-        vlSymsp->TOP__top__DOT__axi_sram.bready = vlSymsp->TOP__top__DOT__axi_ifu.bready;
+        vlSymsp->TOP__top__DOT__axi_sram.awaddr = vlSymsp->TOP__top__DOT__axi_ifu.awaddr;
+        vlSymsp->TOP__top__DOT__axi_sram.wdata = vlSymsp->TOP__top__DOT__axi_ifu.wdata;
+        vlSymsp->TOP__top__DOT__axi_sram.araddr = vlSelfRef.top__DOT__pc;
         vlSymsp->TOP__top__DOT__axi_ifu.rvalid = vlSymsp->TOP__top__DOT__axi_sram.rvalid;
     } else {
-        vlSymsp->TOP__top__DOT__axi_sram.awvalid = 
-            ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-             & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.awvalid));
-        vlSymsp->TOP__top__DOT__axi_sram.wvalid = (
-                                                   (2U 
-                                                    == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                                   & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.wvalid));
-        vlSymsp->TOP__top__DOT__axi_sram.bready = (
-                                                   (2U 
-                                                    == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
-                                                   & (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bready));
+        if ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state))) {
+            vlSymsp->TOP__top__DOT__axi_sram.awaddr 
+                = vlSymsp->TOP__top__DOT__axi_lsu.awaddr;
+            vlSymsp->TOP__top__DOT__axi_sram.wdata 
+                = vlSymsp->TOP__top__DOT__axi_lsu.wdata;
+            vlSymsp->TOP__top__DOT__axi_sram.araddr 
+                = vlSymsp->TOP__top__DOT__axi_lsu.araddr;
+        } else {
+            vlSymsp->TOP__top__DOT__axi_sram.awaddr = 0U;
+            vlSymsp->TOP__top__DOT__axi_sram.wdata = 0U;
+            vlSymsp->TOP__top__DOT__axi_sram.araddr = 0U;
+        }
         vlSymsp->TOP__top__DOT__axi_ifu.rvalid = 0U;
     }
     vlSymsp->TOP__top__DOT__axi_lsu.bvalid = ((2U == (IData)(vlSelfRef.top__DOT__arb__DOT__arbiter_state)) 
@@ -220,20 +218,6 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                     ? 0U
                                                     : 2U)
                                                    : 0U)));
-    vlSelfRef.top__DOT__ln = ((0U == (IData)(vlSelfRef.top__DOT__lc))
-                               ? ((IData)(vlSelfRef.top__DOT__dv)
-                                   ? (((3U == (0x7fU 
-                                               & vlSelfRef.top__DOT__inst)) 
-                                       | (0x23U == 
-                                          (0x7fU & vlSelfRef.top__DOT__inst)))
-                                       ? 1U : 2U) : 0U)
-                               : ((1U == (IData)(vlSelfRef.top__DOT__lc))
-                                   ? (((IData)(vlSymsp->TOP__top__DOT__axi_lsu.rvalid) 
-                                       | (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bvalid))
-                                       ? 2U : 1U) : 
-                                  ((2U == (IData)(vlSelfRef.top__DOT__lc))
-                                    ? ((IData)(vlSelfRef.top__DOT__ir)
-                                        ? 0U : 2U) : 0U)));
     if ((0x40U & vlSelfRef.top__DOT__inst)) {
         if ((0x20U & vlSelfRef.top__DOT__inst)) {
             if ((1U & (~ (vlSelfRef.top__DOT__inst 
@@ -254,6 +238,7 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                            | (0x7feU 
                                               & (vlSelfRef.top__DOT__inst 
                                                  >> 0x14U)))));
+                                vlSelfRef.top__DOT__alu_c = 0U;
                             }
                         }
                     }
@@ -265,6 +250,9 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                 >> 0x1fU))) 
                                     << 0xcU) | (vlSelfRef.top__DOT__inst 
                                                 >> 0x14U));
+                            vlSelfRef.top__DOT__alu_c 
+                                = (7U & (vlSelfRef.top__DOT__inst 
+                                         >> 0xcU));
                         }
                     }
                 } else if ((2U & vlSelfRef.top__DOT__inst)) {
@@ -283,6 +271,13 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                          | (0x1eU 
                                                             & (vlSelfRef.top__DOT__inst 
                                                                >> 7U)))));
+                        vlSelfRef.top__DOT__alu_c = 
+                            ((0U == (3U & (vlSelfRef.top__DOT__inst 
+                                           >> 0xdU)))
+                              ? (8U | (3U & (vlSelfRef.top__DOT__inst 
+                                             >> 0xdU)))
+                              : (3U & (vlSelfRef.top__DOT__inst 
+                                       >> 0xdU)));
                     }
                 }
             }
@@ -296,6 +291,18 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                         if ((1U & vlSelfRef.top__DOT__inst)) {
                             vlSelfRef.top__DOT__imm 
                                 = (0xfffff000U & vlSelfRef.top__DOT__inst);
+                        }
+                    }
+                }
+                if ((1U & (~ (vlSelfRef.top__DOT__inst 
+                              >> 2U)))) {
+                    if ((2U & vlSelfRef.top__DOT__inst)) {
+                        if ((1U & vlSelfRef.top__DOT__inst)) {
+                            vlSelfRef.top__DOT__alu_c 
+                                = ((8U & (vlSelfRef.top__DOT__inst 
+                                          >> 0x1bU)) 
+                                   | (7U & (vlSelfRef.top__DOT__inst 
+                                            >> 0xcU)));
                         }
                     }
                 }
@@ -340,6 +347,22 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                                   >> 0x14U));
                 }
             }
+            if ((1U & (~ (vlSelfRef.top__DOT__inst 
+                          >> 2U)))) {
+                if ((2U & vlSelfRef.top__DOT__inst)) {
+                    if ((1U & vlSelfRef.top__DOT__inst)) {
+                        vlSelfRef.top__DOT__alu_c = 
+                            ((1U == (3U & (vlSelfRef.top__DOT__inst 
+                                           >> 0xcU)))
+                              ? ((8U & (vlSelfRef.top__DOT__inst 
+                                        >> 0x1bU)) 
+                                 | (7U & (vlSelfRef.top__DOT__inst 
+                                          >> 0xcU)))
+                              : (7U & (vlSelfRef.top__DOT__inst 
+                                       >> 0xcU)));
+                    }
+                }
+            }
         }
     } else if ((1U & (~ (vlSelfRef.top__DOT__inst >> 3U)))) {
         if ((1U & (~ (vlSelfRef.top__DOT__inst >> 2U)))) {
@@ -355,6 +378,43 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
             }
         }
     }
+    if ((1U & (~ VL_ONEHOT_I((((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr) 
+                               << 1U) | (0xa0000048U 
+                                         == vlSymsp->TOP__top__DOT__axi_sram.araddr)))))) {
+        if ((0U != (((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr) 
+                     << 1U) | (0xa0000048U == vlSymsp->TOP__top__DOT__axi_sram.araddr)))) {
+            if (VL_UNLIKELY(vlSymsp->_vm_contextp__->assertOn())) {
+                VL_WRITEF_NX("[%0t] %%Error: sram.sv:19: Assertion failed in %Ntop.sram: unique case, but multiple matches found for '32'h%x'\n",0,
+                             64,VL_TIME_UNITED_Q(1),
+                             -9,vlSymsp->name(),32,
+                             vlSymsp->TOP__top__DOT__axi_sram.araddr);
+                Verilated::runFlushCallbacks();
+                VL_STOP_MT("sram.sv", 19, "");
+            }
+        }
+    }
+    vlSelfRef.top__DOT__sram__DOT__dout = 0U;
+    if ((0xa0000048U == vlSymsp->TOP__top__DOT__axi_sram.araddr)) {
+        vlSelfRef.top__DOT__sram__DOT__dout = (IData)(vlSelfRef.top__DOT__sram__DOT__mtime);
+    } else if ((0xa000004cU == vlSymsp->TOP__top__DOT__axi_sram.araddr)) {
+        vlSelfRef.top__DOT__sram__DOT__dout = (IData)(
+                                                      (vlSelfRef.top__DOT__sram__DOT__mtime 
+                                                       >> 0x20U));
+    }
+    vlSelfRef.top__DOT__ln = ((0U == (IData)(vlSelfRef.top__DOT__lc))
+                               ? ((IData)(vlSelfRef.top__DOT__dv)
+                                   ? (((3U == (0x7fU 
+                                               & vlSelfRef.top__DOT__inst)) 
+                                       | (0x23U == 
+                                          (0x7fU & vlSelfRef.top__DOT__inst)))
+                                       ? 1U : 2U) : 0U)
+                               : ((1U == (IData)(vlSelfRef.top__DOT__lc))
+                                   ? (((IData)(vlSymsp->TOP__top__DOT__axi_lsu.rvalid) 
+                                       | (IData)(vlSymsp->TOP__top__DOT__axi_lsu.bvalid))
+                                       ? 2U : 1U) : 
+                                  ((2U == (IData)(vlSelfRef.top__DOT__lc))
+                                    ? ((IData)(vlSelfRef.top__DOT__ir)
+                                        ? 0U : 2U) : 0U)));
     vlSelfRef.top__DOT__mem_addr = (vlSelfRef.top__DOT__regmap
                                     [(0x1fU & (vlSelfRef.top__DOT__inst 
                                                >> 0xfU))] 
@@ -368,7 +428,6 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                     if ((4U & vlSelfRef.top__DOT__inst)) {
                         if ((2U & vlSelfRef.top__DOT__inst)) {
                             if ((1U & vlSelfRef.top__DOT__inst)) {
-                                vlSelfRef.top__DOT__alu_c = 0U;
                                 vlSelfRef.top__DOT__alu_2 = 4U;
                             }
                         }
@@ -376,21 +435,11 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                 } else if ((4U & vlSelfRef.top__DOT__inst)) {
                     if ((2U & vlSelfRef.top__DOT__inst)) {
                         if ((1U & vlSelfRef.top__DOT__inst)) {
-                            vlSelfRef.top__DOT__alu_c 
-                                = (7U & (vlSelfRef.top__DOT__inst 
-                                         >> 0xcU));
                             vlSelfRef.top__DOT__alu_2 = 4U;
                         }
                     }
                 } else if ((2U & vlSelfRef.top__DOT__inst)) {
                     if ((1U & vlSelfRef.top__DOT__inst)) {
-                        vlSelfRef.top__DOT__alu_c = 
-                            ((0U == (3U & (vlSelfRef.top__DOT__inst 
-                                           >> 0xdU)))
-                              ? (8U | (3U & (vlSelfRef.top__DOT__inst 
-                                             >> 0xdU)))
-                              : (3U & (vlSelfRef.top__DOT__inst 
-                                       >> 0xdU)));
                         vlSelfRef.top__DOT__alu_2 = vlSelfRef.top__DOT__rs2_val;
                     }
                 }
@@ -404,11 +453,6 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                               >> 2U)))) {
                     if ((2U & vlSelfRef.top__DOT__inst)) {
                         if ((1U & vlSelfRef.top__DOT__inst)) {
-                            vlSelfRef.top__DOT__alu_c 
-                                = ((8U & (vlSelfRef.top__DOT__inst 
-                                          >> 0x1bU)) 
-                                   | (7U & (vlSelfRef.top__DOT__inst 
-                                            >> 0xcU)));
                             vlSelfRef.top__DOT__alu_2 
                                 = vlSelfRef.top__DOT__rs2_val;
                         }
@@ -422,15 +466,6 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                           >> 2U)))) {
                 if ((2U & vlSelfRef.top__DOT__inst)) {
                     if ((1U & vlSelfRef.top__DOT__inst)) {
-                        vlSelfRef.top__DOT__alu_c = 
-                            ((1U == (3U & (vlSelfRef.top__DOT__inst 
-                                           >> 0xcU)))
-                              ? ((8U & (vlSelfRef.top__DOT__inst 
-                                        >> 0x1bU)) 
-                                 | (7U & (vlSelfRef.top__DOT__inst 
-                                          >> 0xcU)))
-                              : (7U & (vlSelfRef.top__DOT__inst 
-                                       >> 0xcU)));
                         vlSelfRef.top__DOT__alu_2 = vlSelfRef.top__DOT__imm;
                     }
                 }
