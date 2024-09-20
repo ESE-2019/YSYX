@@ -40,7 +40,7 @@ end
 logic [31:0] alu_1, alu_2, alu_3;
 logic [3:0] alu_c;
 
-ysyx_24080006_alu ysyx_24080006_alu(.src1(alu_1), .src2(alu_2), .ctrl(alu_c), .res (alu_3));
+ysyx_24080006_alu ysyx_24080006_alu(.src1(alu_1), .src2(alu_2), .ctrl(alu_c), .res(alu_3));
 localparam	B_type	= 7'b1100011,
 			I_type	= 7'b0010011,
 			R_type	= 7'b0110011,
