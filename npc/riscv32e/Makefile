@@ -51,7 +51,7 @@ VERILATOR_FLAGS += --assert
 #VERILATOR_FLAGS += --gdbbt
 
 # Input files for Verilator   
-VERILATOR_INPUT = -f input.vc top.v sim_main.cpp   ysyx_24080006_imm.sv  ysyx_24080006_alu.sv 
+VERILATOR_INPUT = top.v sim_main.cpp   *.sv 
 
 ######################################################################
 default: run
@@ -62,7 +62,7 @@ run:
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 
 
-	$(MAKE) -j -C obj_dir -f ../Makefile_obj
+	#$(MAKE) -j -C obj_dir -f ../Makefile_obj
 
 	@echo
 	@echo "-- RUN ---------------------"

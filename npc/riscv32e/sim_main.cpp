@@ -21,7 +21,7 @@ struct timespec start_time, end_time;
 uint64_t start_microseconds, end_microseconds;
 #define MAX_IMG   0xFFFFFFF
 #define MEM_BASE  0x80000000
-#define ABORT_NUM 0xFFFFFFFF
+#define ABORT_NUM 0xfffff//0xFFFFFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
 Vtop *top;
@@ -29,7 +29,7 @@ extern "C" void ebreak()
 {
 
     ebreak_n = false;
-    if (0 == top->rootp->top__DOT__regmap[10])
+    //if (0 == top->rootp->top__DOT__regmap[10])
         TRAP = true;
 }
 
@@ -86,9 +86,6 @@ static long load_img()
     fclose(fp);
     return index;
 }
-
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
 
 extern "C" int pmem_read(uint32_t raddr)
 {
@@ -220,20 +217,20 @@ int main(int argc, char **argv)
                 top->rst = 0; // Deassert reset
                 // if(LOG) fprintf(log_file, "\t\t\t[IFU");
                 // top->inst = pmem_readC((uint32_t)top->pc);
-                if (LOG)
+                /*if (LOG)
                 {
                     for (int i = 0; i < 16; i++)
                         if (top->rootp->top__DOT__regmap[i] != 0 && top->clk)
                             fprintf(log_file, "\treg[%02d]: 0x%08x\n", i,
                                     top->rootp->top__DOT__regmap[i]);
-                }
+                }*/
                 abort_endless_loop++;
             }
             // Assign some other inputs
         }
         top->eval();
         if (WAVE)
-            tfp->dump(wave++); // dump wave  //need ii++
+            tfp->dump(wave++); // dump wave
     }
 
     // Final model cleanup

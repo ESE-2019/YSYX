@@ -7,14 +7,12 @@ module ysyx_24080006_idu (
     input  logic [31:0] rs1_val,
     input  logic [31:0] rs2_val,
 
-    output logic [4:0]  rd_addr,
-    output logic [31:0] imm,
     xxu_if.prev    ifu,
     xxu_if.next    exu
 );
 
     enum logic [1:0] {
-        IDLE
+        IDLE,
         EXEC,
         WAIT
     } curr, next;
@@ -56,7 +54,7 @@ module ysyx_24080006_idu (
             IDLE: begin
                 if (ifu.valid) begin
                     ifu.ready <= 0;
-                    exu.valid <= 0;
+                    exu.valid <= 1;
                 end
                 else begin
                     ifu.ready <= 1;
@@ -94,7 +92,7 @@ module ysyx_24080006_idu (
 
     logic [6:0] opcode;
     logic [2:0] funct3;
-    //logic [4:0] rs1_addr, rs2_addr, rd_addr;
+    logic [4:0] rd_addr;
     
     assign opcode = ifu.inst[6:0];
     assign funct3 = ifu.inst[14:12];
@@ -138,10 +136,10 @@ module ysyx_24080006_idu (
                     else
                         alu_ctrl = {  2'b00 , funct3[2:1]};
             I_type:	if (funct3[1:0] == 2'b01)//I
-                        alu_ctrl = {inst[30], funct3};
+                        alu_ctrl = {ifu.inst[30], funct3};
                     else
                         alu_ctrl = {  1'b0  , funct3};
-            R_type:		alu_ctrl = {inst[30], funct3};//R
+            R_type:		alu_ctrl = {ifu.inst[30], funct3};//R
             jal,
             jalr,
             lui,
@@ -164,24 +162,41 @@ module ysyx_24080006_idu (
 		endcase
     end
 
+    logic [31:0] dnpc;
+    always_comb begin
+        if (opcode == jalr)
+            dnpc = (rs1_val + imm) & 32'hffff_fffe;//rs1_val + imm;
+        else
+            dnpc = ifu.pc + imm;
+    end
+
     always_ff @ (posedge clock) begin//fsm 3 for decode alu
         if (reset) begin
             exu.alu_src1 <= '0;
             exu.alu_src2 <= '0;
             exu.alu_ctrl <= '0;
+            exu.alu_set <= '0;
             exu.imm <= '0;
+            exu.rd_addr <= '0;
+            exu.dnpc <= '0;
+            exu.sdata <= '0;
         end
         else if (curr == IDLE && ifu.valid) begin
             exu.alu_src1 <= alu_src1;
             exu.alu_src2 <= alu_src2;
-            exu.alu_ctrl <= alu_ctrl;   
-            exu.imm <= imm;     
+            exu.alu_ctrl <= alu_ctrl;
+            exu.alu_set <= alu_set; 
+            exu.imm <= imm; //is useful? may be aborted
+            exu.rd_addr <= rd_addr;
+            exu.dnpc <= dnpc;
+            exu.sdata <= rs2_val;
         end
     end
 
     //logic load, store, wb, jump, branch;
     always_ff @ (posedge clock) begin//fsm 3 for decode alu
         if (reset) begin
+            exu.funct3 <= '0;
             exu.load <= '0;
             exu.store <= '0;
             exu.wb <= '0;
@@ -189,12 +204,18 @@ module ysyx_24080006_idu (
             exu.branch <= '0;
         end
         else if (curr == IDLE && ifu.valid) begin
+            exu.funct3 <= funct3;
             exu.load <= opcode == load;
             exu.store <= opcode == S_type;
             exu.wb <= opcode inside {auipc, lui, jal, jalr, I_type, R_type, load};
             exu.jump <= opcode inside {jal, jalr};
             exu.branch <= opcode == B_type;     
         end
+    end
+import "DPI-C" function void ebreak();
+    always_ff @ (posedge clock) begin
+        if (opcode == system)
+            ebreak();
     end
 
 endmodule

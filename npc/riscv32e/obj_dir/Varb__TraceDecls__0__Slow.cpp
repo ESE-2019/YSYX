@@ -3,7 +3,7 @@
 #include "verilated_fst_c.h"
 
 
-void Vtop___024root__traceDeclTypesSub0(VerilatedFst* tracep) {
+void Varb___024root__traceDeclTypesSub0(VerilatedFst* tracep) {
     {
         const char* __VenumItemNames[]
         = {"IDLE", "EXEC", "WAIT"};
@@ -41,6 +41,6 @@ void Vtop___024root__traceDeclTypesSub0(VerilatedFst* tracep) {
     }
 }
 
-void Vtop___024root__trace_decl_types(VerilatedFst* tracep) {
-    Vtop___024root__traceDeclTypesSub0(tracep);
+void Varb___024root__trace_decl_types(VerilatedFst* tracep) {
+    Varb___024root__traceDeclTypesSub0(tracep);
 }

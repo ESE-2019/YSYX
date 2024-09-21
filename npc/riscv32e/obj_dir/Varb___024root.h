@@ -1,28 +1,28 @@
 // Verilated -*- C++ -*-
 // DESCRIPTION: Verilator output: Design internal header
-// See Vtop.h for the primary calling header
+// See Varb.h for the primary calling header
 
-#ifndef VERILATED_VTOP___024ROOT_H_
-#define VERILATED_VTOP___024ROOT_H_  // guard
+#ifndef VERILATED_VARB___024ROOT_H_
+#define VERILATED_VARB___024ROOT_H_  // guard
 
 #include "verilated.h"
-class Vtop_axi_if;
-class Vtop_xxu_if;
+class Varb_axi_if;
+class Varb_xxu_if;
 
 
-class Vtop__Syms;
+class Varb__Syms;
 
-class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule {
+class alignas(VL_CACHE_LINE_BYTES) Varb___024root final : public VerilatedModule {
   public:
     // CELLS
-    Vtop_axi_if* __PVT__top__DOT__axi_sram;
-    Vtop_xxu_if* __PVT__top__DOT__CORE__DOT__ifu2idu;
-    Vtop_xxu_if* __PVT__top__DOT__CORE__DOT__idu2exu;
-    Vtop_xxu_if* __PVT__top__DOT__CORE__DOT__exu2lsu;
-    Vtop_xxu_if* __PVT__top__DOT__CORE__DOT__lsu2wbu;
-    Vtop_xxu_if* __PVT__top__DOT__CORE__DOT__wbu2ifu;
-    Vtop_axi_if* __PVT__top__DOT__CORE__DOT__axi_ifu;
-    Vtop_axi_if* __PVT__top__DOT__CORE__DOT__axi_lsu;
+    Varb_axi_if* __PVT__top__DOT__axi_sram;
+    Varb_xxu_if* __PVT__top__DOT__CORE__DOT__ifu2idu;
+    Varb_xxu_if* __PVT__top__DOT__CORE__DOT__idu2exu;
+    Varb_xxu_if* __PVT__top__DOT__CORE__DOT__exu2lsu;
+    Varb_xxu_if* __PVT__top__DOT__CORE__DOT__lsu2wbu;
+    Varb_xxu_if* __PVT__top__DOT__CORE__DOT__wbu2ifu;
+    Varb_axi_if* __PVT__top__DOT__CORE__DOT__axi_ifu;
+    Varb_axi_if* __PVT__top__DOT__CORE__DOT__axi_lsu;
 
     // DESIGN SPECIFIC STATE
     VL_IN8(clk,0,0);
@@ -42,6 +42,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
     CData/*0:0*/ top__DOT__CORE__DOT__EXU__DOT__ALU__DOT__comp_res;
     CData/*1:0*/ top__DOT__CORE__DOT__LSU__DOT__curr;
     CData/*1:0*/ top__DOT__CORE__DOT__LSU__DOT__next;
+    CData/*4:0*/ top__DOT__CORE__DOT__LSU__DOT__rshamt;
     CData/*1:0*/ top__DOT__CORE__DOT__WBU__DOT__curr;
     CData/*1:0*/ top__DOT__CORE__DOT__WBU__DOT__next;
     CData/*3:0*/ __Vtableidx1;
@@ -76,12 +77,12 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
     VlTriggerVec<1> __VnbaTriggered;
 
     // INTERNAL VARIABLES
-    Vtop__Syms* const vlSymsp;
+    Varb__Syms* const vlSymsp;
 
     // CONSTRUCTORS
-    Vtop___024root(Vtop__Syms* symsp, const char* v__name);
-    ~Vtop___024root();
-    VL_UNCOPYABLE(Vtop___024root);
+    Varb___024root(Varb__Syms* symsp, const char* v__name);
+    ~Varb___024root();
+    VL_UNCOPYABLE(Varb___024root);
 
     // INTERNAL METHODS
     void __Vconfigure(bool first);

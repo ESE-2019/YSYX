@@ -1,27 +1,21 @@
-module ysyx_24080006_wbu (
+module ysyx_24080006_lsu (
     input  logic        clock,
     input  logic        reset,
-    input  logic [31:0] alu_result,
-    input  logic [31:0] mem_rdata,
-    input  logic [1:0]  wb_sel, // { mem , alu }
-    input  logic [4:0]  rd,
-    
-    output logic [31:0] rd_data,
-    output logic        rd_we,
-    xxu_if.prev    lsu,
-    xxu_if.next    ifu
+
+    axi_if.master  axi_lsu,
+    xxu_if.prev    exu,
+    xxu_if.next    wbu
 );
-//TODO use fsm
+
     enum logic [1:0] {
-        IDLE
+        IDLE,
         EXEC,
-        WAIT,
-        RST
+        WAIT
     } curr, next;
 
     always_ff @ (posedge clock) begin //fsm 1
         if (reset) begin
-            curr <= RST;
+            curr <= IDLE;
         end
         else begin
             curr <= next;
@@ -31,86 +25,202 @@ module ysyx_24080006_wbu (
     always_comb begin //fsm 2
         unique case (curr)
             IDLE: begin
-                if (lsu.valid)
-                    next = EXEC;
+                if (exu.valid) begin
+                    if (exu.load || exu.store)
+                        next = EXEC;
+                    else
+                        next = WAIT;
+                end
                 else
                     next = IDLE;
             end
-            EXEC,
+            EXEC: begin
+                if (axi_lsu.rvalid || axi_lsu.bvalid)
+                    next = WAIT;
+                else
+                    next = EXEC;
+            end
             WAIT: begin
-                if (ifu.ready)
+                if (wbu.ready)
                     next = IDLE;
                 else
                     next = WAIT;
             end
-            RST:
-                next = IDLE;
         endcase
     end
 
     always_ff @ (posedge clock) begin//fsm 3 for control
         unique if (reset) begin
-            lsu.ready <= 0;
-            ifu.valid <= 0;
+            exu.ready <= 1;
+            wbu.valid <= 0;
         end
         else begin
             unique case (curr)
             IDLE: begin
-                if (lsu.valid) begin
-                    lsu.ready <= 0;
-                    ifu.valid <= 1;
+                if (exu.valid) begin
+                    if (exu.load || exu.store) begin
+                        exu.ready <= 0;
+                        wbu.valid <= 0;
+                    end
+                    else begin // bypass
+                        exu.ready <= 0;
+                        wbu.valid <= 1;
+                    end
                 end
                 else begin
-                    lsu.ready <= 1;
-                    ifu.valid <= 0;
+                    exu.ready <= 1;
+                    wbu.valid <= 0;
                 end
             end
-            EXEC,
+            EXEC: begin
+                if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+                    exu.ready <= 0;
+                    wbu.valid <= 1;
+                end
+                else begin
+                    exu.ready <= 0;
+                    wbu.valid <= 0;
+                end
+            end
             WAIT: begin
-                if (ifu.ready) begin
-                    lsu.ready <= 1;
-                    ifu.valid <= 0;
+                if (wbu.ready) begin
+                    exu.ready <= 1;
+                    wbu.valid <= 0;
                 end
                 else begin
-                    lsu.ready <= 0;
-                    ifu.valid <= 1;
+                    exu.ready <= 0;
+                    wbu.valid <= 1;
                 end
-            end
-            RST: begin
-                lsu.ready <= 0;
-                ifu.valid <= 1;
             end
         endcase
         end
     end
 
-    always_ff @ (posedge clock) begin//fsm 3 for exu output
+    logic [31:0] alu_res, ldata;
+    logic [4:0] rshamt;
+    always_comb begin // process alu_res and ldata
+
+        case (exu.alu_res[1:0])
+			2'b00: rshamt = 0;
+			2'b01: rshamt = 8;
+			2'b10: rshamt = 16;
+			2'b11: rshamt = 24; 
+		endcase
+
+        // if (exu.load)
+        //     alu_res = ldata >> rshamt;
+        // else
+        //     alu_res = exu.alu_res;
+    end
+
+    always_ff @ (posedge clock) begin//fsm 3 for axi
         unique if (reset) begin
-            rd_data <= '0;
-            rd_we <= '0;
+            axi_lsu.arvalid <= 0;
+            axi_lsu.rready  <= 1;
+            axi_lsu.awvalid <= 0;
+            axi_lsu.wvalid  <= 0;
+            axi_lsu.bready  <= 1;
+            axi_lsu.araddr  <= 0;
+            axi_lsu.awaddr  <= 0;
+            axi_lsu.wdata   <= 0;
+            axi_lsu.wstrb   <= 0;
+            wbu.alu_res <= 0;
         end
         else begin
-            if (curr == IDLE && lsu.valid) begin
-                case (wb_sel)
-                    2'b01: begin
-                        rd_data <= alu_result;
-                        rd_we <= 1'b1;
+            unique case (curr)
+            IDLE: begin
+                if (exu.valid) begin
+                    if (exu.load) begin
+                        axi_lsu.arvalid <= 1;
+                        axi_lsu.rready  <= 1;
+                        axi_lsu.awvalid <= 0;
+                        axi_lsu.wvalid  <= 0;
+                        axi_lsu.bready  <= 0;
+                        axi_lsu.araddr  <= {exu.alu_res[31:2], 2'b00};
                     end
-                    2'b10: begin
-                        rd_data <= mem_rdata;
-                        rd_we <= 1'b1;
+                    else if (exu.store) begin
+                        axi_lsu.arvalid <= 0;
+                        axi_lsu.rready  <= 0;
+                        axi_lsu.awvalid <= 1;
+                        axi_lsu.wvalid  <= 1;
+                        axi_lsu.bready  <= 1;
+                        axi_lsu.awaddr  <= {exu.alu_res[31:2], 2'b00};
+                        axi_lsu.wdata   <= exu.sdata;
+                        axi_lsu.wstrb   <=  (exu.funct3==3'b000)?4'b0001:
+                                            (exu.funct3==3'b001)?4'b0011:
+                                            (exu.funct3==3'b010)?4'b1111:4'b0;
                     end
-                    default: begin
-                        rd_data <= '0;
-                        rd_we <= '0;
+                    else begin // bypass
+                        axi_lsu.arvalid <= 0;
+                        axi_lsu.rready  <= 0;
+                        axi_lsu.awvalid <= 0;
+                        axi_lsu.wvalid  <= 0;
+                        axi_lsu.bready  <= 0;
+                        wbu.alu_res <= exu.alu_res;
                     end
-                endcase
+                end
+                else begin
+                    axi_lsu.arvalid <= 0;
+                    axi_lsu.rready  <= 1;
+                    axi_lsu.awvalid <= 0;
+                    axi_lsu.wvalid  <= 0;
+                    axi_lsu.bready  <= 1;
+                end
             end
-            else begin
-                rd_data <= '0;
-                rd_we <= '0;
+            EXEC: begin
+                if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+                    axi_lsu.arvalid <= 0;
+                    axi_lsu.rready  <= 0;
+                    axi_lsu.awvalid <= 0;
+                    axi_lsu.wvalid  <= 0;
+                    axi_lsu.bready  <= 0;
+                    //ldata <= axi_lsu.rdata;
+                    wbu.alu_res <= axi_lsu.rdata >> rshamt;
+                end
+                else
+                    ;
             end
+            WAIT: begin
+                if (wbu.ready) begin
+                    axi_lsu.arvalid <= 0;
+                    axi_lsu.rready  <= 1;
+                    axi_lsu.awvalid <= 0;
+                    axi_lsu.wvalid  <= 0;
+                    axi_lsu.bready  <= 1;
+                end
+                else begin
+                    axi_lsu.arvalid <= 0;
+                    axi_lsu.rready  <= 0;
+                    axi_lsu.awvalid <= 0;
+                    axi_lsu.wvalid  <= 0;
+                    axi_lsu.bready  <= 0;
+                end
+            end
+        endcase
         end
     end
+
+    
+
+    always_ff @ (posedge clock) begin
+        if (reset) begin
+            wbu.dnpc <= '0;
+            wbu.rd_addr <= '0;
+            //wbu.alu_res <= '0;
+            wbu.wb <= '0;
+            wbu.jump <= '0;
+            wbu.branch <= '0;
+        end
+        else begin
+            wbu.dnpc <= exu.dnpc;
+            wbu.rd_addr <= exu.rd_addr;
+            //wbu.alu_res <= alu_res;
+            wbu.wb <= exu.wb;
+            wbu.jump <= exu.jump; //may be merged
+            wbu.branch <= exu.branch; //^^^^^^^^^
+        end
+
+    end
+
 
 endmodule

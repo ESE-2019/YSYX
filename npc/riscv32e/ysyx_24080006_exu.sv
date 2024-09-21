@@ -1,27 +1,20 @@
-module ysyx_24080006_wbu (
+module ysyx_24080006_exu (
     input  logic        clock,
     input  logic        reset,
-    input  logic [31:0] alu_result,
-    input  logic [31:0] mem_rdata,
-    input  logic [1:0]  wb_sel, // { mem , alu }
-    input  logic [4:0]  rd,
-    
-    output logic [31:0] rd_data,
-    output logic        rd_we,
-    xxu_if.prev    lsu,
-    xxu_if.next    ifu
+
+    xxu_if.prev    idu,
+    xxu_if.next    lsu
 );
-//TODO use fsm
+
     enum logic [1:0] {
-        IDLE
+        IDLE,
         EXEC,
-        WAIT,
-        RST
+        WAIT
     } curr, next;
 
     always_ff @ (posedge clock) begin //fsm 1
         if (reset) begin
-            curr <= RST;
+            curr <= IDLE;
         end
         else begin
             curr <= next;
@@ -31,86 +24,108 @@ module ysyx_24080006_wbu (
     always_comb begin //fsm 2
         unique case (curr)
             IDLE: begin
-                if (lsu.valid)
+                if (idu.valid)
                     next = EXEC;
                 else
                     next = IDLE;
             end
             EXEC,
             WAIT: begin
-                if (ifu.ready)
+                if (lsu.ready)
                     next = IDLE;
                 else
                     next = WAIT;
             end
-            RST:
-                next = IDLE;
         endcase
     end
 
     always_ff @ (posedge clock) begin//fsm 3 for control
         unique if (reset) begin
-            lsu.ready <= 0;
-            ifu.valid <= 0;
+            idu.ready <= 1;
+            lsu.valid <= 0;
         end
         else begin
             unique case (curr)
             IDLE: begin
-                if (lsu.valid) begin
-                    lsu.ready <= 0;
-                    ifu.valid <= 1;
+                if (idu.valid) begin
+                    idu.ready <= 0;
+                    lsu.valid <= 1;
                 end
                 else begin
-                    lsu.ready <= 1;
-                    ifu.valid <= 0;
+                    idu.ready <= 1;
+                    lsu.valid <= 0;
                 end
             end
             EXEC,
             WAIT: begin
-                if (ifu.ready) begin
-                    lsu.ready <= 1;
-                    ifu.valid <= 0;
+                if (lsu.ready) begin
+                    idu.ready <= 1;
+                    lsu.valid <= 0;
                 end
                 else begin
-                    lsu.ready <= 0;
-                    ifu.valid <= 1;
+                    idu.ready <= 0;
+                    lsu.valid <= 1;
                 end
-            end
-            RST: begin
-                lsu.ready <= 0;
-                ifu.valid <= 1;
             end
         endcase
         end
     end
 
-    always_ff @ (posedge clock) begin//fsm 3 for exu output
-        unique if (reset) begin
-            rd_data <= '0;
-            rd_we <= '0;
+    logic [31:0] alu_out, alu_res; //TODO not_zero will be merged into alu
+    ysyx_24080006_alu ALU(
+        .src1(idu.alu_src1),
+        .src2(idu.alu_src2),
+        .ctrl(idu.alu_ctrl),
+        .res(alu_out));
+        
+    logic  not_zero;
+    assign not_zero = |alu_out;
+    logic branch;
+    always_comb begin //fsm 2 for alu_res
+
+        unique case (idu.alu_set)
+            2'b00: alu_res = alu_out;
+            2'b01: alu_res = {31'b0, ~not_zero};
+            2'b10: alu_res = {31'b0,  not_zero};
+            2'b11: alu_res = {31'b0, ~alu_out[0]};
+        endcase
+
+        if (idu.branch == 1'b1 && alu_res[0] == 1) begin //check branch cond
+            branch = 1'b1;
         end
         else begin
-            if (curr == IDLE && lsu.valid) begin
-                case (wb_sel)
-                    2'b01: begin
-                        rd_data <= alu_result;
-                        rd_we <= 1'b1;
-                    end
-                    2'b10: begin
-                        rd_data <= mem_rdata;
-                        rd_we <= 1'b1;
-                    end
-                    default: begin
-                        rd_data <= '0;
-                        rd_we <= '0;
-                    end
-                endcase
-            end
-            else begin
-                rd_data <= '0;
-                rd_we <= '0;
-            end
+            branch = 1'b0;
         end
+
     end
+
+    always_ff @ (posedge clock) begin
+        if (reset) begin
+            lsu.dnpc <= '0;
+            lsu.sdata <= '0;
+            lsu.rd_addr <= '0;
+            lsu.alu_res <= '0;
+            lsu.funct3 <= '0;
+            lsu.load <= '0;
+            lsu.store <= '0;
+            lsu.wb <= '0;
+            lsu.jump <= '0;
+            lsu.branch <= '0;
+        end
+        else begin
+            lsu.dnpc <= idu.dnpc;
+            lsu.sdata <= idu.sdata;
+            lsu.rd_addr <= idu.rd_addr;
+            lsu.alu_res <= alu_res;
+            lsu.funct3 <= idu.funct3;
+            lsu.load <= idu.load;
+            lsu.store <= idu.store;
+            lsu.wb <= idu.wb;
+            lsu.jump <= idu.jump; //may be merged
+            lsu.branch <= branch; //^^^^^^^^^^^^^
+        end
+
+    end
+
 
 endmodule

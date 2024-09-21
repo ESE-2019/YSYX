@@ -5,24 +5,24 @@
 // The class here is then constructed to instantiate the design.
 // See the Verilator manual for examples.
 
-#ifndef VERILATED_VTOP_H_
-#define VERILATED_VTOP_H_  // guard
+#ifndef VERILATED_VARB_H_
+#define VERILATED_VARB_H_  // guard
 
 #include "verilated.h"
 #include "svdpi.h"
 
-class Vtop__Syms;
-class Vtop___024root;
+class Varb__Syms;
+class Varb___024root;
 class VerilatedFstC;
-class Vtop_axi_if;
-class Vtop_xxu_if;
+class Varb_axi_if;
+class Varb_xxu_if;
 
 
 // This class is the main interface to the Verilated model
-class alignas(VL_CACHE_LINE_BYTES) Vtop VL_NOT_FINAL : public VerilatedModel {
+class alignas(VL_CACHE_LINE_BYTES) Varb VL_NOT_FINAL : public VerilatedModel {
   private:
     // Symbol table holding complete model state (owned by this class)
-    Vtop__Syms* const vlSymsp;
+    Varb__Syms* const vlSymsp;
 
   public:
 
@@ -39,30 +39,30 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop VL_NOT_FINAL : public VerilatedModel {
     // CELLS
     // Public to allow access to /* verilator public */ items.
     // Otherwise the application code can consider these internals.
-    Vtop_axi_if* const __PVT__top__DOT__axi_sram;
-    Vtop_xxu_if* const __PVT__top__DOT__CORE__DOT__ifu2idu;
-    Vtop_xxu_if* const __PVT__top__DOT__CORE__DOT__idu2exu;
-    Vtop_xxu_if* const __PVT__top__DOT__CORE__DOT__exu2lsu;
-    Vtop_xxu_if* const __PVT__top__DOT__CORE__DOT__lsu2wbu;
-    Vtop_xxu_if* const __PVT__top__DOT__CORE__DOT__wbu2ifu;
-    Vtop_axi_if* const __PVT__top__DOT__CORE__DOT__axi_ifu;
-    Vtop_axi_if* const __PVT__top__DOT__CORE__DOT__axi_lsu;
+    Varb_axi_if* const __PVT__top__DOT__axi_sram;
+    Varb_xxu_if* const __PVT__top__DOT__CORE__DOT__ifu2idu;
+    Varb_xxu_if* const __PVT__top__DOT__CORE__DOT__idu2exu;
+    Varb_xxu_if* const __PVT__top__DOT__CORE__DOT__exu2lsu;
+    Varb_xxu_if* const __PVT__top__DOT__CORE__DOT__lsu2wbu;
+    Varb_xxu_if* const __PVT__top__DOT__CORE__DOT__wbu2ifu;
+    Varb_axi_if* const __PVT__top__DOT__CORE__DOT__axi_ifu;
+    Varb_axi_if* const __PVT__top__DOT__CORE__DOT__axi_lsu;
 
     // Root instance pointer to allow access to model internals,
     // including inlined /* verilator public_flat_* */ items.
-    Vtop___024root* const rootp;
+    Varb___024root* const rootp;
 
     // CONSTRUCTORS
     /// Construct the model; called by application code
     /// If contextp is null, then the model will use the default global context
     /// If name is "", then makes a wrapper with a
     /// single model invisible with respect to DPI scope names.
-    explicit Vtop(VerilatedContext* contextp, const char* name = "TOP");
-    explicit Vtop(const char* name = "TOP");
+    explicit Varb(VerilatedContext* contextp, const char* name = "TOP");
+    explicit Varb(const char* name = "TOP");
     /// Destroy the model; called (often implicitly) by application code
-    virtual ~Vtop();
+    virtual ~Varb();
   private:
-    VL_UNCOPYABLE(Vtop);  ///< Copying not allowed
+    VL_UNCOPYABLE(Varb);  ///< Copying not allowed
 
   public:
     // API METHODS

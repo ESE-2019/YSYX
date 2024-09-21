@@ -1,16 +1,16 @@
 // Verilated -*- C++ -*-
 // DESCRIPTION: Verilator output: Design internal header
-// See Vtop.h for the primary calling header
+// See Varb.h for the primary calling header
 
-#ifndef VERILATED_VTOP_AXI_IF_H_
-#define VERILATED_VTOP_AXI_IF_H_  // guard
+#ifndef VERILATED_VARB_AXI_IF_H_
+#define VERILATED_VARB_AXI_IF_H_  // guard
 
 #include "verilated.h"
 
 
-class Vtop__Syms;
+class Varb__Syms;
 
-class alignas(VL_CACHE_LINE_BYTES) Vtop_axi_if final : public VerilatedModule {
+class alignas(VL_CACHE_LINE_BYTES) Varb_axi_if final : public VerilatedModule {
   public:
 
     // DESIGN SPECIFIC STATE
@@ -47,17 +47,17 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop_axi_if final : public VerilatedModule {
     IData/*31:0*/ rdata;
 
     // INTERNAL VARIABLES
-    Vtop__Syms* const vlSymsp;
+    Varb__Syms* const vlSymsp;
 
     // CONSTRUCTORS
-    Vtop_axi_if(Vtop__Syms* symsp, const char* v__name);
-    ~Vtop_axi_if();
-    VL_UNCOPYABLE(Vtop_axi_if);
+    Varb_axi_if(Varb__Syms* symsp, const char* v__name);
+    ~Varb_axi_if();
+    VL_UNCOPYABLE(Varb_axi_if);
 
     // INTERNAL METHODS
     void __Vconfigure(bool first);
 };
 
-std::string VL_TO_STRING(const Vtop_axi_if* obj);
+std::string VL_TO_STRING(const Varb_axi_if* obj);
 
 #endif  // guard

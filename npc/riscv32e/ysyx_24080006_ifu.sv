@@ -1,14 +1,17 @@
 module ysyx_24080006_ifu (
     input  logic        clock,
     input  logic        reset,
-    input  logic        pc,
+
     axi_if.master  axi_ifu,
     xxu_if.prev    wbu,
     xxu_if.next    idu
 );
 
+    logic [31:0] pc;
+    localparam RST_ADDR = 32'h8000_0000 - 32'h4;
+
     enum logic [1:0] {
-        IDLE
+        IDLE,
         EXEC,
         WAIT
     } curr, next;
@@ -87,11 +90,13 @@ module ysyx_24080006_ifu (
     end
 
 assign axi_ifu.araddr = pc;//TODO will be edited
+
     always_ff @ (posedge clock) begin//fsm 3 for axi
         unique if (reset) begin
             axi_ifu.arvalid <= 0;
 		    axi_ifu.rready  <= 1;
             idu.inst <= '0;
+            pc <= RST_ADDR;
             idu.pc <= '0;
         end
         else begin
@@ -100,6 +105,10 @@ assign axi_ifu.araddr = pc;//TODO will be edited
                 if (wbu.valid) begin
 				    axi_ifu.arvalid <= 1;
 				    axi_ifu.rready  <= 1;
+                    if (wbu.jump || wbu.branch)
+                        pc <= wbu.dnpc;
+                    else
+                        pc <= pc + 32'h4;
                 end
                 else begin
                     axi_ifu.arvalid <= 0;
@@ -114,7 +123,7 @@ assign axi_ifu.araddr = pc;//TODO will be edited
                     idu.pc <= pc;
                 end
                 else begin
-                    axi_ifu.arvalid <= 0;
+                    axi_ifu.arvalid <= 1;
 				    axi_ifu.rready  <= 1;
                 end
             end

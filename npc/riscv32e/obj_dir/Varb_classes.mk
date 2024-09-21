@@ -2,7 +2,7 @@
 # DESCRIPTION: Verilator output: Make include file with class lists
 #
 # This file lists generated Verilated files, for including in higher level makefiles.
-# See Vtop.mk for the caller.
+# See Varb.mk for the caller.
 
 ### Switches...
 # C11 constructs required?  0/1 (always on now)
@@ -23,33 +23,33 @@ VM_TRACE_FST = 1
 ### Object file lists...
 # Generated module classes, fast-path, compile with highest optimization
 VM_CLASSES_FAST += \
-	Vtop \
-	Vtop___024root__DepSet_h84412442__0 \
-	Vtop___024root__DepSet_heccd7ead__0 \
-	Vtop_axi_if__DepSet_he6f8c817__0 \
-	Vtop_xxu_if__DepSet_hecf8d4f6__0 \
+	Varb \
+	Varb___024root__DepSet_h57bbd785__0 \
+	Varb___024root__DepSet_h2560f16f__0 \
+	Varb_axi_if__DepSet_he15d33dc__0 \
+	Varb_xxu_if__DepSet_hea3b28a5__0 \
 
 # Generated module classes, non-fast-path, compile with low/medium optimization
 VM_CLASSES_SLOW += \
-	Vtop__ConstPool_0 \
-	Vtop___024root__Slow \
-	Vtop___024root__DepSet_h84412442__0__Slow \
-	Vtop___024root__DepSet_heccd7ead__0__Slow \
-	Vtop_axi_if__Slow \
-	Vtop_axi_if__DepSet_he6f8c817__0__Slow \
-	Vtop_xxu_if__Slow \
-	Vtop_xxu_if__DepSet_hecf8d4f6__0__Slow \
+	Varb__ConstPool_0 \
+	Varb___024root__Slow \
+	Varb___024root__DepSet_h57bbd785__0__Slow \
+	Varb___024root__DepSet_h2560f16f__0__Slow \
+	Varb_axi_if__Slow \
+	Varb_axi_if__DepSet_he15d33dc__0__Slow \
+	Varb_xxu_if__Slow \
+	Varb_xxu_if__DepSet_hea3b28a5__0__Slow \
 
 # Generated support classes, fast-path, compile with highest optimization
 VM_SUPPORT_FAST += \
-	Vtop__Dpi \
-	Vtop__Trace__0 \
+	Varb__Dpi \
+	Varb__Trace__0 \
 
 # Generated support classes, non-fast-path, compile with low/medium optimization
 VM_SUPPORT_SLOW += \
-	Vtop__Syms \
-	Vtop__Trace__0__Slow \
-	Vtop__TraceDecls__0__Slow \
+	Varb__Syms \
+	Varb__Trace__0__Slow \
+	Varb__TraceDecls__0__Slow \
 
 # Global classes, need linked once per executable, fast-path, compile with highest optimization
 VM_GLOBAL_FAST += \

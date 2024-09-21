@@ -1,18 +1,16 @@
 module ysyx_24080006_wbu (
     input  logic        clock,
     input  logic        reset,
-    input  logic [31:0] mem_rdata,
-    input  logic [1:0]  wb_sel, // { mem , alu }
-    input  logic [4:0]  rd,
-    
-    output logic [31:0] rd_data,
-    output logic        rd_we,
+
+    output logic [4:0]  rd,    
+    output logic [31:0] wdata,
+    output logic        we,
     xxu_if.prev    lsu,
     xxu_if.next    ifu
 );
-//TODO use fsm
+
     enum logic [1:0] {
-        IDLE
+        IDLE,
         EXEC,
         WAIT,
         RST
@@ -85,31 +83,43 @@ module ysyx_24080006_wbu (
 
     always_ff @ (posedge clock) begin//fsm 3 for exu output
         unique if (reset) begin
-            rd_data <= '0;
-            rd_we <= '0;
+            rd <= '0;
+            wdata <= '0;
+            we <= '0;
         end
         else begin
             if (curr == IDLE && lsu.valid) begin
-                case (wb_sel)
-                    2'b01: begin
-                        rd_data <= lsu.alu_res;
-                        rd_we <= 1'b1;
-                    end
-                    2'b10: begin
-                        rd_data <= mem_rdata;
-                        rd_we <= 1'b1;
-                    end
-                    default: begin
-                        rd_data <= '0;
-                        rd_we <= '0;
-                    end
-                endcase
+                if (lsu.wb) begin
+                    rd <= lsu.rd_addr;
+                    wdata <= lsu.alu_res;
+                    we <= 1'b1;
+                end
+                else begin
+                    rd <= '0;
+                    wdata <= '0;
+                    we <= '0;
+                end
             end
             else begin
-                rd_data <= '0;
-                rd_we <= '0;
+                rd <= '0;
+                wdata <= '0;
+                we <= '0;
             end
         end
+    end
+
+    always_ff @ (posedge clock) begin
+        if (reset) begin
+            ifu.dnpc <= '0;
+            ifu.jump <= '0;
+            ifu.branch <= '0;
+        end
+        else begin
+            ifu.dnpc <= lsu.dnpc;
+            ifu.jump <= lsu.jump; //may be merged
+            ifu.branch <= lsu.branch; //^^^^^^^^^
+        end
+
     end
 
 endmodule

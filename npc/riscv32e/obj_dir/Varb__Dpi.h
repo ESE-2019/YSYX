@@ -5,8 +5,8 @@
 // Manually include this file where DPI .c import functions are declared to ensure
 // the C functions match the expectations of the DPI imports.
 
-#ifndef VERILATED_VTOP__DPI_H_
-#define VERILATED_VTOP__DPI_H_  // guard
+#ifndef VERILATED_VARB__DPI_H_
+#define VERILATED_VARB__DPI_H_  // guard
 
 #include "svdpi.h"
 
@@ -16,8 +16,6 @@ extern "C" {
 
 
     // DPI IMPORTS
-    // DPI import at ysyx_24080006_idu.sv:215:30
-    extern void ebreak();
     // DPI import at sram.sv:3:29
     extern int pmem_read(int raddr);
     // DPI import at sram.sv:4:30

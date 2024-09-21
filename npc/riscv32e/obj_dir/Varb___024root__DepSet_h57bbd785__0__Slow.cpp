@@ -1,36 +1,36 @@
 // Verilated -*- C++ -*-
 // DESCRIPTION: Verilator output: Design implementation internals
-// See Vtop.h for the primary calling header
+// See Varb.h for the primary calling header
 
-#include "Vtop__pch.h"
-#include "Vtop__Syms.h"
-#include "Vtop___024root.h"
+#include "Varb__pch.h"
+#include "Varb__Syms.h"
+#include "Varb___024root.h"
 
 #ifdef VL_DEBUG
-VL_ATTR_COLD void Vtop___024root___dump_triggers__stl(Vtop___024root* vlSelf);
+VL_ATTR_COLD void Varb___024root___dump_triggers__stl(Varb___024root* vlSelf);
 #endif  // VL_DEBUG
 
-VL_ATTR_COLD void Vtop___024root___eval_triggers__stl(Vtop___024root* vlSelf) {
+VL_ATTR_COLD void Varb___024root___eval_triggers__stl(Varb___024root* vlSelf) {
     (void)vlSelf;  // Prevent unused variable warning
-    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___eval_triggers__stl\n"); );
+    Varb__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Varb___024root___eval_triggers__stl\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
     vlSelfRef.__VstlTriggered.set(0U, (IData)(vlSelfRef.__VstlFirstIteration));
 #ifdef VL_DEBUG
     if (VL_UNLIKELY(vlSymsp->_vm_contextp__->debug())) {
-        Vtop___024root___dump_triggers__stl(vlSelf);
+        Varb___024root___dump_triggers__stl(vlSelf);
     }
 #endif
 }
 
-extern const VlUnpacked<CData/*1:0*/, 16> Vtop__ConstPool__TABLE_h588dbbb1_0;
-extern const VlUnpacked<CData/*1:0*/, 16> Vtop__ConstPool__TABLE_h0e900e07_0;
+extern const VlUnpacked<CData/*1:0*/, 16> Varb__ConstPool__TABLE_h588dbbb1_0;
+extern const VlUnpacked<CData/*1:0*/, 16> Varb__ConstPool__TABLE_h0e900e07_0;
 
-VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
+VL_ATTR_COLD void Varb___024root___stl_sequent__TOP__0(Varb___024root* vlSelf) {
     (void)vlSelf;  // Prevent unused variable warning
-    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
-    VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___stl_sequent__TOP__0\n"); );
+    Varb__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;
+    VL_DEBUG_IF(VL_DBG_MSGF("+    Varb___024root___stl_sequent__TOP__0\n"); );
     auto &vlSelfRef = std::ref(*vlSelf).get();
     // Body
     if ((1U & (~ VL_ONEHOT_I((((2U == (IData)(vlSelfRef.top__DOT__CORE__DOT__IFU__DOT__curr)) 
@@ -176,7 +176,17 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                        >> 0xbU)) | 
                               (0x63U == (0x7fU & vlSymsp->TOP__top__DOT__CORE__DOT__ifu2idu.inst)));
     vlSelfRef.top__DOT__CORE__DOT__IDU__DOT__alu_set 
-        = Vtop__ConstPool__TABLE_h588dbbb1_0[vlSelfRef.__Vtableidx1];
+        = Varb__ConstPool__TABLE_h588dbbb1_0[vlSelfRef.__Vtableidx1];
+    vlSelfRef.top__DOT__CORE__DOT__LSU__DOT__rshamt 
+        = ((2U & vlSymsp->TOP__top__DOT__CORE__DOT__exu2lsu.alu_res)
+            ? ((1U & vlSymsp->TOP__top__DOT__CORE__DOT__exu2lsu.alu_res)
+                ? 0x18U : 0x10U) : ((1U & vlSymsp->TOP__top__DOT__CORE__DOT__exu2lsu.alu_res)
+                                     ? 8U : 0U));
+    vlSelfRef.top__DOT__CORE__DOT__LSU__DOT__alu_res 
+        = ((IData)(vlSymsp->TOP__top__DOT__CORE__DOT__exu2lsu.load)
+            ? (vlSelfRef.top__DOT__CORE__DOT__LSU__DOT__ldata 
+               >> (IData)(vlSelfRef.top__DOT__CORE__DOT__LSU__DOT__rshamt))
+            : vlSymsp->TOP__top__DOT__CORE__DOT__exu2lsu.alu_res);
     vlSelfRef.top__DOT__CORE__DOT__IDU__DOT__imm = 
         (((- (IData)((vlSymsp->TOP__top__DOT__CORE__DOT__ifu2idu.inst 
                       >> 0x1fU))) << 0xcU) | (vlSymsp->TOP__top__DOT__CORE__DOT__ifu2idu.inst 
@@ -185,7 +195,7 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
                                << 3U) | (((IData)(vlSymsp->TOP__top__DOT__CORE__DOT__wbu2ifu.ready) 
                                           << 2U) | (IData)(vlSelfRef.top__DOT__CORE__DOT__WBU__DOT__curr)));
     vlSelfRef.top__DOT__CORE__DOT__WBU__DOT__next = 
-        Vtop__ConstPool__TABLE_h0e900e07_0[vlSelfRef.__Vtableidx2];
+        Varb__ConstPool__TABLE_h0e900e07_0[vlSelfRef.__Vtableidx2];
     vlSelfRef.top__DOT__CORE__DOT__rs2_val = vlSelfRef.top__DOT__CORE__DOT__REG__DOT__regfile
         [(0x1fU & (vlSymsp->TOP__top__DOT__CORE__DOT__ifu2idu.inst 
                    >> 0x14U))];
