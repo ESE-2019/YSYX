@@ -19,15 +19,33 @@
 #include <memory/paddr.h>
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n,
-                              bool direction) { panic("1");}
+                              bool direction)
+{
+  uint32_t tmp = addr;
+  uint32_t *buffer = (uint32_t *)buf;
+  for (int i = 0; i < n; i++)
+  {
+    paddr_write(tmp, 4, buffer[i]);
+    tmp += 4;
+  }
+}
 
-__EXPORT void difftest_regcpy(void *dut, bool direction) { panic("2");}
+__EXPORT void difftest_regcpy(void *dut, bool direction)
+{
+  uint32_t * tmp = dut;
+  for (int i=0; i<16; i++)
+  {
+    tmp[i] = cpu.gpr[i];
+  }
+  tmp[0] = cpu.pc;
+}
 
-__EXPORT void difftest_exec(uint64_t n) { panic("3");}
+__EXPORT void difftest_exec(uint64_t n) { cpu_exec(n); }
 
-__EXPORT void difftest_raise_intr(word_t NO) { panic("4");}
+__EXPORT void difftest_raise_intr(word_t NO) { panic("4"); }
 
-__EXPORT void difftest_init(int port) {
+__EXPORT void difftest_init(int port)
+{
   void init_mem();
   init_mem();
   /* Perform ISA dependent initialization. */

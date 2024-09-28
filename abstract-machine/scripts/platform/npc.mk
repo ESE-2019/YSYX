@@ -21,4 +21,4 @@ image: $(IMAGE).elf
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 	
 run: image
-	/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/obj_dir/Vtop -IMG=$(IMAGE).bin
+	/home/ubuntu/ysyx-workbench/riscv32e/obj_dir/Vtop -IMG=$(IMAGE).bin
