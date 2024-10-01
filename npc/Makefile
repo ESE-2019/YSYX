@@ -6,11 +6,13 @@ VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
 	--timescale "1ns/1ns" --no-timing --autoflush
 
+VERILATOR_CFLAGS += -DSIM_MODE=1 -DSOC_MODE=1
+
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
-SOC_PATH = /home/ubuntu/Desktop/PA0/ysyx-workbench/ysyxSoC
+SOC_PATH = /home/ubuntu/ysyx-workbench/ysyxSoC
 default: $(BIN)
 
 $(shell mkdir -p $(BUILD_DIR))
@@ -21,7 +23,8 @@ $(shell mkdir -p $(BUILD_DIR))
 #	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv" -or -name "*.svh")
+VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
+VSRCS += $(shell find $(abspath ../riscv32e) -name "ysyx*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")

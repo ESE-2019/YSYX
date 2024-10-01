@@ -20,7 +20,7 @@ bool TRAP = false;
 
 #define MAX_IMG   0xFFFFFF
 #define MEM_BASE  0x80000000
-#define ABORT_NUM 0xFFFFFFFF
+#define ABORT_NUM 0xFFFF
 bool ebreak_n = true;
 VerilatedContext *contextp;
 VysyxSoCFull *top;
@@ -66,7 +66,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
 uint32_t add = (((addr & ~0x3u) - 0x20000000) / 0x4) % MAX_IMG;
     uint32_t ret = mem[add];
-    //printf("\taddr=0x%08x: value=0x%08x\n", addr, ret);
+    printf("\taddr=0x%08x: value=0x%08x\n", add, ret);
     *data=ret; }
 
 
@@ -90,8 +90,8 @@ int main(int argc, char **argv)
             sdb_mode = true;
         }
     }
-    img_file="/home/ubuntu/Desktop/PA0/pre_study/SoC_UART/char-test.bin";
-    //strcpy(img_file, chartest);
+    //img_file="/home/ubuntu/Desktop/PA0/pre_study/SoC_UART/char-test.bin";
+
     load_img();
     log_file =
         fopen("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/debug.log",
