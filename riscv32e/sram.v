@@ -27,7 +27,7 @@ import "DPI-C" function void pmem_write(input int waddr, input int wdata, input 
     end
 //clint end
 
-    always_ff @(posedge clock) begin
+    always_ff @(posedge clock) begin // write / store
         if (reset) begin
             axi.awready <= 1;
             axi.wready <= 1;
@@ -55,7 +55,10 @@ import "DPI-C" function void pmem_write(input int waddr, input int wdata, input 
         end
     end
 
-    always_ff @(posedge clock) begin
+
+    
+
+    always_ff @(posedge clock) begin // read / load
         if (reset) begin
             axi.arready <= 1;
             axi.rvalid <= 0;
@@ -63,7 +66,7 @@ import "DPI-C" function void pmem_write(input int waddr, input int wdata, input 
         else begin
             if (axi.arvalid && axi.arready && !axi.rvalid) begin
                 axi.arready <= 0;
-                axi.rdata   <= axi.araddr >= 32'ha0000000 ? dout : pmem_read(axi.araddr);
+                axi.rdata   <= axi.araddr >= 32'ha0000000 ? (dout) : (pmem_read(axi.araddr));
                 axi.rvalid  <= 1;
                 axi.rresp   <= 2'b00;
             end

@@ -96,75 +96,81 @@ module ysyx_24080006_lsu (
         end
     end
 
-    logic [31:0] alu_res, ldata;
-    logic [4:0] rshamt;
-    always_comb begin // process alu_res and ldata
+localparam [3:0] WSTRB_LUT [4] = '{
+    4'b0001,  // funct3 == 3'b000
+    4'b0011,  // funct3 == 3'b001
+    4'b1111,  // funct3 == 3'b010
+    4'b0000   // others
+};
 
-        case (exu.alu_res[1:0])
-			2'b00: rshamt = 0;
-			2'b01: rshamt = 8;
-			2'b10: rshamt = 16;
-			2'b11: rshamt = 24; 
-		endcase
-
-        // if (exu.load)
-        //     alu_res = ldata >> rshamt;
-        // else
-        //     alu_res = exu.alu_res;
-    end
-
-function automatic logic [31:0] Mr(input logic [31:0] tmp, input logic [2:0] funct_3);
-	unique case (funct_3)
+function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [1:0] addr, input logic [2:0] funct3);
+	logic [4:0] Mr_shamt;
+	logic [31:0] tmp;
+	unique case (addr)
+		2'b00: Mr_shamt = 0;
+		2'b01: Mr_shamt = 8;
+		2'b10: Mr_shamt = 16;
+		2'b11: Mr_shamt = 24;
+	endcase
+	tmp = rdata >> Mr_shamt;
+	unique case (funct3)
 		3'b000: Mr = { {24{tmp[7]}}, tmp[7:0]};
 		3'b001: Mr = { {16{tmp[15]}}, tmp[15:0]};
 		3'b010: Mr = tmp[31:0];
 		3'b100: Mr = {24'b0, tmp[7:0]};
 		3'b101: Mr = {16'b0, tmp[15:0]};
-		default: begin Mr = 0; 
-`ifdef SIM_MODE
-        $display("unknown type"); $finish; 
-`endif
-        end
+		default: begin Mr = 0;end
 	endcase
-    //$display("load %08x", Mr);
 endfunction
+
+assign axi_lsu.arid    = 4'h1;
+assign axi_lsu.arlen   = 8'h0;
+assign axi_lsu.arburst = 2'h0;
+
+assign axi_lsu.awid    = 4'h2;
+assign axi_lsu.awlen   = 8'h0;
+assign axi_lsu.awburst = 2'h0;
+
+assign axi_lsu.wlast   = 1'b0;
 
     always_ff @ (posedge clock) begin//fsm 3 for axi
         unique if (reset) begin
-            axi_lsu.arvalid <= 0;
-            axi_lsu.rready  <= 1;
-            axi_lsu.awvalid <= 0;
-            axi_lsu.wvalid  <= 0;
-            axi_lsu.bready  <= 1;
-            axi_lsu.araddr  <= 0;
-            axi_lsu.awaddr  <= 0;
-            axi_lsu.wdata   <= 0;
-            axi_lsu.wstrb   <= 0;
-            wbu.alu_res <= 0;
+            axi_lsu.arvalid <= '0;
+            axi_lsu.rready  <= '0;
+            axi_lsu.awvalid <= '0;
+            axi_lsu.wvalid  <= '0;
+            axi_lsu.bready  <= '0;
+            axi_lsu.araddr  <= '0;
+            axi_lsu.awaddr  <= '0;
+            axi_lsu.wdata   <= '0;
+            axi_lsu.wstrb   <= '0;
+            axi_lsu.arsize  <= '0;
+            axi_lsu.awsize  <= '0;
+            wbu.alu_res <= '0;
         end
         else begin
             unique case (curr)
             IDLE: begin
                 if (exu.valid) begin
-                    if (exu.load) begin //load
+                    if (exu.load) begin // load / read
                         axi_lsu.arvalid <= 1;
-                        axi_lsu.rready  <= 1;
+                        axi_lsu.rready  <= 0;
                         axi_lsu.awvalid <= 0;
                         axi_lsu.wvalid  <= 0;
                         axi_lsu.bready  <= 0;
-                        axi_lsu.araddr  <= exu.alu_res;//{exu.alu_res[31:2], 2'b00};
+                        axi_lsu.arsize  <= {1'b0, exu.funct3[1:0]};
+                        axi_lsu.araddr  <= exu.alu_res;
                     end
-                    else if (exu.store) begin //write
+                    else if (exu.store) begin // store / write
                         axi_lsu.arvalid <= 0;
                         axi_lsu.rready  <= 0;
                         axi_lsu.awvalid <= 1;
                         axi_lsu.wvalid  <= 1;
-                        axi_lsu.bready  <= 1;
-                        axi_lsu.awaddr  <= exu.alu_res;//{exu.alu_res[31:2], 2'b00};
+                        axi_lsu.bready  <= 0;
+                        axi_lsu.awaddr  <= exu.alu_res;
                         axi_lsu.wdata   <= exu.sdata;
-                        axi_lsu.wstrb   <=  (exu.funct3==3'b000)?4'b0001:
-                                            (exu.funct3==3'b001)?4'b0011:
-                                            (exu.funct3==3'b010)?4'b1111:4'b0;
+                        axi_lsu.awsize  <= exu.funct3;
+                        axi_lsu.wstrb   <= WSTRB_LUT[exu.funct3[1:0]];
                     end
                     else begin // bypass
                         axi_lsu.arvalid <= 0;
@@ -177,33 +183,33 @@ endfunction
                 end
                 else begin
                     axi_lsu.arvalid <= 0;
-                    axi_lsu.rready  <= 1;
+                    axi_lsu.rready  <= 0;
                     axi_lsu.awvalid <= 0;
                     axi_lsu.wvalid  <= 0;
-                    axi_lsu.bready  <= 1;
+                    axi_lsu.bready  <= 0;
                 end
             end
             EXEC: begin
-                if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+                if (axi_lsu.arready)
+                    axi_lsu.arvalid <= 0;
+                if (axi_lsu.awready)
+                    axi_lsu.awvalid <= 0;
+                if (axi_lsu.wready)
+                    axi_lsu.wvalid  <= 0;
+                if (axi_lsu.bvalid)
+                    axi_lsu.bready  <= 1;
+                if (axi_lsu.rvalid) begin
+                    axi_lsu.rready  <= 1;
+                    wbu.alu_res <= Mr(axi_lsu.rdata, exu.alu_res[1:0], exu.funct3);
+                end
+            end
+            WAIT: begin
+                if (wbu.ready) begin
                     axi_lsu.arvalid <= 0;
                     axi_lsu.rready  <= 0;
                     axi_lsu.awvalid <= 0;
                     axi_lsu.wvalid  <= 0;
                     axi_lsu.bready  <= 0;
-                    //ldata <= axi_lsu.rdata;
-                    wbu.alu_res <= Mr(axi_lsu.rdata >> rshamt, exu.funct3);
-                    //$display("araddr %x rdata %x rshamt %d funct %b", exu.alu_res, axi_lsu.rdata, rshamt, exu.funct3);
-                end
-                else
-                    ;
-            end
-            WAIT: begin
-                if (wbu.ready) begin
-                    axi_lsu.arvalid <= 0;
-                    axi_lsu.rready  <= 1;
-                    axi_lsu.awvalid <= 0;
-                    axi_lsu.wvalid  <= 0;
-                    axi_lsu.bready  <= 1;
                 end
                 else begin
                     axi_lsu.arvalid <= 0;
@@ -213,7 +219,7 @@ endfunction
                     axi_lsu.bready  <= 0;
                 end
             end
-        endcase
+            endcase
         end
     end
 
@@ -223,7 +229,6 @@ endfunction
         if (reset) begin
             wbu.dnpc <= '0;
             wbu.rd_addr <= '0;
-            //wbu.alu_res <= '0; //move to upper
             wbu.wb <= '0;
             wbu.jump <= '0;
             wbu.branch <= '0;
@@ -235,7 +240,6 @@ endfunction
         else begin
             wbu.dnpc <= exu.dnpc;
             wbu.rd_addr <= exu.rd_addr;
-            //wbu.alu_res <= alu_res;
             wbu.wb <= exu.wb;
             wbu.jump <= exu.jump; //may be merged
             wbu.branch <= exu.branch; //^^^^^^^^^

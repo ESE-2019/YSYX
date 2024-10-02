@@ -256,8 +256,10 @@ import "DPI-C" function void ebreak();
     always_ff @ (posedge clock) begin
         if (ifu.inst == 32'b0000000_00001_00000_000_00000_11100_11)
             ebreak();
+        `ifndef SOC_MODE
         if (curr == EXEC && (ifu.pc < 32'h8000_0000 || ifu.pc > 32'h9000_0000)) begin
             $display("addr error 0x%08x", ifu.pc);$finish;end
+        `endif
     end
 `endif
 

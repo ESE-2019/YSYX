@@ -31,7 +31,19 @@ extern "C" void ebreak()
         TRAP = true;
 }
 
-static uint32_t mem[MAX_IMG] = {};
+static uint32_t mem[MAX_IMG] = {
+0x100007b7,
+0x04100713,
+0x00e78023,
+0x04200713,
+0x00e78023,
+0x04300713,
+0x00e78023,
+0x04400713,
+0x00e78023,
+0x00a00713,
+0x00e78023,
+0x00100073};
 
 static char *img_file = NULL;
 static long load_img()
@@ -66,7 +78,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
 uint32_t add = (((addr & ~0x3u) - 0x20000000) / 0x4) % MAX_IMG;
     uint32_t ret = mem[add];
-    printf("\taddr=0x%08x: value=0x%08x\n", add, ret);
+    //printf("\taddr=0x%08x: value=0x%08x\n", addr, ret);
     *data=ret; }
 
 
@@ -74,7 +86,7 @@ uint32_t add = (((addr & ~0x3u) - 0x20000000) / 0x4) % MAX_IMG;
 int main(int argc, char **argv)
 {
     for(int i=0; i<MAX_IMG; i++) {
-    	mem[i] = 0x00100073;
+    	//mem[i] = 0x00100073;
     }
     const char *prefix = "-IMG=";
     bool sdb_mode = false;
@@ -90,11 +102,11 @@ int main(int argc, char **argv)
             sdb_mode = true;
         }
     }
-    //img_file="/home/ubuntu/Desktop/PA0/pre_study/SoC_UART/char-test.bin";
+    //img_file="/home/ubuntu/Desktop/PA0/pre_study/char-test/char-test.bin";
 
     load_img();
     log_file =
-        fopen("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/debug.log",
+        fopen("/home/ubuntu/ysyx-workbench/npc/build/debug.log",
               "w");
     if (log_file == NULL)
     {
@@ -113,7 +125,7 @@ int main(int argc, char **argv)
     if (WAVE)
         top->trace(tfp, 0);
     if (WAVE)
-        tfp->open("/home/ubuntu/Desktop/PA0/ysyx-workbench/npc/riscv32e/logs/wave.fst");
+        tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
     // Simulate until $finish
     ebreak_n = true;
     uint64_t wave = 0;
@@ -129,7 +141,7 @@ int main(int argc, char **argv)
 
         if (!top->clock)
         {
-            if (contextp->time() > 1 && contextp->time() < 4)
+            if (contextp->time() > 1 && contextp->time() < 20)
             {
                 top->reset = 1; // Assert reset
             }

@@ -104,7 +104,7 @@ logic [31:0] ftrace;
     always_ff @ (posedge clock) begin//fsm 3 for axi
         unique if (reset) begin
             axi_ifu.arvalid <= 0;
-		    axi_ifu.rready  <= 1;
+		    axi_ifu.rready  <= 0;
             idu.inst <= '0;
             pc <= RST_ADDR;
             `ifdef SIM_MODE
@@ -119,7 +119,7 @@ logic [31:0] ftrace;
             IDLE: begin
                 if (wbu.valid) begin
 				    axi_ifu.arvalid <= 1;
-				    axi_ifu.rready  <= 1;
+				    axi_ifu.rready  <= 0;
                     if (wbu.jump || wbu.branch)
                         pc <= wbu.dnpc;
                     else
@@ -127,13 +127,15 @@ logic [31:0] ftrace;
                 end
                 else begin
                     axi_ifu.arvalid <= 0;
-				    axi_ifu.rready  <= 1;
+				    axi_ifu.rready  <= 0;
                 end
             end
             EXEC: begin
-                if (axi_ifu.rvalid) begin
+                if (axi_ifu.arready)
                     axi_ifu.arvalid <= 0;
-				    axi_ifu.rready  <= 0;
+                if (axi_ifu.rvalid) begin
+                    
+				    axi_ifu.rready  <= 1;
                     idu.inst <= axi_ifu.rdata;
                     `ifdef SIM_MODE
                     `ifndef SOC_MODE
@@ -146,10 +148,10 @@ logic [31:0] ftrace;
                     `endif
                     idu.pc <= pc;
                 end
-                else begin
-                    axi_ifu.arvalid <= 1;
-				    axi_ifu.rready  <= 1;
-                end
+                // else begin
+                //     axi_ifu.arvalid <= 1;
+				//     axi_ifu.rready  <= 0;
+                // end
             end
             WAIT: begin
                 if (idu.ready) begin
@@ -158,11 +160,16 @@ logic [31:0] ftrace;
                 end
                 else begin
                     axi_ifu.arvalid <= 0;
-				    axi_ifu.rready  <= 1;
+				    axi_ifu.rready  <= 0;
                 end
             end
         endcase
         end
     end
+
+assign axi_ifu.arid    = 4'h0;
+assign axi_ifu.arlen   = 8'h0;
+assign axi_ifu.arsize  = 3'h2;
+assign axi_ifu.arburst = 2'h1;
 
 endmodule
