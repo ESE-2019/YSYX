@@ -1,6 +1,7 @@
 #include <am.h>
 #include <klib-macros.h>
 #include <riscv/riscv.h>
+#include <stdio.h>
 
 extern char _heap_start;
 int main(const char *args);
@@ -36,8 +37,33 @@ void uart_init() {
     outb(0x10000003, 0);
 }
 
+void print_ysyx() {
+    uint32_t mvendorid;
+    uint32_t marchid;
+    char ysyx[5];
+    
+    __asm__ volatile (
+        "csrr %0, 0xF11"
+        : "=r" (mvendorid)
+    );
+
+    __asm__ volatile (
+        "csrr %0, 0xF12"
+        : "=r" (marchid)
+    );
+    
+    for (int i = 0; i < 4; i++) {
+        ysyx[3-i] = (mvendorid >> (8 * i)) & 0xFF;
+    }
+    
+    ysyx[4] = '\0';
+    
+    printf("%s_%d\n", ysyx, marchid);
+}
+
 void _trm_init() {
   uart_init();
+  print_ysyx();
   int ret = main(mainargs);
   halt(ret);
 }

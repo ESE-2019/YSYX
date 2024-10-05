@@ -168,9 +168,9 @@ assign axi_lsu.wlast   = 1'b0;
                         axi_lsu.wvalid  <= 1;
                         axi_lsu.bready  <= 0;
                         axi_lsu.awaddr  <= exu.alu_res;
-                        axi_lsu.wdata   <= exu.sdata;
+                        axi_lsu.wdata   <= exu.sdata << (8* exu.alu_res[1:0]);
                         axi_lsu.awsize  <= exu.funct3;
-                        axi_lsu.wstrb   <= WSTRB_LUT[exu.funct3[1:0]];
+                        axi_lsu.wstrb   <= WSTRB_LUT[exu.funct3[1:0]] << exu.alu_res[1:0];
                     end
                     else begin // bypass
                         axi_lsu.arvalid <= 0;

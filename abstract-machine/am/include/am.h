@@ -1,6 +1,17 @@
 #ifndef AM_H__
 #define AM_H__
 
+#define UART_BASE_ADDR 0x10000000
+#define UART_DLL (UART_BASE_ADDR + 0x00)
+#define UART_DLH (UART_BASE_ADDR + 0x01)
+#define UART_LCR (UART_BASE_ADDR + 0x03)
+#define UART_FCR (UART_BASE_ADDR + 0x02)
+#define UART_IER (UART_BASE_ADDR + 0x01)
+#define UART_MCR (UART_BASE_ADDR + 0x04)
+#define UART_LSR (UART_BASE_ADDR + 0x05)
+#define UART_THR (UART_BASE_ADDR + 0x00)
+#define UART_RBR (UART_BASE_ADDR + 0x00)
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

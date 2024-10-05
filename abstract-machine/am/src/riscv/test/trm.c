@@ -17,7 +17,8 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
-outb(0xa00003f8, ch);
+while ((inb(UART_LSR) & (1 << 5)) == 0);
+outb(UART_THR, ch);
 }
 
 void halt(int code) {
@@ -26,7 +27,29 @@ void halt(int code) {
   ;
 }
 
-void print_ysyx() {
+static void uart_init() {
+
+    uint16_t divisor = 1;
+    uint8_t tmp = inb(UART_LCR);
+    outb(UART_LCR, (1<<7)|tmp);
+    outb(UART_DLH, (uint8_t)((divisor >> 8) & 0xFF));
+    outb(UART_DLL, (uint8_t)(divisor & 0xFF));
+    outb(UART_LCR, tmp);
+}
+static uint32_t decimalTo32Bit(uint32_t decimal) {
+    uint32_t result = 0;
+    uint32_t shift = 0;
+
+    while (decimal > 0 && shift < 32) {
+        uint32_t digit = decimal % 10;
+        result |= (digit << shift);
+        decimal /= 10;
+        shift += 4;
+    }
+    return result;
+}
+
+static void print_ysyx() {
     uint32_t mvendorid;
     uint32_t marchid;
     char ysyx[5];
@@ -48,9 +71,11 @@ void print_ysyx() {
     ysyx[4] = '\0';
     
     printf("%s_%d\n", ysyx, marchid);
+    outl(0x10002008, decimalTo32Bit(marchid));
 }
 
 void _trm_init() {
+  uart_init();
   print_ysyx();
   int ret = main(mainargs);
   halt(ret);

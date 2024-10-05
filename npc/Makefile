@@ -1,12 +1,11 @@
 TOPNAME = ysyxSoCFull
-NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
 	--timescale "1ns/1ns" --no-timing --autoflush
 
-VERILATOR_CFLAGS += -DSIM_MODE=1 -DSOC_MODE=1
+VERILATOR_CFLAGS += -DSIM_MODE=1 #-DSOC_MODE=1
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -18,9 +17,11 @@ default: $(BIN)
 $(shell mkdir -p $(BUILD_DIR))
 
 # constraint file
-#SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-#$(SRC_AUTO_BIND): $(NXDC_FILES)
-#	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+include $(NVBOARD_HOME)/scripts/nvboard.mk
+NXDC_FILES = constr/top.nxdc
+SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+$(SRC_AUTO_BIND): $(NXDC_FILES)
+	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
@@ -28,9 +29,17 @@ VSRCS += $(shell find $(abspath ../riscv32e) -name "ysyx*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-#CSRCS += $(SRC_AUTO_BIND)
+CSRCS += $(SRC_AUTO_BIND)
 
-VERILATOR_CFLAGS += -I$(SOC_PATH)/perip/uart16550/rtl -I$(SOC_PATH)/perip/spi/rtl
+VERILATOR_CFLAGS += -I$(SOC_PATH)/perip/uart16550/rtl -I$(SOC_PATH)/perip/spi/rtl -I$(SOC_PATH)/perip/gpio
+
+VERILATOR_CFLAGS += -CFLAGS -I/usr/lib/llvm-14/include \
+	-CFLAGS -std=c++14 -CFLAGS -fno-exceptions -CFLAGS -D_GNU_SOURCE -CFLAGS -D__STDC_CONSTANT_MACROS -CFLAGS -D__STDC_LIMIT_MACROS \
+	-CFLAGS -Ofast -CFLAGS -fexceptions \
+	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
+	-LDFLAGS /home/ubuntu/ysyx-workbench/riscv32e/libdisasm.so \
+	-LDFLAGS /home/ubuntu/ysyx-workbench/riscv32e/riscv32-nemu-interpreter-so \
+	-LDFLAGS -lLLVM-14 -LDFLAGS -flto
 ifneq ($(words $(CURDIR)),1)
  $(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')
 endif

@@ -7,11 +7,11 @@ void __am_gpu_init() {}
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg)
 {
-  uint32_t V = inl(VGACTL_ADDR);
+  uint32_t tmp = inl(VGACTL_ADDR);
   *cfg = (AM_GPU_CONFIG_T){.present = true,
                            .has_accel = false,
-                           .width = ((uint16_t)(V >> 16)),
-                           .height = ((uint16_t)V),
+                           .width = ((uint16_t)(tmp >> 16)),
+                           .height = ((uint16_t)tmp),
                            .vmemsz = 0};
 }
 

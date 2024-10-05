@@ -13,13 +13,15 @@ module ysyx_24080006_csr (
     output logic [31:0] csr_rdata
 );
 
-    logic [31:0] regfile [4];
+    logic [31:0] regfile [8];
     
-    enum logic [1:0] {
-        mstatus = 2'b00,
-        mtvec   = 2'b01,
-        mepc    = 2'b10,
-        mcause  = 2'b11
+    enum logic [2:0] {
+        mstatus   = 3'b000,
+        mtvec     = 3'b001,
+        mepc      = 3'b010,
+        mcause    = 3'b011,
+        mvendorid = 3'b100,
+        marchid   = 3'b101
     } csr_r, csr_w;
     
     always_comb begin
@@ -28,6 +30,8 @@ module ysyx_24080006_csr (
 	12'h305: csr_r = mtvec;
 	12'h341: csr_r = mepc;
 	12'h342: csr_r = mcause;
+    12'hf11: csr_r = mvendorid;
+    12'hf12: csr_r = marchid;
 	default: csr_r = mstatus;
 	endcase
     end
@@ -38,6 +42,8 @@ module ysyx_24080006_csr (
 	12'h305: csr_w = mtvec;
 	12'h341: csr_w = mepc;
 	12'h342: csr_w = mcause;
+    12'hf11: csr_w = mvendorid;
+    12'hf12: csr_w = marchid;
 	default: csr_w = mstatus;
 	endcase
     end
@@ -50,6 +56,10 @@ module ysyx_24080006_csr (
             regfile[1] <= '0;
             regfile[2] <= '0;
             regfile[3] <= '0;
+            regfile[4] <= 32'h79737978;
+            regfile[5] <= 32'd24080006;
+            regfile[6] <= '0;
+            regfile[7] <= '0;
         end else if (csr_we) begin
             regfile[csr_w] <= csr_wdata;
         end else if (mepc_en) begin

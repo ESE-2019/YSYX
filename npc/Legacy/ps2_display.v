@@ -26,7 +26,7 @@ always@(posedge clk) begin
     hold <= 1'b0;
     cnt <= 8'b0;
   end else begin
-  	if(ready ==1 && overflow == 0) begin
+  	if(ready == 1 && overflow == 0) begin
   	  tmp <= data;
       if(tmp != data) begin
         if(tmp == 8'hf0) begin
