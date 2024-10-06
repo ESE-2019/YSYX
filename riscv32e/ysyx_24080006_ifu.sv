@@ -133,8 +133,7 @@ logic [31:0] ftrace;
             EXEC: begin
                 if (axi_ifu.arready)
                     axi_ifu.arvalid <= 0;
-                if (axi_ifu.rvalid) begin
-                    
+                if (axi_ifu.rvalid) begin                    
 				    axi_ifu.rready  <= 1;
                     idu.inst <= axi_ifu.rdata;
                     `ifdef SIM_MODE
@@ -148,21 +147,11 @@ logic [31:0] ftrace;
                     `endif
                     idu.pc <= pc;
                 end
-                // else begin
-                //     axi_ifu.arvalid <= 1;
-				//     axi_ifu.rready  <= 0;
-                // end
             end
             WAIT: begin
-                if (idu.ready) begin
                     axi_ifu.arvalid <= 0;
 				    axi_ifu.rready  <= 0;
                 end
-                else begin
-                    axi_ifu.arvalid <= 0;
-				    axi_ifu.rready  <= 0;
-                end
-            end
         endcase
         end
     end

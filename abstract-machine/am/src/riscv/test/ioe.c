@@ -9,7 +9,8 @@ void __am_timer_uptime(AM_TIMER_UPTIME_T *);
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *);
 void __am_uart_rx(AM_UART_RX_T *);
 
-static void __am_timer_config(AM_TIMER_CONFIG_T *cfg) {
+static void __am_timer_config(AM_TIMER_CONFIG_T *cfg)
+{
   cfg->present = true;
   cfg->has_rtc = true;
 }
@@ -27,20 +28,39 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg)
                            .vmemsz = 0};
 }
 
+static uint32_t cast_color(uint32_t input)
+{
+  // 提取 23-20 位
+  uint32_t part1 = (input >> 20) & 0xF;
+
+  // 提取 15-12 位
+  uint32_t part2 = (input >> 12) & 0xF;
+
+  // 提取 7-4 位
+  uint32_t part3 = (input >> 4) & 0xF;
+
+  // 将这些位拼接成一个数，高位补零
+  uint32_t result = (part1 << 8) | (part2 << 4) | part3;
+
+  return result;
+}
+
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
 {
   int x = ctl->x, y = ctl->y, w = ctl->w, h = ctl->h;
-  if (!ctl->sync || w == 0 || h == 0 || w > 640 || h > 480)
+  if (w == 0 || h == 0 || x + w > 640 || y + h > 480) //!ctl->sync || 
     return;
 
   uint32_t *pixels = ctl->pixels;
-
-  for (int i = 0; i < h; i++)
+  uint32_t addr, value;
+  for (int j = 0; j < h; j = j + 3)
   {
-    uint32_t *pixels_row = &pixels[w * i];
-    for (int j = 0; j < w; j++)
+    uint32_t *tmp = &pixels[w * j];
+    for (int i = 0; i < w; i = i + 6)
     {
-      outl(0x21000000|((x+j)<<12)|((y+i)<<2),pixels_row[j]);
+      addr = 0x21000000 | ((x + i) << 11) | ((y + j) << 2);
+      value = (cast_color(tmp[i + 3]) << 16) | cast_color(tmp[i]);
+      outl(addr, value);
     }
   }
 }
@@ -63,7 +83,8 @@ static void *lut[128] = {
 
 static void fail(void *buf) { panic("access nonexist register"); }
 
-bool ioe_init() {
+bool ioe_init()
+{
   for (int i = 0; i < LENGTH(lut); i++)
     if (!lut[i])
       lut[i] = fail;

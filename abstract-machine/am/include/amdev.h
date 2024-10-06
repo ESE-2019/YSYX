@@ -53,7 +53,6 @@ AM_DEVREG(24, NET_RX, WR, Area buf);
 
 #define AM_KEY_NAMES(key) AM_KEY_##key,
 enum { AM_KEY_NONE = 0, AM_KEYS(AM_KEY_NAMES) };
-
 // GPU
 
 #define AM_GPU_TEXTURE 1

@@ -1,5 +1,5 @@
-bool LOG = true;
-bool WAVE = true;
+bool LOG = 0;
+bool WAVE = 0;
 bool TRAP = false;
 bool SDB = false;
 bool QUIT = false;
@@ -1192,7 +1192,7 @@ int main(int argc, char **argv)
     }
     load_img();
     log_file =
-        fopen("/home/ubuntu/ysyx-workbench/riscv32e/debug.log",
+        fopen("/home/ubuntu/ysyx-workbench/npc/build/debug.log",
               "w");
     if (log_file == NULL)
     {
@@ -1213,7 +1213,7 @@ int main(int argc, char **argv)
     if (WAVE)
         top->trace(tfp, 0);
     if (WAVE)
-        tfp->open("/home/ubuntu/ysyx-workbench/riscv32e/wave.fst");
+        tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
     // Simulate until $finish
     ebreak_n = true;
     uint64_t wave = 0;
