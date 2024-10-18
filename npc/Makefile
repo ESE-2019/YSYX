@@ -67,8 +67,9 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 
 all: default
 
-sim:
+sim: run
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	gtkwave ./build/wave.fst
 
 run: $(BIN)
 	@$^

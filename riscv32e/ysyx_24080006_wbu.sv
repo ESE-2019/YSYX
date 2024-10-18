@@ -113,7 +113,7 @@ module ysyx_24080006_wbu (
                 else if (lsu.ecall) begin
                     csr_we <= 1'b1;//lsu.csr_we;
                     csr_waddr <= 12'h342;
-                    csr_wdata <= lsu.alu_res;
+                    csr_wdata <= 32'd11;
                 end
                 else begin
                     rd <= '0;
@@ -140,11 +140,13 @@ module ysyx_24080006_wbu (
             ifu.dnpc <= '0;
             ifu.jump <= '0;
             ifu.branch <= '0;
+            ifu.rd_addr <= '0;
         end
-        else begin
+        else if (curr == IDLE && lsu.valid) begin
             ifu.dnpc <= lsu.dnpc;
             ifu.jump <= lsu.jump; //may be merged
             ifu.branch <= lsu.branch; //^^^^^^^^^
+            ifu.rd_addr <= (lsu.wb) ? lsu.rd_addr : '0;
         end
 
     end

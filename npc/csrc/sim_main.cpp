@@ -1,5 +1,5 @@
 bool LOG = 0;
-bool WAVE = 0;
+bool WAVE = 1;
 bool TRAP = false;
 bool SDB = false;
 bool QUIT = false;

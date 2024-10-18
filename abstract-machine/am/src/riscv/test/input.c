@@ -277,8 +277,8 @@ void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd)
 
 void __am_uart_rx(AM_UART_RX_T *uart)
 {
-  if ((inb(UART_LSR) & (1)) == 0)
+  if ((inb(SOC_UART_LSR) & (1)) == 0)
     uart->data = 0xff;
   else
-    uart->data = inb(UART_RBR);
+    uart->data = inb(SOC_UART_RBR);
 }

@@ -16,9 +16,11 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 #endif
 static const char mainargs[] = MAINARGS;
 
+
+
 void putch(char ch) {
-while ((inb(UART_LSR) & (1 << 5)) == 0);
-outb(UART_THR, ch);
+while ((inb(SOC_UART_LSR) & (1 << 5)) == 0);
+outb(SOC_UART_THR, ch);
 }
 
 void halt(int code) {
@@ -30,11 +32,11 @@ void halt(int code) {
 static void uart_init() {
 
     uint16_t divisor = 1;
-    uint8_t tmp = inb(UART_LCR);
-    outb(UART_LCR, (1<<7)|tmp);
-    outb(UART_DLH, (uint8_t)((divisor >> 8) & 0xFF));
-    outb(UART_DLL, (uint8_t)(divisor & 0xFF));
-    outb(UART_LCR, tmp);
+    uint8_t tmp = inb(SOC_UART_LCR);
+    outb(SOC_UART_LCR, (1<<7)|tmp);
+    outb(SOC_UART_DLH, (uint8_t)((divisor >> 8) & 0xFF));
+    outb(SOC_UART_DLL, (uint8_t)(divisor & 0xFF));
+    outb(SOC_UART_LCR, tmp);
 }
 static uint32_t decimalTo32Bit(uint32_t decimal) {
     uint32_t result = 0;

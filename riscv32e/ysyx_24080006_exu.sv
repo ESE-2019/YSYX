@@ -115,8 +115,9 @@ module ysyx_24080006_exu (
             lsu.csr_we <= '0;
             lsu.csr_wdata <= '0;
             lsu.ecall <= '0;
+            lsu.pc <= '0;
         end
-        else begin
+        else if (curr == IDLE && idu.valid) begin
             lsu.dnpc <= idu.dnpc;
             lsu.sdata <= idu.sdata;
             lsu.rd_addr <= idu.rd_addr;
@@ -131,6 +132,7 @@ module ysyx_24080006_exu (
             lsu.csr_we <= idu.csr_we;
             lsu.csr_wdata <= idu.csr_wdata;
             lsu.ecall <= idu.ecall;
+            lsu.pc <= idu.pc;
         end
 
     end

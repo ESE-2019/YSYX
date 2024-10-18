@@ -103,12 +103,12 @@ assign mepc_en = ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11;
     
     assign opcode = ifu.inst[6:0];
     assign funct3 = ifu.inst[14:12];
-    assign rs1_addr = ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11 ? 5'd15 : ifu.inst[19:15];
+    assign rs1_addr = ifu.inst[19:15];
     assign rs2_addr = ifu.inst[24:20];
     assign rd_addr = ifu.inst[11:7];
 
-    assign csr_addr = ( ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11 ) ? 12'h305 : // ecall
-                        ( ifu.inst == 32'b0011000_00010_00000_000_00000_11100_11 ) ? 12'h341 : // mret
+    assign csr_addr = ( ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11 ) ? 12'h305 : // ecall mtvec
+                        ( ifu.inst == 32'b0011000_00010_00000_000_00000_11100_11 ) ? 12'h341 : // mret mepc
                             ifu.inst[31:20];
 
     logic [31:0] alu_src1, alu_src2;
@@ -239,6 +239,7 @@ assign mepc_en = ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11;
             exu.jump <= '0;
             exu.branch <= '0;
             exu.ecall <= '0;
+            exu.pc <= '0;
         end
         else if (curr == IDLE && ifu.valid) begin
             exu.funct3 <= funct3;
@@ -248,6 +249,7 @@ assign mepc_en = ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11;
             exu.jump <= (opcode inside {jal, jalr}) || (opcode == system && !csr_we);
             exu.branch <= opcode == B_type;   
             exu.ecall <= ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11;
+            exu.pc <= ifu.pc;
         end
     end
 

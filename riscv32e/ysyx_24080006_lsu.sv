@@ -103,6 +103,8 @@ localparam [3:0] WSTRB_LUT [4] = '{
     4'b0000   // others
 };
 
+logic [1:0] Mr_param_addr;
+logic [2:0] Mr_param_funct3;
 function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [1:0] addr, input logic [2:0] funct3);
 	logic [4:0] Mr_shamt;
 	logic [31:0] tmp;
@@ -147,6 +149,8 @@ assign axi_lsu.wlast   = 1'b0;
             axi_lsu.arsize  <= '0;
             axi_lsu.awsize  <= '0;
             wbu.alu_res <= '0;
+            Mr_param_addr <= '0;
+            Mr_param_funct3 <= '0;
         end
         else begin
             unique case (curr)
@@ -160,6 +164,8 @@ assign axi_lsu.wlast   = 1'b0;
                         axi_lsu.bready  <= 0;
                         axi_lsu.arsize  <= {1'b0, exu.funct3[1:0]};
                         axi_lsu.araddr  <= exu.alu_res;
+                        Mr_param_addr <= exu.alu_res[1:0];
+                        Mr_param_funct3 <= exu.funct3;
                     end
                     else if (exu.store) begin // store / write
                         axi_lsu.arvalid <= 0;
@@ -200,7 +206,7 @@ assign axi_lsu.wlast   = 1'b0;
                     axi_lsu.bready  <= 1;
                 if (axi_lsu.rvalid) begin
                     axi_lsu.rready  <= 1;
-                    wbu.alu_res <= Mr(axi_lsu.rdata, exu.alu_res[1:0], exu.funct3);
+                    wbu.alu_res <= Mr(axi_lsu.rdata, Mr_param_addr, Mr_param_funct3);
                 end
             end
             WAIT: begin
@@ -236,8 +242,9 @@ assign axi_lsu.wlast   = 1'b0;
             wbu.csr_we <= '0;
             wbu.csr_wdata <= '0;
             wbu.ecall <= '0;
+            wbu.pc <= '0;
         end
-        else begin
+        else if (curr == IDLE && exu.valid) begin
             wbu.dnpc <= exu.dnpc;
             wbu.rd_addr <= exu.rd_addr;
             wbu.wb <= exu.wb;
@@ -247,6 +254,7 @@ assign axi_lsu.wlast   = 1'b0;
             wbu.csr_we <= exu.csr_we;
             wbu.csr_wdata <= exu.csr_wdata;
             wbu.ecall <= exu.ecall;
+            wbu.pc <= exu.pc;
         end
 
     end
