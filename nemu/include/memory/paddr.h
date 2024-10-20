@@ -20,7 +20,11 @@
 
 #define PMEM_LEFT ((paddr_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
+#ifdef CONFIG_TARGET_SHARE
+#define RESET_VECTOR 0x20000000
+#else
 #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
+#endif
 
 /* convert the guest physical address in the guest program to host virtual
  * address in NEMU */
@@ -30,7 +34,15 @@ uint8_t *guest_to_host(paddr_t paddr);
 paddr_t host_to_guest(uint8_t *haddr);
 
 static inline bool in_pmem(paddr_t addr) {
-  return addr - CONFIG_MBASE < CONFIG_MSIZE;
+  return (addr >= CONFIG_MBASE) &&  ((addr - CONFIG_MBASE) < CONFIG_MSIZE);
+}
+
+static inline bool in_soc_mrom(paddr_t addr) {
+  return (addr >= SOC_MROM_MBASE) && ((addr - SOC_MROM_MBASE) < SOC_MROM_MSIZE);
+}
+
+static inline bool in_soc_sram(paddr_t addr) {
+  return (addr >= SOC_SRAM_MBASE) && ((addr - SOC_SRAM_MBASE) < SOC_SRAM_MSIZE);
 }
 
 word_t paddr_read(paddr_t addr, int len);

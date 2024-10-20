@@ -259,5 +259,58 @@ assign axi_lsu.wlast   = 1'b0;
 
     end
 
+`ifdef SOC_MODE
 
+    function automatic logic INSIDE (
+        input logic [31:0] addr, left, right);
+        INSIDE = addr >= left && addr <= right;
+    endfunction
+
+    function automatic logic INSIDE_PERIP (input logic [31:0] addr);
+        INSIDE_PERIP =  INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) || // CLINT
+                        INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) || // UART
+                        INSIDE(addr, 32'h1000_1000, 32'h1000_1fff) || // SPI
+                        INSIDE(addr, 32'h1000_2000, 32'h1000_200f) || // GPIO
+                        INSIDE(addr, 32'h1001_1000, 32'h1001_1007) || // PS2
+                        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff) || // VGA
+                        0;
+    endfunction
+
+    function automatic logic INSIDE_MEM (input logic [31:0] addr);
+        INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
+                        INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
+                        INSIDE(addr, 32'h3000_0000, 32'h3fff_ffff) || // FLASH
+                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
+                        0;
+    endfunction
+
+    import "DPI-C" function void SKIP_DIFFTEST();
+
+    always_ff @ (posedge clock) begin
+        if (curr == EXEC && exu.store) begin
+            if (INSIDE_PERIP(axi_lsu.awaddr)) begin
+                SKIP_DIFFTEST();
+                //$display("[LSU] addr skip 0x%08x", axi_lsu.awaddr);
+            end
+            else if (INSIDE_MEM(axi_lsu.awaddr))
+                ;
+            else begin
+                $display("[LSU] store addr error 0x%08x", axi_lsu.awaddr);
+                $finish;
+            end
+        end
+        if (curr == EXEC && exu.load) begin
+            if (INSIDE_PERIP(axi_lsu.araddr)) begin
+                SKIP_DIFFTEST();
+                //$display("[LSU] addr skip 0x%08x", axi_lsu.araddr);
+            end
+            else if (INSIDE_MEM(axi_lsu.araddr))
+                ;
+            else begin
+                $display("[LSU] load addr error 0x%08x",axi_lsu.araddr);
+                $finish;
+            end
+        end
+    end
+`endif
 endmodule

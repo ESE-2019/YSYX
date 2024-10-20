@@ -177,7 +177,6 @@ int32_t mulhsu(int32_t a, uint32_t b)
   int64_t result = (int64_t)a * (uint64_t)b;
   return (int32_t)(result >> 32);
 }
-
 uint32_t CSR_r(uint32_t imm)
 {
   int csr = imm & 0xFFF;
@@ -195,6 +194,12 @@ uint32_t CSR_r(uint32_t imm)
     break;
   case 0x342:
     addr = &cpu.mcause;
+    break;
+  case 0xf11:
+    addr = &cpu.mvendorid;
+    break;
+  case 0xf12:
+    addr = &cpu.marchid;
     break;
   default:
     panic();
@@ -223,6 +228,12 @@ bool CSR_w(uint32_t imm, uint32_t data)
     break;
   case 0x342:
     addr = &cpu.mcause;
+    break;
+  case 0xf11:
+    addr = &cpu.mvendorid;
+    break;
+  case 0xf12:
+    addr = &cpu.marchid;
     break;
   default:
     panic();
@@ -317,7 +328,6 @@ static int decode_exec(Decode *s)
     IFDEF(CONFIG_ETRACE, Log("csrrsi")); R(rd) = tmp; CSR_w(imm, uimm | tmp););
   INSTPAT("??????? ????? ????? 111 ????? 11100 11", csrrci, I,
     IFDEF(CONFIG_ETRACE, Log("csrrci")); R(rd) = tmp; CSR_w(imm, (~uimm) | tmp););
-//cpu.mstatus=0x1800;
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc, U,
           R(rd) = s->pc + imm /*; Log("auipc") */);
   INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I,

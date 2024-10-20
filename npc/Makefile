@@ -4,8 +4,10 @@ INC_PATH ?=
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
 	--timescale "1ns/1ns" --no-timing --autoflush
+	
+#VERILATOR_CFLAGS += --debug
 
-VERILATOR_CFLAGS += -DSIM_MODE=1 #-DSOC_MODE=1
+VERILATOR_CFLAGS += -DSIM_MODE=1  -DSOC_MODE=1
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -38,7 +40,7 @@ VERILATOR_CFLAGS += -CFLAGS -I/usr/lib/llvm-14/include \
 	-CFLAGS -Ofast -CFLAGS -fexceptions \
 	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/riscv32e/libdisasm.so \
-	-LDFLAGS /home/ubuntu/ysyx-workbench/riscv32e/riscv32-nemu-interpreter-so \
+	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
 	-LDFLAGS -lLLVM-14 -LDFLAGS -flto
 ifneq ($(words $(CURDIR)),1)
  $(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')
@@ -69,7 +71,10 @@ all: default
 
 sim: run
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	gtkwave ./build/wave.fst
+	gtkwave ./build/wave.fst &
+
+wave:
+	gtkwave ./build/wave.fst &
 
 run: $(BIN)
 	@$^

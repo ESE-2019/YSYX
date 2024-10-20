@@ -95,10 +95,8 @@ module ysyx_24080006_ifu (
 
 assign axi_ifu.araddr = pc;//TODO will be edited
 `ifdef SIM_MODE
-`ifndef SOC_MODE
 import "DPI-C" function void dbg(input int inst, input int pc, input int ft_pc);
 logic [31:0] ftrace;
-`endif
 `endif
 
     always_ff @ (posedge clock) begin//fsm 3 for axi
@@ -108,9 +106,7 @@ logic [31:0] ftrace;
             idu.inst <= '0;
             pc <= RST_ADDR;
             `ifdef SIM_MODE
-            `ifndef SOC_MODE
             ftrace <= RST_ADDR;
-            `endif
             `endif
             idu.pc <= '0;
         end
@@ -137,13 +133,11 @@ logic [31:0] ftrace;
 				    axi_ifu.rready  <= 1;
                     idu.inst <= axi_ifu.rdata;
                     `ifdef SIM_MODE
-                    `ifndef SOC_MODE
                     if (wbu.jump || wbu.branch)
                         ftrace <= wbu.dnpc;
                     else
                         ftrace <= ftrace + 32'h4;
                     dbg(axi_ifu.rdata, pc, (wbu.jump?ftrace:0));
-                    `endif
                     `endif
                     idu.pc <= pc;
                 end
@@ -160,5 +154,12 @@ assign axi_ifu.arid    = 4'h0;
 assign axi_ifu.arlen   = 8'h0;
 assign axi_ifu.arsize  = 3'h2;
 assign axi_ifu.arburst = 2'h1;
+
+`ifdef SOC_MODE
+    always_ff @ (posedge clock) begin
+        if (curr == EXEC && (pc < 32'h2000_0000 || pc > 32'h2000_0fff)) begin
+            $display("addr error 0x%08x", pc);$finish;end
+    end
+`endif
 
 endmodule

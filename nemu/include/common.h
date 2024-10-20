@@ -46,4 +46,9 @@ typedef uint16_t ioaddr_t;
 
 #include <debug.h>
 
+#define SOC_SRAM_MBASE 0x0f000000
+#define SOC_SRAM_MSIZE 0xffffff
+#define SOC_MROM_MBASE 0x20000000
+#define SOC_MROM_MSIZE 0xfff
+
 #endif

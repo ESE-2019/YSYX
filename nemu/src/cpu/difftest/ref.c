@@ -18,8 +18,7 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
-__EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n,
-                              bool direction)
+__EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
 {
   uint32_t tmp = addr;
   uint32_t *buffer = (uint32_t *)buf;
@@ -30,14 +29,25 @@ __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n,
   }
 }
 
-__EXPORT void difftest_regcpy(void *dut, bool direction)
+__EXPORT void difftest_regcpy(void *dut, bool direction) // 0 for normal, 1 for skip
 {
-  uint32_t * tmp = dut;
-  for (int i=0; i<16; i++)
+  uint32_t *tmp = dut;
+  if (direction == 0)
   {
-    tmp[i] = cpu.gpr[i];
+    for (int i = 0; i < 32; i++)
+    {
+      tmp[i] = cpu.gpr[i];
+    }
+    tmp[0] = cpu.pc;
   }
-  tmp[0] = cpu.pc;
+  else
+  {
+    cpu.pc = tmp[0];
+    for (int i = 1; i < 32; i++)
+    {
+      cpu.gpr[i] = tmp[i];
+    }
+  }
 }
 
 __EXPORT void difftest_exec(uint64_t n) { cpu_exec(n); }

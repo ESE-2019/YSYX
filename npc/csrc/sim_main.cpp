@@ -1,14 +1,17 @@
+// 反汇编时机：每次IFU取指后
+// DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 bool LOG = 0;
 bool WAVE = 1;
-bool TRAP = false;
-bool SDB = false;
-bool QUIT = false;
+bool TRAP = 0;
+bool SDB = 0;
 
-bool DIFF_EN = false;
+bool DIFF_EN = 1;
 bool IT_EN = 0;
 bool FT_EN = false;
 
-#define ABORT_NUM 0//0xffff
+#define ABORT_NUM 0 // 0xffff
+
+#define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__REG__DOT__regfile
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"
@@ -33,8 +36,7 @@ bool FT_EN = false;
 
 #define STRLEN(CONST_STR) (sizeof(CONST_STR) - 1)
 #define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data)  { assert(0); }
+
 extern "C"
 {
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
@@ -58,7 +60,7 @@ extern "C" void ebreak()
 {
 
     ebreak_n = false;
-    //if (0 == top->rootp->top__DOT__CORE__DOT__REG__DOT__regfile[10])
+    if (0 == NPC_REG[10])
         TRAP = true;
 }
 
@@ -339,12 +341,59 @@ static void ftrace_print()
     printf("%s\n", ftrace_buf);
 }
 bool initial = true;
+bool SKIP = 0;
+extern "C" void SKIP_DIFFTEST()
+{
+    SKIP = 1;
+}
 extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
 {
     uint32_t ist = inst;
     cycle--;
     inst_ipc++;
     PC = pc;
+    // diff test
+    uint32_t check[32];
+    if (DIFF_EN)
+
+        if (initial)
+        {
+            initial = false;
+        }
+        else if (SKIP)
+        {
+            SKIP = 0;
+            for (int j = 0; j < 32; j++)
+            {
+                check[j] = NPC_REG[j];
+            }
+            check[0] = pc;
+            difftest_regcpy(check, 1); // 0 for normal, 1 for skip
+        }
+        else
+        {
+            difftest_exec(1);
+            difftest_regcpy(check, 0); // 0 for normal, 1 for skip
+            for (int j = 0; j < 32; j++)
+            {
+                if (j == 0)
+                {
+                    if (check[j] != pc)
+                    {
+                        printf("pc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", check[j], pc);
+                        cycle = 0;
+                    }
+                }
+                else
+                {
+                    if (check[j] != NPC_REG[j])
+                    {
+                        printf("%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", j, check[j], NPC_REG[j]);
+                        cycle = 0;
+                    }
+                }
+            }
+        }
     if (IT_EN)
     {
         char logbuf[128];
@@ -377,38 +426,6 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
 
     if (FT_EN && ft_pc != 0)
         ftrace_jump(pc, ft_pc, ft_pc + 4); // ftrace
-
-    // diff test
-    if (DIFF_EN)
-        if (initial)
-        {
-            initial = false;
-        }
-        else
-        {
-            difftest_exec(1);
-            uint32_t check[16];
-            difftest_regcpy(check, 0);
-            for (int j = 0; j < 16; j++)
-            {
-                if (j == 0)
-                {
-                    if (check[j] != pc)
-                    {
-                        printf("pc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", check[j], pc);
-                        cycle = 0;
-                    }
-                }
-                else
-                {
-                    //if (check[j] != top->rootp->top__DOT__CORE__DOT__REG__DOT__regfile[j])
-                    {
-                        //printf("%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", j, check[j], top->rootp->top__DOT__CORE__DOT__REG__DOT__regfile[j]);
-                        //cycle = 0;
-                    }
-                }
-            }
-        }
 }
 
 static uint32_t mem[MAX_IMG] = {
@@ -434,6 +451,13 @@ uint32_t pmem_readC(uint32_t addr)
         fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u,
                 ret);
     return ret;
+}
+
+extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data)
+{
+    uint32_t add = (((addr & ~0x3u) - 0x20000000u) / 0x4) % MAX_IMG;
+    *data = mem[add];
 }
 
 static char *img_file = NULL;
@@ -481,7 +505,7 @@ extern "C" int pmem_read(uint32_t raddr)
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)
 { // mask: 1 3 15
     uint32_t shamt = waddr & 0x3;
-    wmask = wmask >> shamt;//new
+    wmask = wmask >> shamt; // new
     switch (shamt)
     {
     case 0:
@@ -501,7 +525,7 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)
         assert(0);
         break;
     }
-	wdata = wdata >> shamt;
+    wdata = wdata >> shamt;
     uint32_t add = (((waddr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
     uint32_t data1, data2;
     switch (wmask)
@@ -892,7 +916,7 @@ uint32_t expr(char *e, bool *success)
                 reg2dec = atoi(tmpstr);
                 if (reg2dec >= 0 && reg2dec < 16)
                 {
-                    //sprintf(tokens[i].str, "%d", top->rootp->top__DOT__CORE__DOT__REG__DOT__regfile[reg2dec]);
+                    sprintf(tokens[i].str, "%d", NPC_REG[reg2dec]);
                     tokens[i].type = DEC;
                 }
                 else
@@ -1000,7 +1024,9 @@ static int cmd_c(char *args)
 
 static int cmd_q(char *args)
 {
-    QUIT = true;
+    ebreak_n = 0;
+    TRAP = 1;
+    cycle++;
     return -1;
 }
 
@@ -1039,10 +1065,10 @@ static int cmd_info(char *args)
     else if (strcmp(arg, "r") == 0)
     {
         printf("PC:  0x%08x\n", PC);
-        for (int i = 0; i < 16; i++);
-            //printf("x%02d: 0x%08x\n", i, top->rootp->top__DOT__CORE__DOT__REG__DOT__regfile[i]);
-        for (int i = 0; i < 4; i++);
-            //printf("x%02d: 0x%08x\n", i, top->rootp->top__DOT__CORE__DOT__CSR__DOT__regfile[i]);
+        for (int i = 0; i < 16; i++)
+            printf("x%02d: 0x%08x\n", i, NPC_REG[i]);
+        // for (int i = 0; i < 4; i++)
+        // printf("x%02d: 0x%08x\n", i, NPC_REG[i]);
     }
     else if (strcmp(arg, "w") == 0)
         print_wp();
@@ -1167,7 +1193,7 @@ static int cmd_help(char *args)
 }
 
 extern "C" void init_disasm(const char *triple);
-void nvboard_bind_all_pins(TOP_NAME* top);
+void nvboard_bind_all_pins(TOP_NAME *top);
 
 int main(int argc, char **argv)
 {
@@ -1175,7 +1201,7 @@ int main(int argc, char **argv)
     init_regex();
     init_wp_pool();
     init_disasm("riscv32-pc-linux-gnu");
-    difftest_init(0);
+
     const char *prefix = "-IMG=";
 
     for (int i_argc = 1; i_argc < argc; i_argc++)
@@ -1199,14 +1225,18 @@ int main(int argc, char **argv)
         perror("Failed to open log file");
         return -1;
     }
-    difftest_memcpy(MEM_BASE, mem, MAX_IMG, 0);
+    if (DIFF_EN)
+    {
+        difftest_memcpy(0x20000000, mem, 0xfff/4, 0);
+        difftest_init(0);
+    }
     Verilated::commandArgs(argc, argv);
     contextp = new VerilatedContext;
     contextp->commandArgs(argc, argv);
     top = new VysyxSoCFull{contextp};
-    nvboard_bind_all_pins(top);//nvboard
+    nvboard_bind_all_pins(top); // nvboard
     nvboard_init();
-    
+
     VerilatedFstC *tfp = new VerilatedFstC;
     if (WAVE)
         contextp->traceEverOn(true);
@@ -1214,8 +1244,6 @@ int main(int argc, char **argv)
         top->trace(tfp, 0);
     if (WAVE)
         tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
-    // Simulate until $finish
-    ebreak_n = true;
     uint64_t wave = 0;
     uint64_t abort_endless_loop = 0;
 
@@ -1229,7 +1257,7 @@ int main(int argc, char **argv)
 
         contextp->timeInc(1);
         top->clock = !top->clock;
-	nvboard_update();
+        nvboard_update();
         if (!top->clock)
         {
             if (contextp->time() > 1 && contextp->time() < 20)
@@ -1268,8 +1296,6 @@ int main(int argc, char **argv)
                             if (strcmp(cmd, cmd_table[i].name) == 0)
                             {
                                 cmd_table[i].handler(args);
-                                if (QUIT)
-                                    return 0;
                                 break;
                             }
                         }
@@ -1280,26 +1306,23 @@ int main(int argc, char **argv)
                         }
                     }
                 }
-                
+
                 abort_endless_loop++;
             }
-            // Assign some other inputs
         }
         top->eval();
         if (WAVE)
             tfp->dump(wave++); // dump wave
     }
-    
+
     // Final model cleanup
     top->final();
     fclose(log_file);
-    // Destroy model
-nvboard_quit();
+    nvboard_quit();
     delete top;
     if (WAVE)
         tfp->close();
     free(img_file);
-    // Return good completion status
     if (FT_EN)
         ftrace_print();
 
@@ -1317,184 +1340,3 @@ nvboard_quit();
 
     return 0;
 }
-/*
-// Include common routines
-#include <verilated.h>
-// Include model header, generated from Verilating "top.v"
-#include "VysyxSoCFull.h"
-
-#include "VysyxSoCFull___024root.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "verilated_fst_c.h"
-// #include "verilated_vcd_c.h"
-#include "svdpi.h"
-#include <getopt.h>
-#include <time.h>
-#include <math.h>
-FILE *log_file;
-bool LOG = true;
-bool WAVE = true;
-bool TRAP = false;
-
-#define MAX_IMG   0xFFFFFF
-#define MEM_BASE  0x80000000
-#define ABORT_NUM 0xFFFFFFF
-bool ebreak_n = true;
-VerilatedContext *contextp;
-VysyxSoCFull *top;
-extern "C" void ebreak()
-{
-
-    ebreak_n = false;
-        TRAP = true;
-}
-
-static uint32_t mem[MAX_IMG] = {
-0x100007b7,
-0x04100713,
-0x00e78023,
-0x04200713,
-0x00e78023,
-0x04300713,
-0x00e78023,
-0x04400713,
-0x00e78023,
-0x00a00713,
-0x00e78023,
-0x00100073};
-
-static char *img_file = NULL;
-static long load_img()
-{
-    if (img_file == NULL)
-    {
-        printf("use default img\n");
-        return MAX_IMG; // built-in image size
-    }
-
-    FILE *fp = fopen(img_file, "rb");
-    if (!fp)
-    {
-        perror("Could not open file");
-        assert(0);
-        return -1;
-    }
-    printf("use img: %s\n", img_file);
-    long index = 0;
-    while (index < MAX_IMG && fread(const_cast<
-                                        void *>(static_cast<const volatile void *>(&mem[index])),
-                                    sizeof(uint32_t), 1, fp) == 1)
-    {
-        index++;
-    }
-
-    fclose(fp);
-    return index;
-}
-
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data) { 
-uint32_t add = (((addr & ~0x3u) - 0x20000000) / 0x4) % MAX_IMG;
-    uint32_t ret = mem[add];
-    //printf("\taddr=0x%08x: value=0x%08x\n", addr, ret);
-    *data=ret; }
-
-
-
-int main(int argc, char **argv)
-{
-    for(int i=0; i<MAX_IMG; i++) {
-    	//mem[i] = 0x00100073;
-    }
-    const char *prefix = "-IMG=";
-    bool sdb_mode = false;
-    for (int i_argc = 1; i_argc < argc; i_argc++)
-    {
-        if (strncmp(argv[i_argc], prefix, strlen(prefix)) == 0)
-        {
-            img_file = (char *)malloc(strlen(argv[i_argc]) + 1);
-            strcpy(img_file, argv[i_argc] + strlen(prefix));
-        }
-        if (strcmp(argv[i_argc], "-sdb") == 0)
-        {
-            sdb_mode = true;
-        }
-    }
-    //img_file="/home/ubuntu/Desktop/PA0/pre_study/char-test/char-test.bin";
-
-    load_img();
-    log_file =
-        fopen("/home/ubuntu/ysyx-workbench/npc/build/debug.log",
-              "w");
-    if (log_file == NULL)
-    {
-        perror("Failed to open log file");
-        return -1;
-    }
-    Verilated::commandArgs(argc, argv);
-    contextp = new VerilatedContext;
-    contextp->commandArgs(argc, argv);
-    top = new VysyxSoCFull{
-        contextp};
-
-    VerilatedFstC *tfp = new VerilatedFstC;
-    if (WAVE)
-        contextp->traceEverOn(true);
-    if (WAVE)
-        top->trace(tfp, 0);
-    if (WAVE)
-        tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
-    // Simulate until $finish
-    ebreak_n = true;
-    uint64_t wave = 0;
-    uint32_t abort_endless_loop = 0;
-    if (sdb_mode)
-    {
-    }
-    while (!contextp->gotFinish() && ebreak_n && abort_endless_loop < ABORT_NUM)
-    {
-
-        contextp->timeInc(1);
-        top->clock = !top->clock;
-
-        if (!top->clock)
-        {
-            if (contextp->time() > 1 && contextp->time() < 20)
-            {
-                top->reset = 1; // Assert reset
-            }
-            else
-            {
-                top->reset = 0; // Deassert reset
-                abort_endless_loop++;
-            }
-            // Assign some other inputs
-        }
-        top->eval();
-        if (WAVE)
-            tfp->dump(wave++); // dump wave  //need ii++
-    }
-
-    // Final model cleanup
-    top->final();
-    fclose(log_file);
-    // Destroy model
-    delete top;
-    if (WAVE)
-        tfp->close();
-    //free(img_file);
-    // Return good completion status
-    printf("\033[1;33mLOOP / MAX_LOOP = %d / %d\033[0m\n", abort_endless_loop,
-           (uint32_t)ABORT_NUM);
-    if (!TRAP)
-    {
-        printf("\033[1;31mHIT BAD TRAP\033[0m\n");
-        return -1;
-    }
-    else
-        printf("\033[1;32mHIT GOOD TRAP\033[0m\n");
-    return 0;
-}
-*/
