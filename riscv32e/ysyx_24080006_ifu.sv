@@ -9,7 +9,7 @@ module ysyx_24080006_ifu (
 
     logic [31:0] pc;
     `ifdef SOC_MODE
-    localparam RST_ADDR = 32'h2000_0000 - 32'h4;
+    localparam RST_ADDR = 32'h3000_0000 - 32'h4;
     `else
     localparam RST_ADDR = 32'h8000_0000 - 32'h4;
     `endif
@@ -156,9 +156,21 @@ assign axi_ifu.arsize  = 3'h2;
 assign axi_ifu.arburst = 2'h1;
 
 `ifdef SOC_MODE
+    function automatic logic INSIDE (
+        input logic [31:0] addr, left, right);
+        INSIDE = addr >= left && addr <= right;
+    endfunction
+
+    function automatic logic INSIDE_MEM (input logic [31:0] addr);
+        INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
+                        //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
+                        INSIDE(addr, 32'h3000_0000, 32'h300f_ffff) || // FLASH
+                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
+                        0;
+    endfunction
     always_ff @ (posedge clock) begin
-        if (curr == EXEC && (pc < 32'h2000_0000 || pc > 32'h2000_0fff)) begin
-            $display("addr error 0x%08x", pc);$finish;end
+        if (curr == EXEC && !INSIDE_MEM(pc)) begin
+            $display("[IFU]addr error 0x%08x", pc);$finish;end
     end
 `endif
 

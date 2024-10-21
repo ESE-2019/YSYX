@@ -2,46 +2,49 @@ ENTRY(_start)
 PHDRS { text PT_LOAD; data PT_LOAD; }
 
 MEMORY {
-  mrom : ORIGIN = 0x20000000, LENGTH = 4K
+  flash : ORIGIN = 0x30000000, LENGTH = 16M
   sram : ORIGIN = 0x0f000000, LENGTH = 8K
 }
 
 SECTIONS {
-  . = ORIGIN(mrom);
+  . = ORIGIN(flash);
   .text : {
     *(entry)
     *(.text*)
-  } > mrom AT> mrom : text
+  } > flash AT > flash : text
   etext = .;
   _etext = .;
 
+  .bootloader : {
+    *(.bootloader*)
+  } > flash AT > flash 
+
   .rodata : {
     *(.rodata*)
-  } > mrom AT> mrom
+  } > flash AT > flash 
 
   .data : {
-    _rom_data = .;
-    *(.data)
-  } > sram AT> mrom : data
+    _data_vma_start = .;
+    *(.data*)
+    *(.sdata*)
+    _data_vma_end = .;
+  } > sram AT > flash : data
   edata = .;
-  _data = _rom_data;
+  _data = _data_vma_start;
+  _data_lma_start = LOADADDR(.data);
 
   .bss : {
     _bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-    _bss_end = .;
   } > sram
 
-  . = ORIGIN(sram) + LENGTH(sram);
-  _stack_top = .;
-  . = _stack_top - 0x800;
-  _stack_pointer = _stack_top;
-
-  _heap_start = edata;
-  _heap_end = _stack_pointer - 0x800;
-  
+  _stack_top = ALIGN(0x4);
+  . = _stack_top + 0x400;
+  _stack_pointer = .;
   end = .;
   _end = .;
+  _heap_start = ALIGN(0x4);
+  _heap_end = ORIGIN(sram)+LENGTH(sram);
 }

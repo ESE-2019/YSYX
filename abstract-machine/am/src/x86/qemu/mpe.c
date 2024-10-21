@@ -1,7 +1,7 @@
 #include "x86-qemu.h"
 
 struct cpu_local __am_cpuinfo[MAX_CPU] = {};
-static void (*volatile user_entry)();
+static void (* volatile user_entry)();
 static int ap_ready = 0;
 
 static void call_user_entry() {
@@ -33,11 +33,17 @@ void __am_othercpu_entry() {
   stack_switch_call(stack_top(&CPU->stack), othercpu_entry, 0);
 }
 
-int cpu_count() { return __am_ncpu; }
+int cpu_count() {
+  return __am_ncpu;
+}
 
-int cpu_current(void) { return __am_lapic[8] >> 24; }
+int cpu_current(void) {
+  return __am_lapic[8] >> 24;
+}
 
-int atomic_xchg(int *addr, int newval) { return xchg(addr, newval); }
+int atomic_xchg(int *addr, int newval) {
+  return xchg(addr, newval);
+}
 
 void __am_stop_the_world() {
   boot_record()->jmp_code = 0x0000feeb; // (16-bit) jmp .

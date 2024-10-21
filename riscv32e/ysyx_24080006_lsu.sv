@@ -278,8 +278,8 @@ assign axi_lsu.wlast   = 1'b0;
 
     function automatic logic INSIDE_MEM (input logic [31:0] addr);
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
-                        INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
-                        INSIDE(addr, 32'h3000_0000, 32'h3fff_ffff) || // FLASH
+                        //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
+                        INSIDE(addr, 32'h3000_0000, 32'h300f_ffff) || // FLASH
                         INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
                         0;
     endfunction

@@ -1,13 +1,13 @@
 // 反汇编时机：每次IFU取指后
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
-bool LOG = 0;
-bool WAVE = 1;
-bool TRAP = 0;
-bool SDB = 0;
+static bool LOG = 0;
+static bool WAVE = 1;
+static bool TRAP = 0;
+static bool SDB = 0;
 
-bool DIFF_EN = 1;
-bool IT_EN = 0;
-bool FT_EN = false;
+static bool DIFF_EN = 0;
+static bool IT_EN = 0;
+static bool FT_EN = false;
 
 #define ABORT_NUM 0 // 0xffff
 
@@ -46,14 +46,14 @@ extern "C"
     void difftest_init(int port);
 }
 
-uint32_t expr(char *e, bool *success);
+static uint32_t expr(char *e, bool *success);
 
-FILE *log_file;
+static FILE *log_file;
 
 #define MAX_IMG 0x2000000
 #define MEM_BASE 0x80000000
 
-bool ebreak_n = true;
+static bool ebreak_n = true;
 VerilatedContext *contextp;
 VysyxSoCFull *top;
 extern "C" void ebreak()
@@ -64,11 +64,11 @@ extern "C" void ebreak()
         TRAP = true;
 }
 
-int64_t cycle = 0; // to controll sdb
-uint64_t inst_ipc = 0;
+static int64_t cycle = 0; // to controll sdb
+static uint64_t inst_ipc = 0;
 static char iringbuf[16][128];
-int iringbuf_index = 0;
-void print_iringbuf()
+static int iringbuf_index = 0;
+static void print_iringbuf()
 {
     // Log("print_iringbuf begin");
     for (int i = 0; i < 16; i++)
@@ -95,7 +95,7 @@ static WP wp_pool[NR_WP] = {};
 
 static WP *head = NULL, *free_ = NULL;
 
-void init_wp_pool()
+static void init_wp_pool()
 {
     for (int i = 0; i < NR_WP; i++)
     {
@@ -107,7 +107,7 @@ void init_wp_pool()
     free_ = wp_pool;
 }
 
-WP *new_wp()
+static WP *new_wp()
 {
     WP *ret = NULL;
     if (free_ != NULL)
@@ -130,7 +130,7 @@ WP *new_wp()
         return NULL;
 }
 
-void free_wp(WP *wp)
+static void free_wp(WP *wp)
 {
     if (head == wp)
     {
@@ -152,7 +152,7 @@ void free_wp(WP *wp)
     return;
 }
 
-void wp_exec()
+static void wp_exec()
 {
     for (WP *i = head; i != NULL; i = i->next)
     {
@@ -173,7 +173,7 @@ void wp_exec()
     }
 }
 
-void print_wp()
+static void print_wp()
 {
     for (WP *i = head; i != NULL; i = i->next)
     {
@@ -182,7 +182,7 @@ void print_wp()
     }
 }
 
-void set_wp(char *e)
+static void set_wp(char *e)
 {
     WP *set = new_wp();
     if (set != NULL)
@@ -200,7 +200,7 @@ void set_wp(char *e)
     printf("------watchpoint is full, set_wp failed------\n");
 }
 
-void del_wp(int N)
+static void del_wp(int N)
 {
     for (WP *i = head; i != NULL; i = i->next)
     {
@@ -216,9 +216,9 @@ void del_wp(int N)
 uint32_t PC = 0x80000000;
 
 #define NR_FT 256
-char FT_name[NR_FT][256] = {};
+static char FT_name[NR_FT][256] = {};
 uint32_t FT_addr[NR_FT] = {};
-void get_elf_function(const char *filename)
+static void get_elf_function(const char *filename)
 {
     int index = 0;
     int fd = open(filename, O_RDONLY);
@@ -273,7 +273,7 @@ void get_elf_function(const char *filename)
     strncpy(FT_name[index], "UNKNOWN", 256);
     FT_addr[index] = 0;
 }
-char *bin2elf(const char *input)
+static char *bin2elf(const char *input)
 {
     const char *bin_suffix = ".bin";
     const char *elf_suffix = ".elf";
@@ -340,8 +340,8 @@ static void ftrace_print()
 {
     printf("%s\n", ftrace_buf);
 }
-bool initial = true;
-bool SKIP = 0;
+static bool initial = true;
+static bool SKIP = 0;
 extern "C" void SKIP_DIFFTEST()
 {
     SKIP = 1;
@@ -442,8 +442,15 @@ static uint32_t mem[MAX_IMG] = {
     0xfe9ff0ef,
     0x00050513,
     0x00100073};
-
-uint32_t pmem_readC(uint32_t addr)
+static uint32_t char_test[] = {
+    0x100007b7,
+    0x04100713,
+    0x00e78023,
+    0x100007b7,
+    0x00a00713,
+    0x00e78023,
+    0x00100073};
+static uint32_t pmem_readC(uint32_t addr)
 {
     uint32_t add = (((addr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
     uint32_t ret = mem[add];
@@ -453,7 +460,11 @@ uint32_t pmem_readC(uint32_t addr)
     return ret;
 }
 
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void flash_read(int32_t addr, int32_t *data)
+{
+    uint32_t add = (((addr & ~0x3u)) / 0x4) % MAX_IMG;
+    *data = mem[add];
+}
 extern "C" void mrom_read(int32_t addr, int32_t *data)
 {
     uint32_t add = (((addr & ~0x3u) - 0x20000000u) / 0x4) % MAX_IMG;
@@ -606,7 +617,7 @@ static struct rule
              {"\\^", '^'},
              {"\\|", '|'}};
 
-bool check_parentheses(int p, int q)
+static bool check_parentheses(int p, int q)
 {
     int i, cnt = 0;
     if (tokens[p].type != '(' || tokens[q].type != ')')
@@ -625,9 +636,9 @@ bool check_parentheses(int p, int q)
     return true;
 }
 
-int max(int a, int b) { return (a > b) ? a : b; }
+static int max(int a, int b) { return (a > b) ? a : b; }
 
-uint32_t eval(int p, int q)
+static uint32_t eval(int p, int q)
 {
     if (p > q)
     { // Bad expression
@@ -751,7 +762,7 @@ uint32_t eval(int p, int q)
 #define NR_REGEX ARRLEN(rules)
 static regex_t re[NR_REGEX] = {};
 
-void init_regex()
+static void init_regex()
 {
     int i;
     char error_msg[128];
@@ -879,7 +890,7 @@ static bool make_token(char *e)
     return true;
 }
 
-uint32_t expr(char *e, bool *success)
+static uint32_t expr(char *e, bool *success)
 {
     *success = false;
     for (int ii = 0; ii < 256; ii++) // reset tokens
@@ -1227,7 +1238,7 @@ int main(int argc, char **argv)
     }
     if (DIFF_EN)
     {
-        difftest_memcpy(0x20000000, mem, 0xfff/4, 0);
+        difftest_memcpy(0x20000000, mem, 0xfff / 4, 0);
         difftest_init(0);
     }
     Verilated::commandArgs(argc, argv);

@@ -1,11 +1,11 @@
-#include "platform.h"
-#include <string.h>
 #include <sys/time.h>
+#include <string.h>
+#include "platform.h"
 
 #define TIMER_HZ 100
 #define SYSCALL_INSTR_LEN 7
 
-static Context *(*user_handler)(Event, Context *) = NULL;
+static Context* (*user_handler)(Event, Context*) = NULL;
 
 void __am_kcontext_start();
 void __am_switch(Context *c);
@@ -20,9 +20,8 @@ static void irq_handle(Context *c) {
   c->ksp = thiscpu->ksp;
 
   if (thiscpu->ev.event == EVENT_ERROR) {
-    uintptr_t rip = c->uc.uc_mcontext.gregs[REG_RIP];
-    printf("Unhandle signal '%s' at rip = %p, badaddr = %p, cause = 0x%x\n",
-           thiscpu->ev.msg, rip, thiscpu->ev.ref, thiscpu->ev.cause);
+    printf("Unhandle signal '%s' at pc = %p, badaddr = %p, cause = 0x%x\n",
+      thiscpu->ev.msg, AM_REG_PC(&c->uc), thiscpu->ev.ref, thiscpu->ev.cause);
     assert(0);
   }
   c = user_handler(thiscpu->ev, c);
@@ -31,23 +30,22 @@ static void irq_handle(Context *c) {
   __am_switch(c);
 
   // magic call to restore context
-  void (*p)(Context * c) = (void *)(uintptr_t)0x100008;
+  void (*p)(Context *c) = (void *)(uintptr_t)0x100008;
   p(c);
   __am_panic_on_return();
 }
 
 static void setup_stack(uintptr_t event, ucontext_t *uc) {
-  void *rip = (void *)uc->uc_mcontext.gregs[REG_RIP];
+  void *pc = (void *)AM_REG_PC(uc);
   extern uint8_t _start, _etext;
-  int trap_from_user = __am_in_userspace(rip);
-  int signal_safe = IN_RANGE(rip, RANGE(&_start, &_etext)) || trap_from_user ||
-                    // Hack here: "+13" points to the instruction after syscall.
-                    // This is the instruction which will trigger the pending
-                    // signal if interrupt is enabled.
-                    (rip == (void *)&sigprocmask + 13);
+  int trap_from_user = __am_in_userspace(pc);
+  int signal_safe = IN_RANGE(pc, RANGE(&_start, &_etext)) || trap_from_user ||
+    // Hack here: "+13" points to the instruction after syscall. This is the
+    // instruction which will trigger the pending signal if interrupt is enabled.
+    // FIXME: should change 13 for aarch and riscv
+    (pc == (void *)&sigprocmask + 13);
 
-  if (((event == EVENT_IRQ_IODEV) || (event == EVENT_IRQ_TIMER)) &&
-      !signal_safe) {
+  if (((event == EVENT_IRQ_IODEV) || (event == EVENT_IRQ_TIMER)) && !signal_safe) {
     // Shared libraries contain code which are not reenterable.
     // If the signal comes when executing code in shared libraries,
     // the signal handler can not call any function which is not signal-safe,
@@ -58,23 +56,20 @@ static void setup_stack(uintptr_t event, ucontext_t *uc) {
     return;
   }
 
-  if (trap_from_user)
-    __am_pmem_unprotect();
+  if (trap_from_user) __am_pmem_unprotect();
 
   // skip the instructions causing SIGSEGV for syscall
-  if (event == EVENT_SYSCALL) {
-    rip += SYSCALL_INSTR_LEN;
-  }
-  uc->uc_mcontext.gregs[REG_RIP] = (uintptr_t)rip;
+  if (event == EVENT_SYSCALL) { pc += SYSCALL_INSTR_LEN; }
+  AM_REG_PC(uc) = (uintptr_t)pc;
 
   // switch to kernel stack if we were previously in user space
-  uintptr_t rsp =
-      trap_from_user ? thiscpu->ksp : uc->uc_mcontext.gregs[REG_RSP];
-  rsp -= sizeof(Context);
-  // keep (rsp + 8) % 16 == 0 to support SSE
-  if ((rsp + 8) % 16 != 0)
-    rsp -= 8;
-  Context *c = (void *)rsp;
+  uintptr_t sp = trap_from_user ? thiscpu->ksp : AM_REG_SP(uc);
+  sp -= sizeof(Context);
+#ifdef __x86_64__
+  // keep (sp + 8) % 16 == 0 to support SSE
+  if ((sp + 8) % 16 != 0) sp -= 8;
+#endif
+  Context *c = (void *)sp;
 
   // save the context on the stack
   c->uc = *uc;
@@ -83,61 +78,45 @@ static void setup_stack(uintptr_t event, ucontext_t *uc) {
   __am_get_intr_sigmask(&uc->uc_sigmask);
 
   // call irq_handle after returning from the signal handler
-  uc->uc_mcontext.gregs[REG_RDI] = (uintptr_t)c;
-  uc->uc_mcontext.gregs[REG_RIP] = (uintptr_t)irq_handle;
-  uc->uc_mcontext.gregs[REG_RSP] = (uintptr_t)c;
+  AM_REG_GPR1(uc) = (uintptr_t)c;
+  AM_REG_PC(uc)   = (uintptr_t)irq_handle;
+  AM_REG_SP(uc)   = (uintptr_t)c;
 }
 
 static void iret(ucontext_t *uc) {
-  Context *c = (void *)uc->uc_mcontext.gregs[REG_RDI];
+  Context *c = (void *)AM_REG_GPR1(uc);
   // restore the context
   *uc = c->uc;
   thiscpu->ksp = c->ksp;
-  if (__am_in_userspace((void *)uc->uc_mcontext.gregs[REG_RIP]))
-    __am_pmem_protect();
+  if (__am_in_userspace((void *)AM_REG_PC(uc))) __am_pmem_protect();
 }
 
 static void sig_handler(int sig, siginfo_t *info, void *ucontext) {
-  thiscpu->ev = (Event){0};
+  thiscpu->ev = (Event) {0};
   thiscpu->ev.event = EVENT_ERROR;
   switch (sig) {
-  case SIGUSR1:
-    thiscpu->ev.event = EVENT_IRQ_IODEV;
-    break;
-  case SIGUSR2:
-    thiscpu->ev.event = EVENT_YIELD;
-    break;
-  case SIGVTALRM:
-    thiscpu->ev.event = EVENT_IRQ_TIMER;
-    break;
-  case SIGSEGV:
-    if (info->si_code == SEGV_ACCERR) {
-      switch ((uintptr_t)info->si_addr) {
-      case 0x100000:
-        thiscpu->ev.event = EVENT_SYSCALL;
-        break;
-      case 0x100008:
-        iret(ucontext);
-        return;
+    case SIGUSR1: thiscpu->ev.event = EVENT_IRQ_IODEV; break;
+    case SIGUSR2: thiscpu->ev.event = EVENT_YIELD; break;
+    case SIGVTALRM: thiscpu->ev.event = EVENT_IRQ_TIMER; break;
+    case SIGSEGV:
+      if (info->si_code == SEGV_ACCERR) {
+        switch ((uintptr_t)info->si_addr) {
+          case 0x100000: thiscpu->ev.event = EVENT_SYSCALL; break;
+          case 0x100008: iret(ucontext); return;
+        }
       }
-    }
-    if (__am_in_userspace(info->si_addr)) {
-      assert(thiscpu->ev.event == EVENT_ERROR);
-      thiscpu->ev.event = EVENT_PAGEFAULT;
-      switch (info->si_code) {
-      case SEGV_MAPERR:
-        thiscpu->ev.cause = MMAP_READ;
-        break;
-      // we do not support mapped user pages with MMAP_NONE
-      case SEGV_ACCERR:
-        thiscpu->ev.cause = MMAP_WRITE;
-        break;
-      default:
-        assert(0);
+      if (__am_in_userspace(info->si_addr)) {
+        assert(thiscpu->ev.event == EVENT_ERROR);
+        thiscpu->ev.event = EVENT_PAGEFAULT;
+        switch (info->si_code) {
+          case SEGV_MAPERR: thiscpu->ev.cause = MMAP_READ; break;
+          // we do not support mapped user pages with MMAP_NONE
+          case SEGV_ACCERR: thiscpu->ev.cause = MMAP_WRITE; break;
+          default: assert(0);
+        }
+        thiscpu->ev.ref = (uintptr_t)info->si_addr;
       }
-      thiscpu->ev.ref = (uintptr_t)info->si_addr;
-    }
-    break;
+      break;
   }
 
   if (thiscpu->ev.event == EVENT_ERROR) {
@@ -178,7 +157,7 @@ void __am_init_timer_irq() {
   assert(ret == 0);
 }
 
-bool cte_init(Context *(*handler)(Event, Context *)) {
+bool cte_init(Context*(*handler)(Event, Context*)) {
   user_handler = handler;
 
   install_signal_handler();
@@ -186,12 +165,12 @@ bool cte_init(Context *(*handler)(Event, Context *)) {
   return true;
 }
 
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  Context *c = (Context *)kstack.end - 1;
+Context* kcontext(Area kstack, void (*entry)(void *), void *arg) {
+  Context *c = (Context*)kstack.end - 1;
 
   __am_get_example_uc(c);
-  c->uc.uc_mcontext.gregs[REG_RIP] = (uintptr_t)__am_kcontext_start;
-  c->uc.uc_mcontext.gregs[REG_RSP] = (uintptr_t)kstack.end;
+  AM_REG_PC(&c->uc) = (uintptr_t)__am_kcontext_start;
+  AM_REG_SP(&c->uc) = (uintptr_t)kstack.end;
 
   int ret = sigemptyset(&(c->uc.uc_sigmask)); // enable interrupt
   assert(ret == 0);
@@ -203,7 +182,9 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   return c;
 }
 
-void yield() { raise(SIGUSR2); }
+void yield() {
+  raise(SIGUSR2);
+}
 
 bool ienabled() {
   sigset_t set;
@@ -215,7 +196,6 @@ bool ienabled() {
 void iset(bool enable) {
   extern sigset_t __am_intr_sigmask;
   // NOTE: sigprocmask does not supported in multithreading
-  int ret =
-      sigprocmask(enable ? SIG_UNBLOCK : SIG_BLOCK, &__am_intr_sigmask, NULL);
+  int ret = sigprocmask(enable ? SIG_UNBLOCK : SIG_BLOCK, &__am_intr_sigmask, NULL);
   assert(ret == 0);
 }

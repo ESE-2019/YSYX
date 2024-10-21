@@ -5,17 +5,15 @@
 #include <string.h>
 
 extern char _heap_start;
+extern char _heap_end;
 int main(const char *args);
 
-extern char _pmem_start;
-#define PMEM_SIZE (128 * 1024 * 1024)
-#define PMEM_END ((uintptr_t) & _pmem_start + PMEM_SIZE)
+// extern char _pmem_start;
+// #define PMEM_SIZE 0x800 //(128 * 1024 * 1024)
+// #define PMEM_END ((uintptr_t) & _pmem_start + PMEM_SIZE)
 
-Area heap = RANGE(&_heap_start, PMEM_END);
-#ifndef MAINARGS
-#define MAINARGS ""
-#endif
-static const char mainargs[] = MAINARGS;
+Area heap = RANGE(&_heap_start, &_heap_end);
+static const char mainargs[MAINARGS_MAX_LEN] = MAINARGS_PLACEHOLDER; // defined in CFLAGS
 
 void putch(char ch)
 {
@@ -79,24 +77,23 @@ static void uart_init()
 //     outl(0x10002008, decimalTo32Bit(marchid));
 // }
 
-extern unsigned int _data;     // 数据段在 SRAM 的开始地址
-extern unsigned int edata;    // 数据段在 SRAM 的结束地址
-extern unsigned int _rom_data; // 数据段在 ROM 的开始地址
-
-void init_data_segment(void)
-{
-    // 获取数据段的大小
-    unsigned int size = (unsigned int)(&edata - &_data);
-
-    // 使用 memcpy 从 ROM 复制到 SRAM
-    memcpy((void *)&_data, (const void *)&_rom_data, size);
-}
-
 void _trm_init()
 {
-    init_data_segment();
     uart_init();
     // print_ysyx();
     int ret = main(mainargs);
     halt(ret);
 }
+
+
+extern char _data_vma_start;
+extern char _data_vma_end;
+extern char _data_lma_start;
+
+void __attribute__((section(".bootloader"))) _bootloader()
+{
+    size_t _data_size = (size_t)(&_data_vma_end - &_data_vma_start);
+    memcpy((void *)&_data_vma_start, (const void *)&_data_lma_start, _data_size);
+}
+
+
