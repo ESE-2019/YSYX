@@ -23,7 +23,7 @@ static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t soc_sram[SOC_SRAM_MSIZE] PG_ALIGN = {};
-static uint8_t soc_mrom[SOC_MROM_MSIZE] PG_ALIGN = {};
+static uint8_t soc_flash[SOC_FLASH_MSIZE] PG_ALIGN = {};
 #endif
 
 uint8_t *guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
@@ -42,7 +42,7 @@ static void pmem_write(paddr_t addr, int len, word_t data)
 }
 
 // mrom
-uint8_t *mrom_guest_to_host(paddr_t paddr) { return soc_mrom + paddr - SOC_MROM_MBASE; }
+uint8_t *mrom_guest_to_host(paddr_t paddr) { return soc_flash + paddr - SOC_FLASH_MBASE; }
 static word_t soc_mrom_read(paddr_t addr, int len)
 {
   word_t ret = host_read(mrom_guest_to_host(addr), len);

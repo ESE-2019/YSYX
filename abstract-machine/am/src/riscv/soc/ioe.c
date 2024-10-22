@@ -1,6 +1,7 @@
 #include <am.h>
 #include <klib-macros.h>
 #include <riscv/riscv.h>
+#include <stdio.h>
 
 void __am_timer_init();
 
@@ -30,25 +31,17 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg)
 
 static uint32_t cast_color(uint32_t input)
 {
-  // 提取 23-20 位
   uint32_t part1 = (input >> 20) & 0xF;
-
-  // 提取 15-12 位
   uint32_t part2 = (input >> 12) & 0xF;
-
-  // 提取 7-4 位
   uint32_t part3 = (input >> 4) & 0xF;
-
-  // 将这些位拼接成一个数，高位补零
   uint32_t result = (part1 << 8) | (part2 << 4) | part3;
-
   return result;
 }
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
 {
   int x = ctl->x, y = ctl->y, w = ctl->w, h = ctl->h;
-  if (w == 0 || h == 0 || x + w > 640 || y + h > 480) //!ctl->sync || 
+  if (w == 0 || h == 0 || x + w > 640 || y + h > 480) //! ctl->sync ||
     return;
 
   uint32_t *pixels = ctl->pixels;
@@ -78,8 +71,7 @@ static void *lut[128] = {
     [AM_UART_RX] = __am_uart_rx,
     [AM_GPU_CONFIG] = __am_gpu_config,
     [AM_GPU_FBDRAW] = __am_gpu_fbdraw,
-    [AM_GPU_STATUS] = __am_gpu_status,
-};
+    [AM_GPU_STATUS] = __am_gpu_status};
 
 static void fail(void *buf) { panic("access nonexist register"); }
 

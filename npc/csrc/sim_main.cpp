@@ -1,13 +1,13 @@
 // 反汇编时机：每次IFU取指后
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 static bool LOG = 0;
-static bool WAVE = 1;
-static bool TRAP = 0;
+static bool WAVE = 0;
 static bool SDB = 0;
 
 static bool DIFF_EN = 0;
 static bool IT_EN = 0;
-static bool FT_EN = false;
+static bool FT_EN = 0;
+static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
 
@@ -50,10 +50,11 @@ static uint32_t expr(char *e, bool *success);
 
 static FILE *log_file;
 
-#define MAX_IMG 0x2000000
+#define MAX_IMG (0x01000000 / 4)
 #define MEM_BASE 0x80000000
 
 static bool ebreak_n = true;
+static bool TRAP = 0;
 VerilatedContext *contextp;
 VysyxSoCFull *top;
 extern "C" void ebreak()
@@ -313,6 +314,7 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
             }
             char tmp2[1024];
             snprintf(tmp2, 1024, "0x%08x: call [%s@0x%08x]\n", pc, FT_name[i], FT_addr[i]);
+            printf("\e[33m[FTRACE] %s\e[0m", tmp2);
             strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
             strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
             return;
@@ -330,6 +332,7 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
             }
             char tmp2[1024];
             snprintf(tmp2, 1024, "0x%08x: ret [%s]\n", pc, FT_name[FT_local[i]]);
+            printf("\e[33m[FTRACE] %s\e[0m", tmp2);
             strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
             strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
             return;
@@ -338,7 +341,7 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
 }
 static void ftrace_print()
 {
-    printf("%s\n", ftrace_buf);
+    printf("%s", ftrace_buf);
 }
 static bool initial = true;
 static bool SKIP = 0;
@@ -352,6 +355,10 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
     cycle--;
     inst_ipc++;
     PC = pc;
+
+    if (FT_EN && ft_pc != 0)
+        ftrace_jump(pc, ft_pc, ft_pc + 4); // ftrace
+
     // diff test
     uint32_t check[32];
     if (DIFF_EN)
@@ -394,6 +401,9 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
                 }
             }
         }
+
+    wp_exec(); // watchpoint
+
     if (IT_EN)
     {
         char logbuf[128];
@@ -422,10 +432,6 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
         if (iringbuf_index++ >= 15)
             iringbuf_index = 0;
     }
-    wp_exec(); // watchpoint
-
-    if (FT_EN && ft_pc != 0)
-        ftrace_jump(pc, ft_pc, ft_pc + 4); // ftrace
 }
 
 static uint32_t mem[MAX_IMG] = {
@@ -464,11 +470,15 @@ extern "C" void flash_read(int32_t addr, int32_t *data)
 {
     uint32_t add = (((addr & ~0x3u)) / 0x4) % MAX_IMG;
     *data = mem[add];
+    if (FLASH_TRACE)
+        printf("\e[34m[flash_read] ADDR = 0x%08x VALUE = 0x%08x\n\e[0m", addr, *data);
 }
 extern "C" void mrom_read(int32_t addr, int32_t *data)
 {
-    uint32_t add = (((addr & ~0x3u) - 0x20000000u) / 0x4) % MAX_IMG;
-    *data = mem[add];
+    printf("mrom read\n");
+    assert(0);
+    // uint32_t add = (((addr & ~0x3u) - 0x20000000u) / 0x4) % MAX_IMG;
+    // *data = mem[add];
 }
 
 static char *img_file = NULL;
@@ -1238,7 +1248,7 @@ int main(int argc, char **argv)
     }
     if (DIFF_EN)
     {
-        difftest_memcpy(0x20000000, mem, 0xfff / 4, 0);
+        difftest_memcpy(0x30000000, mem, 0x01000000 / 4, 0);
         difftest_init(0);
     }
     Verilated::commandArgs(argc, argv);
@@ -1335,12 +1345,11 @@ int main(int argc, char **argv)
         tfp->close();
     free(img_file);
     if (FT_EN)
-        ftrace_print();
+        ; // ftrace_print();
 
     double ipc_num;
     ipc_num = (double)inst_ipc / (double)abort_endless_loop;
-    printf("\033[1;33mINST = %ld\nCYCLE / MAX_CYCLE = %ld / %ld\n\033[1;36mIPC = %.3f\033[0m\n", inst_ipc, abort_endless_loop,
-           (uint64_t)ABORT_NUM, ipc_num);
+    printf("\033[1;36mIPC = %ld / %ld = %.5f\n\033[0m", inst_ipc, abort_endless_loop, ipc_num);
     if (!TRAP)
     {
         printf("\033[1;31mHIT BAD TRAP\033[0m\n");

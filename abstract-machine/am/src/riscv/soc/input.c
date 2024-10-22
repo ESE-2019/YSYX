@@ -90,7 +90,7 @@ typedef enum
   ps2_KEY_PAGEDOWN
 } ps2_key;
 
-static ps2_key ps2_scan_code_to_enum(int scan_code)
+static inline ps2_key ps2_scan_code_to_enum(int scan_code)
 {
   switch (scan_code)
   {
@@ -263,16 +263,12 @@ static ps2_key ps2_scan_code_to_enum(int scan_code)
   }
 }
 
-
-
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd)
 {
   uint8_t k = ps2_KEY_NONE;
   k = inb(KBD_ADDR);
   kbd->keydown = k ? true : false;
   kbd->keycode = ps2_scan_code_to_enum(k);
-  // kbd->keydown = 0;
-  // kbd->keycode = ps2_KEY_NONE;
 }
 
 void __am_uart_rx(AM_UART_RX_T *uart)

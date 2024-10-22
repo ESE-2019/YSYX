@@ -21,7 +21,7 @@
 #define PMEM_LEFT ((paddr_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
 #ifdef CONFIG_TARGET_SHARE
-#define RESET_VECTOR 0x20000000
+#define RESET_VECTOR 0x30000000
 #else
 #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
 #endif
@@ -38,7 +38,7 @@ static inline bool in_pmem(paddr_t addr) {
 }
 
 static inline bool in_soc_mrom(paddr_t addr) {
-  return (addr >= SOC_MROM_MBASE) && ((addr - SOC_MROM_MBASE) < SOC_MROM_MSIZE);
+  return (addr >= SOC_FLASH_MBASE) && ((addr - SOC_FLASH_MBASE) < SOC_FLASH_MSIZE);
 }
 
 static inline bool in_soc_sram(paddr_t addr) {

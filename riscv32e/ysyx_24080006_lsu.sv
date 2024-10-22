@@ -202,11 +202,14 @@ assign axi_lsu.wlast   = 1'b0;
                     axi_lsu.awvalid <= 0;
                 if (axi_lsu.wready)
                     axi_lsu.wvalid  <= 0;
-                if (axi_lsu.bvalid)
+                if (axi_lsu.bvalid) begin
                     axi_lsu.bready  <= 1;
+                    //$display("[LSU] 0x%08x write [0x%08x]", axi_lsu.awaddr, axi_lsu.wdata);
+                end
                 if (axi_lsu.rvalid) begin
                     axi_lsu.rready  <= 1;
                     wbu.alu_res <= Mr(axi_lsu.rdata, Mr_param_addr, Mr_param_funct3);
+                    //$display("[LSU] 0x%08x read [0x%08x]", axi_lsu.araddr, axi_lsu.rdata);
                 end
             end
             WAIT: begin
@@ -269,19 +272,17 @@ assign axi_lsu.wlast   = 1'b0;
     function automatic logic INSIDE_PERIP (input logic [31:0] addr);
         INSIDE_PERIP =  INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) || // CLINT
                         INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) || // UART
-                        INSIDE(addr, 32'h1000_1000, 32'h1000_1fff) || // SPI
+                        //INSIDE(addr, 32'h1000_1000, 32'h1000_1fff) || // SPI
                         INSIDE(addr, 32'h1000_2000, 32'h1000_200f) || // GPIO
                         INSIDE(addr, 32'h1001_1000, 32'h1001_1007) || // PS2
-                        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff) || // VGA
-                        0;
+                        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff) ; // VGA
     endfunction
 
     function automatic logic INSIDE_MEM (input logic [31:0] addr);
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
                         //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
-                        INSIDE(addr, 32'h3000_0000, 32'h300f_ffff) || // FLASH
-                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
-                        0;
+                        INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
+                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) ; // OTHERS
     endfunction
 
     import "DPI-C" function void SKIP_DIFFTEST();
@@ -290,7 +291,6 @@ assign axi_lsu.wlast   = 1'b0;
         if (curr == EXEC && exu.store) begin
             if (INSIDE_PERIP(axi_lsu.awaddr)) begin
                 SKIP_DIFFTEST();
-                //$display("[LSU] addr skip 0x%08x", axi_lsu.awaddr);
             end
             else if (INSIDE_MEM(axi_lsu.awaddr))
                 ;
@@ -302,7 +302,6 @@ assign axi_lsu.wlast   = 1'b0;
         if (curr == EXEC && exu.load) begin
             if (INSIDE_PERIP(axi_lsu.araddr)) begin
                 SKIP_DIFFTEST();
-                //$display("[LSU] addr skip 0x%08x", axi_lsu.araddr);
             end
             else if (INSIDE_MEM(axi_lsu.araddr))
                 ;

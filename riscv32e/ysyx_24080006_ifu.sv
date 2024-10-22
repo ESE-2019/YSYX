@@ -164,7 +164,7 @@ assign axi_ifu.arburst = 2'h1;
     function automatic logic INSIDE_MEM (input logic [31:0] addr);
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
                         //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
-                        INSIDE(addr, 32'h3000_0000, 32'h300f_ffff) || // FLASH
+                        INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
                         INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
                         0;
     endfunction
