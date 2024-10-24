@@ -95,8 +95,8 @@ module ysyx_24080006_ifu (
 
 assign axi_ifu.araddr = pc;//TODO will be edited
 `ifdef SIM_MODE
-import "DPI-C" function void dbg(input int inst, input int pc, input int ft_pc);
-logic [31:0] ftrace;
+import "DPI-C" function void dbg(input int inst, input int pc, input int ft_pc, input int type_cnt);
+logic [31:0] ftrace, type_cnt;
 `endif
 
     always_ff @ (posedge clock) begin//fsm 3 for axi
@@ -107,12 +107,19 @@ logic [31:0] ftrace;
             pc <= RST_ADDR;
             `ifdef SIM_MODE
             ftrace <= RST_ADDR;
+            type_cnt <= 0;
             `endif
             idu.pc <= '0;
+            `ifdef SIM_MODE
+                type_cnt <= 1;
+            `endif
         end
         else begin
             unique case (curr)
             IDLE: begin
+                `ifdef SIM_MODE
+                type_cnt <= type_cnt + 1;
+                `endif
                 if (wbu.valid) begin
 				    axi_ifu.arvalid <= 1;
 				    axi_ifu.rready  <= 0;
@@ -133,18 +140,27 @@ logic [31:0] ftrace;
 				    axi_ifu.rready  <= 1;
                     idu.inst <= axi_ifu.rdata;
                     `ifdef SIM_MODE
+                    dbg(axi_ifu.rdata, pc, (wbu.jump?ftrace:0), type_cnt);
+                    type_cnt <= 1;
                     if (wbu.jump || wbu.branch)
                         ftrace <= wbu.dnpc;
                     else
-                        ftrace <= ftrace + 32'h4;
-                    dbg(axi_ifu.rdata, pc, (wbu.jump?ftrace:0));
+                        ftrace <= ftrace + 32'h4;                    
                     `endif
                     idu.pc <= pc;
                 end
+                else begin
+                    `ifdef SIM_MODE
+                    type_cnt <= type_cnt + 1;
+                    `endif
+                end
             end
             WAIT: begin
-                    axi_ifu.arvalid <= 0;
-				    axi_ifu.rready  <= 0;
+                `ifdef SIM_MODE
+                type_cnt <= type_cnt + 1;
+                `endif
+                axi_ifu.arvalid <= 0;
+			    axi_ifu.rready  <= 0;
                 end
         endcase
         end
@@ -165,8 +181,7 @@ assign axi_ifu.arburst = 2'h1;
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
                         //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
                         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
-                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) || // OTHERS
-                        0;
+                        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff) ; // SDRAM
     endfunction
     always_ff @ (posedge clock) begin
         if (curr == EXEC && !INSIDE_MEM(pc)) begin

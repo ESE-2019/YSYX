@@ -255,9 +255,35 @@ assign mepc_en = ifu.inst == 32'b0000000_00000_00000_000_00000_11100_11;
 
 `ifdef SIM_MODE
 import "DPI-C" function void ebreak();
+import "DPI-C" function void INST_CNT(input int type_code);
     always_ff @ (posedge clock) begin
-        if (ifu.inst == 32'b0000000_00001_00000_000_00000_11100_11)
-            ebreak();
+        if (curr == IDLE && ifu.valid)
+            case(opcode)
+
+            auipc,
+            lui,
+            R_type,
+            I_type: INST_CNT(0);
+
+            load,
+            S_type: INST_CNT(1);
+
+            system: begin
+                INST_CNT(2);
+                if (ifu.inst == 32'b0000000_00001_00000_000_00000_11100_11)
+                    ebreak();
+            end
+
+            B_type: INST_CNT(3);
+            
+            jal,
+            jalr:   INST_CNT(4);
+
+            default: begin
+                $display("inst error 0x%08x", ifu.inst);$finish;
+            end
+            endcase
+        
         `ifndef SOC_MODE
         if (curr == EXEC && (ifu.pc < 32'h8000_0000 || ifu.pc > 32'h9000_0000)) begin
             $display("addr error 0x%08x", ifu.pc);$finish;end

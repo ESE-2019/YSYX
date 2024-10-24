@@ -36,49 +36,48 @@ static inline void uart_init()
     outb(SOC_UART_LCR, tmp);
 }
 
-static inline uint32_t decimalTo32Bit(uint32_t decimal) {
-    uint32_t result = 0;
-    uint32_t shift = 0;
+// static inline uint32_t decimalTo32Bit(uint32_t decimal) {
+//     uint32_t result = 0;
+//     uint32_t shift = 0;
 
-    while (decimal > 0 && shift < 32) {
-        uint32_t digit = decimal % 10;
-        result |= (digit << shift);
-        decimal /= 10;
-        shift += 4;
-    }
-    return result;
-}
+//     while (decimal > 0 && shift < 32) {
+//         uint32_t digit = decimal % 10;
+//         result |= (digit << shift);
+//         decimal /= 10;
+//         shift += 4;
+//     }
+//     return result;
+// }
 
-static inline void print_ysyx() {
-    uint32_t mvendorid;
-    uint32_t marchid;
-    char ysyx[5];
+// static inline void print_ysyx() {
+//     uint32_t mvendorid;
+//     uint32_t marchid;
+//     char ysyx[5];
 
-    __asm__ volatile (
-        "csrr %0, 0xF11"
-        : "=r" (mvendorid)
-    );
+//     __asm__ volatile (
+//         "csrr %0, 0xF11"
+//         : "=r" (mvendorid)
+//     );
 
-    __asm__ volatile (
-        "csrr %0, 0xF12"
-        : "=r" (marchid)
-    );
+//     __asm__ volatile (
+//         "csrr %0, 0xF12"
+//         : "=r" (marchid)
+//     );
 
-    for (int i = 0; i < 4; i++) {
-        ysyx[3-i] = (mvendorid >> (8 * i)) & 0xFF;
-    }
+//     for (int i = 0; i < 4; i++) {
+//         ysyx[3-i] = (mvendorid >> (8 * i)) & 0xFF;
+//     }
 
-    ysyx[4] = '\0';
+//     ysyx[4] = '\0';
 
-    printf("%s_%d\n", ysyx, marchid);
-    outl(0x10002008, decimalTo32Bit(marchid));
-}
+//     printf("%s_%d\n", ysyx, marchid);
+//     outl(0x10002008, decimalTo32Bit(marchid));
+// }
 
 static inline void _trm_init()
 {
     uart_init();
-    ioe_init();
-    print_ysyx();
+    //print_ysyx();
     int ret = main(mainargs);
     halt(ret);
 }

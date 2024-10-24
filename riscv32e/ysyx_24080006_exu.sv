@@ -99,6 +99,9 @@ module ysyx_24080006_exu (
 
     end
 
+`ifdef SIM_MODE
+import "DPI-C" function void EXU_CNT();
+`endif
     always_ff @ (posedge clock) begin
         if (reset) begin
             lsu.dnpc <= '0;
@@ -133,6 +136,9 @@ module ysyx_24080006_exu (
             lsu.csr_wdata <= idu.csr_wdata;
             lsu.ecall <= idu.ecall;
             lsu.pc <= idu.pc;
+            `ifdef SIM_MODE
+            EXU_CNT();
+            `endif
         end
 
     end

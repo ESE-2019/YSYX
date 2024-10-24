@@ -170,18 +170,18 @@ module AXI4Xbar(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
 endmodule
 
 // VCS coverage exclude_file
-module ram_2x3(	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+module ram_2x2(	// src/main/scala/chisel3/util/Decoupled.scala:256:91
   input        R0_addr,
                R0_en,
                R0_clk,
-  output [2:0] R0_data,
+  output [1:0] R0_data,
   input        W0_addr,
                W0_en,
                W0_clk,
-  input  [2:0] W0_data
+  input  [1:0] W0_data
 );
 
-  reg [2:0] Memory[0:1];	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+  reg [1:0] Memory[0:1];	// src/main/scala/chisel3/util/Decoupled.scala:256:91
   always @(posedge W0_clk) begin	// src/main/scala/chisel3/util/Decoupled.scala:256:91
     if (W0_en & 1'h1)	// src/main/scala/chisel3/util/Decoupled.scala:256:91
       Memory[W0_addr] <= W0_data;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
@@ -193,26 +193,26 @@ module ram_2x3(	// src/main/scala/chisel3/util/Decoupled.scala:256:91
       `ifdef RANDOMIZE_MEM_INIT	// src/main/scala/chisel3/util/Decoupled.scala:256:91
         for (logic [1:0] i = 2'h0; i < 2'h2; i += 2'h1) begin
           _RANDOM_MEM = `RANDOM;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
-          Memory[i[0]] = _RANDOM_MEM[2:0];	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+          Memory[i[0]] = _RANDOM_MEM[1:0];	// src/main/scala/chisel3/util/Decoupled.scala:256:91
         end
       `endif // RANDOMIZE_MEM_INIT
     end // initial
   `endif // ENABLE_INITIAL_MEM_
-  assign R0_data = R0_en ? Memory[R0_addr] : 3'bx;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+  assign R0_data = R0_en ? Memory[R0_addr] : 2'bx;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
 endmodule
 
-module Queue2_UInt3(	// src/main/scala/chisel3/util/Decoupled.scala:243:7
+module Queue2_UInt2(	// src/main/scala/chisel3/util/Decoupled.scala:243:7
   input        clock,	// src/main/scala/chisel3/util/Decoupled.scala:243:7
                reset,	// src/main/scala/chisel3/util/Decoupled.scala:243:7
   output       io_enq_ready,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
   input        io_enq_valid,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
-  input  [2:0] io_enq_bits,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
+  input  [1:0] io_enq_bits,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
   input        io_deq_ready,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
   output       io_deq_valid,	// src/main/scala/chisel3/util/Decoupled.scala:255:14
-  output [2:0] io_deq_bits	// src/main/scala/chisel3/util/Decoupled.scala:255:14
+  output [1:0] io_deq_bits	// src/main/scala/chisel3/util/Decoupled.scala:255:14
 );
 
-  wire [2:0] _ram_ext_R0_data;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+  wire [1:0] _ram_ext_R0_data;	// src/main/scala/chisel3/util/Decoupled.scala:256:91
   reg        wrap;	// src/main/scala/chisel3/util/Counter.scala:61:40
   reg        wrap_1;	// src/main/scala/chisel3/util/Counter.scala:61:40
   reg        maybe_full;	// src/main/scala/chisel3/util/Decoupled.scala:259:27
@@ -257,7 +257,7 @@ module Queue2_UInt3(	// src/main/scala/chisel3/util/Decoupled.scala:243:7
       `FIRRTL_AFTER_INITIAL	// src/main/scala/chisel3/util/Decoupled.scala:243:7
     `endif // FIRRTL_AFTER_INITIAL
   `endif // ENABLE_INITIAL_REG_
-  ram_2x3 ram_ext (	// src/main/scala/chisel3/util/Decoupled.scala:256:91
+  ram_2x2 ram_ext (	// src/main/scala/chisel3/util/Decoupled.scala:256:91
     .R0_addr (wrap_1),	// src/main/scala/chisel3/util/Counter.scala:61:40
     .R0_en   (1'h1),
     .R0_clk  (clock),
@@ -300,37 +300,27 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   output [31:0] auto_in_rdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [1:0]  auto_in_rresp,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_in_rlast,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_2_awready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_2_awvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [3:0]  auto_out_2_awid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [27:0] auto_out_2_awaddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_2_wready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_2_wvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_out_2_wdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [3:0]  auto_out_2_wstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_2_bready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_2_bvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [3:0]  auto_out_2_bid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [1:0]  auto_out_2_bresp,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_2_arready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_2_arvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [3:0]  auto_out_2_arid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [27:0] auto_out_2_araddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_2_rready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_2_rvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [3:0]  auto_out_2_rid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [31:0] auto_out_2_rdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [1:0]  auto_out_2_rresp,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input         auto_out_1_awready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_out_1_awvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_out_1_wvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [3:0]  auto_out_1_awid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [27:0] auto_out_1_awaddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input         auto_out_1_wready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output        auto_out_1_wvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [31:0] auto_out_1_wdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [3:0]  auto_out_1_wstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output        auto_out_1_bready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input         auto_out_1_bvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input  [3:0]  auto_out_1_bid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input  [1:0]  auto_out_1_bresp,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   input         auto_out_1_arready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_out_1_arvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [3:0]  auto_out_1_arid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [29:0] auto_out_1_araddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [27:0] auto_out_1_araddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_out_1_rready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   input         auto_out_1_rvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   input  [3:0]  auto_out_1_rid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   input  [31:0] auto_out_1_rdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  input  [1:0]  auto_out_1_rresp,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   input         auto_out_0_awready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_out_0_awvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [3:0]  auto_out_0_awid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
@@ -356,236 +346,185 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   input  [1:0]  auto_out_0_rresp	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
 );
 
-  wire [3:0] _in_0_bT_9;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire [3:0] _in_0_bT_5;	// src/main/scala/chisel3/util/Mux.scala:30:73
   wire       in_0_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:297:22
-  wire [3:0] _in_0_rT_19;	// src/main/scala/chisel3/util/Mux.scala:30:73
-  wire       _in_0_rT_4;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire [3:0] _in_0_rT_11;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _in_0_rT_2;	// src/main/scala/chisel3/util/Mux.scala:30:73
   wire       in_0_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:297:22
-  wire       _portsWOI_in_0_wready_T_4;	// src/main/scala/chisel3/util/Mux.scala:30:73
-  wire       _portsAWOI_in_0_awready_T_4;	// src/main/scala/chisel3/util/Mux.scala:30:73
-  wire       _portsAROI_in_0_arready_T_4;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _portsWOI_in_0_wready_T_2;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _portsAWOI_in_0_awready_T_2;	// src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _portsAROI_in_0_arready_T_2;	// src/main/scala/chisel3/util/Mux.scala:30:73
   wire       nodeIn_awready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:154:45
   wire       _awIn_0_io_enq_ready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
   wire       _awIn_0_io_deq_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
-  wire [2:0] _awIn_0_io_deq_bits;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
-  wire [5:0] _GEN = auto_in_araddr[29:24] ^ 6'h21;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  wire [3:0] _requestARIO_T_20 = auto_in_araddr[31:28] ^ 4'hA;	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
+  wire [1:0] _awIn_0_io_deq_bits;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
   wire       requestARIO_0_0 =
-    {auto_in_araddr[31],
-     auto_in_araddr[29],
-     ~(auto_in_araddr[28]),
-     auto_in_araddr[24]} == 4'h0
-    | {auto_in_araddr[31], _GEN[5:4], _GEN[0]} == 4'h0
-    | {auto_in_araddr[31], ~(auto_in_araddr[29:28])} == 3'h0
-    | {~(auto_in_araddr[31]),
-       auto_in_araddr[29:28],
-       auto_in_araddr[24]} == 4'h0
-    | {_requestARIO_T_20[3], _requestARIO_T_20[1:0]} == 3'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire       requestARIO_0_1 =
-    {auto_in_araddr[31],
-     auto_in_araddr[29:28] ^ 2'h2,
-     auto_in_araddr[24],
-     auto_in_araddr[12]} == 5'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire       requestARIO_0_2 =
-    {auto_in_araddr[31],
-     auto_in_araddr[29:28],
-     ~(auto_in_araddr[24])} == 4'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire [5:0] _GEN_0 = auto_in_awaddr[29:24] ^ 6'h21;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  wire [3:0] _requestAWIO_T_20 = auto_in_awaddr[31:28] ^ 4'hA;	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
+    {auto_in_araddr[29], ~(auto_in_araddr[28])} == 2'h0
+    | auto_in_araddr[29];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
+  wire       requestARIO_0_1 = auto_in_araddr[29:28] == 2'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   wire       requestAWIO_0_0 =
-    {auto_in_awaddr[31],
-     auto_in_awaddr[29],
-     ~(auto_in_awaddr[28]),
-     auto_in_awaddr[24]} == 4'h0
-    | {auto_in_awaddr[31], _GEN_0[5:4], _GEN_0[0]} == 4'h0
-    | {auto_in_awaddr[31], ~(auto_in_awaddr[29:28])} == 3'h0
-    | {~(auto_in_awaddr[31]),
-       auto_in_awaddr[29:28],
-       auto_in_awaddr[24]} == 4'h0
-    | {_requestAWIO_T_20[3], _requestAWIO_T_20[1:0]} == 3'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire       requestAWIO_0_1 =
-    {auto_in_awaddr[31],
-     auto_in_awaddr[29:28] ^ 2'h2,
-     auto_in_awaddr[24],
-     auto_in_awaddr[12]} == 5'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire       requestAWIO_0_2 =
-    {auto_in_awaddr[31],
-     auto_in_awaddr[29:28],
-     ~(auto_in_awaddr[24])} == 4'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire       _arFIFOMap_15_T_1 = _portsAROI_in_0_arready_T_4 & auto_in_arvalid;	// src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    {auto_in_awaddr[29], ~(auto_in_awaddr[28])} == 2'h0
+    | auto_in_awaddr[29];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
+  wire       requestAWIO_0_1 = auto_in_awaddr[29:28] == 2'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
+  wire       _arFIFOMap_15_T_1 = _portsAROI_in_0_arready_T_2 & auto_in_arvalid;	// src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   wire       _arFIFOMap_0_T_2 = auto_in_arid == 4'h0 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_15_T_4 = auto_in_rready & in_0_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_0_T_6 =
-    _in_0_rT_19 == 4'h0 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h0 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_0_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_15_T_1 = nodeIn_awready & auto_in_awvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:154:45, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _awFIFOMap_0_T_2 = auto_in_awid == 4'h0 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _awFIFOMap_15_T_4 = auto_in_bready & in_0_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_0_T_5 = _in_0_bT_9 == 4'h0 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_0_T_5 = _in_0_bT_5 == 4'h0 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_0_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_1_T_2 = auto_in_arid == 4'h1 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_1_T_6 =
-    _in_0_rT_19 == 4'h1 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h1 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_1_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_1_T_2 = auto_in_awid == 4'h1 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_1_T_5 = _in_0_bT_9 == 4'h1 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_1_T_5 = _in_0_bT_5 == 4'h1 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_1_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_2_T_2 = auto_in_arid == 4'h2 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_2_T_6 =
-    _in_0_rT_19 == 4'h2 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h2 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_2_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_2_T_2 = auto_in_awid == 4'h2 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_2_T_5 = _in_0_bT_9 == 4'h2 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_2_T_5 = _in_0_bT_5 == 4'h2 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_2_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_3_T_2 = auto_in_arid == 4'h3 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_3_T_6 =
-    _in_0_rT_19 == 4'h3 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h3 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_3_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_3_T_2 = auto_in_awid == 4'h3 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_3_T_5 = _in_0_bT_9 == 4'h3 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_3_T_5 = _in_0_bT_5 == 4'h3 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_3_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_4_T_2 = auto_in_arid == 4'h4 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_4_T_6 =
-    _in_0_rT_19 == 4'h4 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h4 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_4_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_4_T_2 = auto_in_awid == 4'h4 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_4_T_5 = _in_0_bT_9 == 4'h4 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_4_T_5 = _in_0_bT_5 == 4'h4 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_4_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_5_T_2 = auto_in_arid == 4'h5 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_5_T_6 =
-    _in_0_rT_19 == 4'h5 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h5 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_5_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_5_T_2 = auto_in_awid == 4'h5 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_5_T_5 = _in_0_bT_9 == 4'h5 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_5_T_5 = _in_0_bT_5 == 4'h5 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_5_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_6_T_2 = auto_in_arid == 4'h6 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_6_T_6 =
-    _in_0_rT_19 == 4'h6 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h6 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_6_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_6_T_2 = auto_in_awid == 4'h6 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_6_T_5 = _in_0_bT_9 == 4'h6 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_6_T_5 = _in_0_bT_5 == 4'h6 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_6_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_7_T_2 = auto_in_arid == 4'h7 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_7_T_6 =
-    _in_0_rT_19 == 4'h7 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h7 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_7_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_7_T_2 = auto_in_awid == 4'h7 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_7_T_5 = _in_0_bT_9 == 4'h7 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_7_T_5 = _in_0_bT_5 == 4'h7 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_7_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_8_T_2 = auto_in_arid == 4'h8 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_8_T_6 =
-    _in_0_rT_19 == 4'h8 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h8 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_8_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_8_T_2 = auto_in_awid == 4'h8 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_8_T_5 = _in_0_bT_9 == 4'h8 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_8_T_5 = _in_0_bT_5 == 4'h8 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_8_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_9_T_2 = auto_in_arid == 4'h9 & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_9_T_6 =
-    _in_0_rT_19 == 4'h9 & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'h9 & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_9_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_9_T_2 = auto_in_awid == 4'h9 & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_9_T_5 = _in_0_bT_9 == 4'h9 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_9_T_5 = _in_0_bT_5 == 4'h9 & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_9_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_10_T_2 = auto_in_arid == 4'hA & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_10_T_6 =
-    _in_0_rT_19 == 4'hA & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'hA & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_10_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_10_T_2 = auto_in_awid == 4'hA & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_10_T_5 = _in_0_bT_9 == 4'hA & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_10_T_5 = _in_0_bT_5 == 4'hA & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_10_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_11_T_2 = auto_in_arid == 4'hB & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_11_T_6 =
-    _in_0_rT_19 == 4'hB & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'hB & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_11_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_11_T_2 = auto_in_awid == 4'hB & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_11_T_5 = _in_0_bT_9 == 4'hB & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_11_T_5 = _in_0_bT_5 == 4'hB & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_11_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_12_T_2 = auto_in_arid == 4'hC & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_12_T_6 =
-    _in_0_rT_19 == 4'hC & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'hC & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_12_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_12_T_2 = auto_in_awid == 4'hC & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_12_T_5 = _in_0_bT_9 == 4'hC & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_12_T_5 = _in_0_bT_5 == 4'hC & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_12_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_13_T_2 = auto_in_arid == 4'hD & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_13_T_6 =
-    _in_0_rT_19 == 4'hD & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'hD & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_13_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_13_T_2 = auto_in_awid == 4'hD & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_13_T_5 = _in_0_bT_9 == 4'hD & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_13_T_5 = _in_0_bT_5 == 4'hD & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_13_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_14_T_2 = auto_in_arid == 4'hE & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_14_T_6 =
-    _in_0_rT_19 == 4'hE & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    _in_0_rT_11 == 4'hE & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_14_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_14_T_2 = auto_in_awid == 4'hE & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_14_T_5 = _in_0_bT_9 == 4'hE & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_14_T_5 = _in_0_bT_5 == 4'hE & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_14_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _arFIFOMap_15_T_2 = (&auto_in_arid) & _arFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:134:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
   wire       _arFIFOMap_15_T_6 =
-    (&_in_0_rT_19) & _arFIFOMap_15_T_4 & _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+    (&_in_0_rT_11) & _arFIFOMap_15_T_4 & _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:135:{19,24,43}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        arFIFOMap_15_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   wire       _awFIFOMap_15_T_2 = (&auto_in_awid) & _awFIFOMap_15_T_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:138:{20,25}, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  wire       _awFIFOMap_15_T_5 = (&_in_0_bT_9) & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
+  wire       _awFIFOMap_15_T_5 = (&_in_0_bT_5) & _awFIFOMap_15_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:139:{19,24}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
   reg        awFIFOMap_15_count;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
   reg        latched;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:152:30
   wire       _nodeIn_awready_T = latched | _awIn_0_io_enq_ready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47, :152:30, :153:57
   wire       in_0_awvalid = auto_in_awvalid & _nodeIn_awready_T;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:153:{45,57}
-  assign nodeIn_awready = _portsAWOI_in_0_awready_T_4 & _nodeIn_awready_T;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:153:57, :154:45, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign nodeIn_awready = _portsAWOI_in_0_awready_T_2 & _nodeIn_awready_T;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:153:57, :154:45, src/main/scala/chisel3/util/Mux.scala:30:73
   wire       awIn_0_io_enq_valid = auto_in_awvalid & ~latched;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:152:30, :155:{51,54}
   wire       in_0_wvalid = auto_in_wvalid & _awIn_0_io_deq_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47, :160:43
-  assign _portsAROI_in_0_arready_T_4 =
-    requestARIO_0_0 & auto_out_0_arready | requestARIO_0_1 & auto_out_1_arready
-    | requestARIO_0_2 & auto_out_2_arready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign _portsAWOI_in_0_awready_T_4 =
-    requestAWIO_0_0 & auto_out_0_awready | requestAWIO_0_2 & auto_out_2_awready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign _portsWOI_in_0_wready_T_4 =
-    _awIn_0_io_deq_bits[0] & auto_out_0_wready | _awIn_0_io_deq_bits[2]
-    & auto_out_2_wready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47, :80:73, src/main/scala/chisel3/util/Mux.scala:30:73
-  reg        idle_3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-  wire       anyValid = auto_out_0_rvalid | auto_out_1_rvalid | auto_out_2_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36
-  wire [2:0] readys_valid = {auto_out_2_rvalid, auto_out_1_rvalid, auto_out_0_rvalid};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49
-  reg  [2:0] readys_mask;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
-  wire [2:0] _readys_filter_T_1 = readys_valid & ~readys_mask;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:{28,30}
-  wire [3:0] _GEN_1 =
-    {_readys_filter_T_1[1:0], auto_out_2_rvalid, auto_out_1_rvalid}
-    | {_readys_filter_T_1, auto_out_2_rvalid};	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:24:28, rocket-chip/src/main/scala/util/package.scala:262:{43,48}
-  wire [2:0] readys_readys =
-    ~({readys_mask[2], _readys_filter_T_1[2] | readys_mask[1], _GEN_1[3] | readys_mask[0]}
-      & (_GEN_1[2:0] | {_readys_filter_T_1[2], _GEN_1[3:2]}));	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:28, :25:58, :26:{18,29,39}, rocket-chip/src/main/scala/util/package.scala:262:{43,48}
+  assign _portsAROI_in_0_arready_T_2 =
+    requestARIO_0_0 & auto_out_0_arready | requestARIO_0_1 & auto_out_1_arready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign _portsAWOI_in_0_awready_T_2 =
+    requestAWIO_0_0 & auto_out_0_awready | requestAWIO_0_1 & auto_out_1_awready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign _portsWOI_in_0_wready_T_2 =
+    _awIn_0_io_deq_bits[0] & auto_out_0_wready | _awIn_0_io_deq_bits[1]
+    & auto_out_1_wready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47, :80:73, src/main/scala/chisel3/util/Mux.scala:30:73
+  reg        idle_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
+  wire       anyValid = auto_out_0_rvalid | auto_out_1_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36
+  wire [1:0] readys_valid = {auto_out_1_rvalid, auto_out_0_rvalid};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49
+  reg  [1:0] readys_mask;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+  wire [1:0] _readys_filter_T_1 = readys_valid & ~readys_mask;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:{28,30}
+  wire [1:0] readys_readys =
+    ~({readys_mask[1], _readys_filter_T_1[1] | readys_mask[0]}
+      & ({_readys_filter_T_1[0], auto_out_1_rvalid} | _readys_filter_T_1));	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:28, :25:58, :26:{18,29,39}, rocket-chip/src/main/scala/util/package.scala:262:43
   wire       prefixOR_1 = readys_readys[0] & auto_out_0_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
-  wire       winner_3_1 = readys_readys[1] & auto_out_1_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
-  wire       winner_3_2 = readys_readys[2] & auto_out_2_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
-  reg        state_3_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-  reg        state_3_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-  reg        state_3_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-  wire       muxState_3_0 = idle_3 ? prefixOR_1 : state_3_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
-  wire       muxState_3_1 = idle_3 ? winner_3_1 : state_3_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
-  wire       muxState_3_2 = idle_3 ? winner_3_2 : state_3_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
+  wire       winner_2_1 = readys_readys[1] & auto_out_1_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+  reg        state_2_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
+  reg        state_2_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
+  wire       muxState_2_0 = idle_2 ? prefixOR_1 : state_2_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
+  wire       muxState_2_1 = idle_2 ? winner_2_1 : state_2_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
   assign in_0_rvalid =
-    idle_3
-      ? anyValid
-      : state_3_0 & auto_out_0_rvalid | state_3_1 & auto_out_1_rvalid | state_3_2
-        & auto_out_2_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :280:24, :297:22, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign _in_0_rT_4 = muxState_3_0 | muxState_3_1 | muxState_3_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign _in_0_rT_19 =
-    (muxState_3_0 ? auto_out_0_rid : 4'h0)
-    | (muxState_3_1 ? auto_out_1_rid : 4'h0)
-    | (muxState_3_2 ? auto_out_2_rid : 4'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
-  reg        idle_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-  wire       anyValid_1 = auto_out_0_bvalid | auto_out_2_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36
-  wire [2:0] readys_valid_1 = {auto_out_2_bvalid, 1'h0, auto_out_0_bvalid};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49
-  reg  [2:0] readys_mask_1;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
-  wire [2:0] _readys_filter_T_3 = readys_valid_1 & ~readys_mask_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:{28,30}
-  wire [1:0] _GEN_2 = _readys_filter_T_3[1:0] | _readys_filter_T_3[2:1];	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:24:28, rocket-chip/src/main/scala/util/package.scala:262:43
-  wire [2:0] readys_readys_1 =
-    ~({readys_mask_1[2],
-       _readys_filter_T_3[2] | readys_mask_1[1],
-       _GEN_2[1] | readys_mask_1[0]}
-      & ({_GEN_2[0], auto_out_2_bvalid | _readys_filter_T_3[0], auto_out_2_bvalid}
-         | {_readys_filter_T_3[2], _GEN_2}));	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:28, :25:58, :26:{18,29,39}, rocket-chip/src/main/scala/util/package.scala:262:{43,48}
-  wire       winner_4_0 = readys_readys_1[0] & auto_out_0_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
-  wire       winner_4_2 = readys_readys_1[2] & auto_out_2_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+    idle_2 ? anyValid : state_2_0 & auto_out_0_rvalid | state_2_1 & auto_out_1_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :280:24, :297:22, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign _in_0_rT_2 = muxState_2_0 | muxState_2_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign _in_0_rT_11 =
+    (muxState_2_0 ? auto_out_0_rid : 4'h0)
+    | (muxState_2_1 ? auto_out_1_rid : 4'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+  reg        idle_3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
+  wire       anyValid_1 = auto_out_0_bvalid | auto_out_1_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36
+  wire [1:0] readys_valid_1 = {auto_out_1_bvalid, auto_out_0_bvalid};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49
+  reg  [1:0] readys_mask_1;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+  wire [1:0] _readys_filter_T_3 = readys_valid_1 & ~readys_mask_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:{28,30}
+  wire [1:0] readys_readys_1 =
+    ~({readys_mask_1[1], _readys_filter_T_3[1] | readys_mask_1[0]}
+      & ({_readys_filter_T_3[0], auto_out_1_bvalid} | _readys_filter_T_3));	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :24:28, :25:58, :26:{18,29,39}, rocket-chip/src/main/scala/util/package.scala:262:43
+  wire       winner_3_0 = readys_readys_1[0] & auto_out_0_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+  wire       winner_3_1 = readys_readys_1[1] & auto_out_1_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:73, :269:67, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
   `ifndef SYNTHESIS	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:122:22
     always @(posedge clock) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:122:22
       if (~reset & ~(~_arFIFOMap_0_T_6 | arFIFOMap_0_count)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34, :122:{22,23,34}, :135:{24,43}
@@ -972,27 +911,25 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
         if (`STOP_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:123:22
           $fatal;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:123:22
       end
-      if (~reset
-          & ~((~prefixOR_1 | ~winner_3_1)
-              & (~(prefixOR_1 | winner_3_1) | ~winner_3_2))) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :274:46, :275:{11,54,57,60,75}, :277:12
+      if (~reset & ~(~prefixOR_1 | ~winner_2_1)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :275:{11,54,57,60}, :277:12
         if (`ASSERT_VERBOSE_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
           $error("Assertion failed\n    at Xbar.scala:275 assert((prefixOR zip winner) map { case (p,w) => !p || !w } reduce {_ && _})\n");	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
         if (`STOP_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
           $fatal;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
       end
-      if (~reset & ~(~anyValid | prefixOR_1 | winner_3_1 | winner_3_2)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36, :269:67, :277:{12,13,23,41}
+      if (~reset & ~(~anyValid | prefixOR_1 | winner_2_1)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36, :269:67, :277:{12,13,23,41}
         if (`ASSERT_VERBOSE_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
           $error("Assertion failed\n    at Xbar.scala:277 assert (!anyValid || winner.reduce(_||_))\n");	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
         if (`STOP_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
           $fatal;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
       end
-      if (~reset & ~(~winner_4_0 | ~winner_4_2)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :275:{11,54,57,60}, :277:12
+      if (~reset & ~(~winner_3_0 | ~winner_3_1)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :275:{11,54,57,60}, :277:12
         if (`ASSERT_VERBOSE_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
           $error("Assertion failed\n    at Xbar.scala:275 assert((prefixOR zip winner) map { case (p,w) => !p || !w } reduce {_ && _})\n");	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
         if (`STOP_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
           $fatal;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:275:11
       end
-      if (~reset & ~(~anyValid_1 | winner_4_0 | winner_4_2)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36, :269:67, :277:{12,13,23,41}
+      if (~reset & ~(~anyValid_1 | winner_3_0 | winner_3_1)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:265:36, :269:67, :277:{12,13,23,41}
         if (`ASSERT_VERBOSE_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
           $error("Assertion failed\n    at Xbar.scala:277 assert (!anyValid || winner.reduce(_||_))\n");	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
         if (`STOP_COND_)	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:277:12
@@ -1000,15 +937,15 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       end
     end // always @(posedge)
   `endif // not def SYNTHESIS
-  reg        state_4_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-  reg        state_4_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-  wire       muxState_4_0 = idle_4 ? winner_4_0 : state_4_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
-  wire       muxState_4_2 = idle_4 ? winner_4_2 : state_4_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
+  reg        state_3_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
+  reg        state_3_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
+  wire       muxState_3_0 = idle_3 ? winner_3_0 : state_3_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
+  wire       muxState_3_1 = idle_3 ? winner_3_1 : state_3_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :269:67, :280:24, :281:23
   assign in_0_bvalid =
-    idle_4 ? anyValid_1 : state_4_0 & auto_out_0_bvalid | state_4_2 & auto_out_2_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :280:24, :297:22, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign _in_0_bT_9 =
-    (muxState_4_0 ? auto_out_0_bid : 4'h0)
-    | (muxState_4_2 ? auto_out_2_bid : 4'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+    idle_3 ? anyValid_1 : state_3_0 & auto_out_0_bvalid | state_3_1 & auto_out_1_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :280:24, :297:22, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign _in_0_bT_5 =
+    (muxState_3_0 ? auto_out_0_bid : 4'h0)
+    | (muxState_3_1 ? auto_out_1_bid : 4'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:281:23, src/main/scala/chisel3/util/Mux.scala:30:73
   always @(posedge clock) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
     if (reset) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       arFIFOMap_0_count <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
@@ -1044,15 +981,14 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       arFIFOMap_15_count <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
       awFIFOMap_15_count <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34
       latched <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:152:30
+      idle_2 <= 1'h1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
+      readys_mask <= 2'h3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+      state_2_0 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
+      state_2_1 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
       idle_3 <= 1'h1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-      readys_mask <= 3'h7;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+      readys_mask_1 <= 2'h3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
       state_3_0 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
       state_3_1 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-      state_3_2 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-      idle_4 <= 1'h1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-      readys_mask_1 <= 3'h7;	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
-      state_4_0 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
-      state_4_2 <= 1'h0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:280:24
     end
     else begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       arFIFOMap_0_count <= arFIFOMap_0_count + _arFIFOMap_0_T_2 - _arFIFOMap_0_T_6;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34, :121:{30,48}, :134:25, :135:{24,43}
@@ -1088,30 +1024,25 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       arFIFOMap_15_count <= arFIFOMap_15_count + _arFIFOMap_15_T_2 - _arFIFOMap_15_T_6;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34, :121:{30,48}, :134:25, :135:{24,43}
       awFIFOMap_15_count <= awFIFOMap_15_count + _awFIFOMap_15_T_2 - _awFIFOMap_15_T_5;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:119:34, :121:{30,48}, :138:25, :139:24
       latched <=
-        ~(_portsAWOI_in_0_awready_T_4 & in_0_awvalid)
+        ~(_portsAWOI_in_0_awready_T_2 & in_0_awvalid)
         & (_awIn_0_io_enq_ready & awIn_0_io_enq_valid | latched);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47, :152:30, :153:45, :155:51, :156:{36,46}, :157:{30,40}, src/main/scala/chisel3/util/Decoupled.scala:51:35, src/main/scala/chisel3/util/Mux.scala:30:73
-      idle_3 <= auto_in_rready & in_0_rvalid | ~anyValid & idle_3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :285:{21,28}, :286:{22,29}, :297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
-      if (idle_3 & (|readys_valid)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:27:{18,27}
-        automatic logic [2:0] _readys_mask_T = readys_readys & readys_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18, :28:29
-        automatic logic [2:0] _readys_mask_T_3 =
-          _readys_mask_T | {_readys_mask_T[1:0], 1'h0};	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:28:29, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
-        readys_mask <= _readys_mask_T_3 | {_readys_mask_T_3[0], 2'h0};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
+      idle_2 <= auto_in_rready & in_0_rvalid | ~anyValid & idle_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :285:{21,28}, :286:{22,29}, :297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
+      if (idle_2 & (|readys_valid)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:27:{18,27}
+        automatic logic [1:0] _readys_mask_T = readys_readys & readys_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18, :28:29
+        readys_mask <= _readys_mask_T | {_readys_mask_T[0], 1'h0};	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :28:29, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
+      end
+      if (idle_2) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
+        state_2_0 <= prefixOR_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
+        state_2_1 <= winner_2_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
+      end
+      idle_3 <= auto_in_bready & in_0_bvalid | ~anyValid_1 & idle_3;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :285:{21,28}, :286:{22,29}, :297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
+      if (idle_3 & (|readys_valid_1)) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:27:{18,27}
+        automatic logic [1:0] _readys_mask_T_5 = readys_readys_1 & readys_valid_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18, :28:29
+        readys_mask_1 <= _readys_mask_T_5 | {_readys_mask_T_5[0], 1'h0};	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, :28:29, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
       end
       if (idle_3) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-        state_3_0 <= prefixOR_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
+        state_3_0 <= winner_3_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
         state_3_1 <= winner_3_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
-        state_3_2 <= winner_3_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
-      end
-      idle_4 <= auto_in_bready & in_0_bvalid | ~anyValid_1 & idle_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :265:36, :285:{21,28}, :286:{22,29}, :297:22, src/main/scala/chisel3/util/Decoupled.scala:51:35
-      if (idle_4 & (|{auto_out_2_bvalid, auto_out_0_bvalid})) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23, :267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:27:{18,27}
-        automatic logic [2:0] _readys_mask_T_8 = readys_readys_1 & readys_valid_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:267:49, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18, :28:29
-        automatic logic [2:0] _readys_mask_T_11 =
-          _readys_mask_T_8 | {_readys_mask_T_8[1:0], 1'h0};	// rocket-chip/src/main/scala/tilelink/Arbiter.scala:28:29, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
-        readys_mask_1 <= _readys_mask_T_11 | {_readys_mask_T_11[0], 2'h0};	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23, rocket-chip/src/main/scala/util/package.scala:253:{43,53}
-      end
-      if (idle_4) begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:261:23
-        state_4_0 <= winner_4_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
-        state_4_2 <= winner_4_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:269:67, :280:24
       end
     end
   end // always @(posedge)
@@ -1120,107 +1051,99 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       `FIRRTL_BEFORE_INITIAL	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
     `endif // FIRRTL_BEFORE_INITIAL
     initial begin	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-      automatic logic [31:0] _RANDOM[0:3];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
+      automatic logic [31:0] _RANDOM[0:2];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       `ifdef INIT_RANDOM_PROLOG_	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
         `INIT_RANDOM_PROLOG_	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       `endif // INIT_RANDOM_PROLOG_
       `ifdef RANDOMIZE_REG_INIT	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-        for (logic [2:0] i = 3'h0; i < 3'h4; i += 3'h1) begin
-          _RANDOM[i[1:0]] = `RANDOM;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
+        for (logic [1:0] i = 2'h0; i < 2'h3; i += 2'h1) begin
+          _RANDOM[i] = `RANDOM;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
         end	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
         arFIFOMap_0_count = _RANDOM[2'h0][0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_0_count = _RANDOM[2'h0][3];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_1_count = _RANDOM[2'h0][6];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_1_count = _RANDOM[2'h0][9];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_2_count = _RANDOM[2'h0][12];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_2_count = _RANDOM[2'h0][15];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_3_count = _RANDOM[2'h0][18];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_3_count = _RANDOM[2'h0][21];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_4_count = _RANDOM[2'h0][24];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_4_count = _RANDOM[2'h0][27];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_5_count = _RANDOM[2'h0][30];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_5_count = _RANDOM[2'h1][1];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_6_count = _RANDOM[2'h1][4];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_6_count = _RANDOM[2'h1][7];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_7_count = _RANDOM[2'h1][10];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_7_count = _RANDOM[2'h1][13];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_8_count = _RANDOM[2'h1][16];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_8_count = _RANDOM[2'h1][19];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_9_count = _RANDOM[2'h1][22];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_9_count = _RANDOM[2'h1][25];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_10_count = _RANDOM[2'h1][28];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_10_count = _RANDOM[2'h1][31];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_11_count = _RANDOM[2'h2][2];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_11_count = _RANDOM[2'h2][5];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_12_count = _RANDOM[2'h2][8];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_12_count = _RANDOM[2'h2][11];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_13_count = _RANDOM[2'h2][14];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_13_count = _RANDOM[2'h2][17];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_14_count = _RANDOM[2'h2][20];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_14_count = _RANDOM[2'h2][23];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        arFIFOMap_15_count = _RANDOM[2'h2][26];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        awFIFOMap_15_count = _RANDOM[2'h2][29];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
-        latched = _RANDOM[2'h3][0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30
-        idle_3 = _RANDOM[2'h3][13];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :261:23
-        readys_mask = _RANDOM[2'h3][16:14];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
-        state_3_0 = _RANDOM[2'h3][17];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
-        state_3_1 = _RANDOM[2'h3][18];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
-        state_3_2 = _RANDOM[2'h3][19];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
-        idle_4 = _RANDOM[2'h3][20];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :261:23
-        readys_mask_1 = _RANDOM[2'h3][23:21];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
-        state_4_0 = _RANDOM[2'h3][24];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
-        state_4_2 = _RANDOM[2'h3][26];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
+        awFIFOMap_0_count = _RANDOM[2'h0][2];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_1_count = _RANDOM[2'h0][4];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_1_count = _RANDOM[2'h0][6];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_2_count = _RANDOM[2'h0][8];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_2_count = _RANDOM[2'h0][10];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_3_count = _RANDOM[2'h0][12];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_3_count = _RANDOM[2'h0][14];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_4_count = _RANDOM[2'h0][16];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_4_count = _RANDOM[2'h0][18];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_5_count = _RANDOM[2'h0][20];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_5_count = _RANDOM[2'h0][22];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_6_count = _RANDOM[2'h0][24];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_6_count = _RANDOM[2'h0][26];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_7_count = _RANDOM[2'h0][28];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_7_count = _RANDOM[2'h0][30];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_8_count = _RANDOM[2'h1][0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_8_count = _RANDOM[2'h1][2];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_9_count = _RANDOM[2'h1][4];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_9_count = _RANDOM[2'h1][6];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_10_count = _RANDOM[2'h1][8];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_10_count = _RANDOM[2'h1][10];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_11_count = _RANDOM[2'h1][12];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_11_count = _RANDOM[2'h1][14];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_12_count = _RANDOM[2'h1][16];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_12_count = _RANDOM[2'h1][18];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_13_count = _RANDOM[2'h1][20];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_13_count = _RANDOM[2'h1][22];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_14_count = _RANDOM[2'h1][24];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_14_count = _RANDOM[2'h1][26];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        arFIFOMap_15_count = _RANDOM[2'h1][28];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        awFIFOMap_15_count = _RANDOM[2'h1][30];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :119:34
+        latched = _RANDOM[2'h2][0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30
+        idle_2 = _RANDOM[2'h2][9];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :261:23
+        readys_mask = _RANDOM[2'h2][11:10];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+        state_2_0 = _RANDOM[2'h2][12];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
+        state_2_1 = _RANDOM[2'h2][13];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
+        idle_3 = _RANDOM[2'h2][14];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :261:23
+        readys_mask_1 = _RANDOM[2'h2][16:15];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, rocket-chip/src/main/scala/tilelink/Arbiter.scala:23:23
+        state_3_0 = _RANDOM[2'h2][17];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
+        state_3_1 = _RANDOM[2'h2][18];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :152:30, :280:24
       `endif // RANDOMIZE_REG_INIT
     end // initial
     `ifdef FIRRTL_AFTER_INITIAL	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
       `FIRRTL_AFTER_INITIAL	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
     `endif // FIRRTL_AFTER_INITIAL
   `endif // ENABLE_INITIAL_REG_
-  Queue2_UInt3 awIn_0 (	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
+  Queue2_UInt2 awIn_0 (	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
     .clock        (clock),
     .reset        (reset),
     .io_enq_ready (_awIn_0_io_enq_ready),
     .io_enq_valid (awIn_0_io_enq_valid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:155:51
-    .io_enq_bits  ({requestAWIO_0_2, requestAWIO_0_1, requestAWIO_0_0}),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, :79:75, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
-    .io_deq_ready (auto_in_wvalid & auto_in_wlast & _portsWOI_in_0_wready_T_4),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:162:{50,74}, src/main/scala/chisel3/util/Mux.scala:30:73
+    .io_enq_bits  ({requestAWIO_0_1, requestAWIO_0_0}),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:67:97, :79:75, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
+    .io_deq_ready (auto_in_wvalid & auto_in_wlast & _portsWOI_in_0_wready_T_2),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:162:{50,74}, src/main/scala/chisel3/util/Mux.scala:30:73
     .io_deq_valid (_awIn_0_io_deq_valid),
     .io_deq_bits  (_awIn_0_io_deq_bits)
   );	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:70:47
   assign auto_in_awready = nodeIn_awready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :154:45
-  assign auto_in_wready = _portsWOI_in_0_wready_T_4 & _awIn_0_io_deq_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :70:47, :161:43, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign auto_in_wready = _portsWOI_in_0_wready_T_2 & _awIn_0_io_deq_valid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :70:47, :161:43, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_bvalid = in_0_bvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :297:22
-  assign auto_in_bid = _in_0_bT_9;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign auto_in_bid = _in_0_bT_5;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_bresp =
-    (muxState_4_0 ? auto_out_0_bresp : 2'h0)
-    | (muxState_4_2 ? auto_out_2_bresp : 2'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign auto_in_arready = _portsAROI_in_0_arready_T_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
+    (muxState_3_0 ? auto_out_0_bresp : 2'h0)
+    | (muxState_3_1 ? auto_out_1_bresp : 2'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign auto_in_arready = _portsAROI_in_0_arready_T_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_rvalid = in_0_rvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :297:22
-  assign auto_in_rid = _in_0_rT_19;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign auto_in_rid = _in_0_rT_11;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_rdata =
-    (muxState_3_0 ? auto_out_0_rdata : 32'h0)
-    | (muxState_3_1 ? auto_out_1_rdata : 32'h0)
-    | (muxState_3_2 ? auto_out_2_rdata : 32'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+    (muxState_2_0 ? auto_out_0_rdata : 32'h0)
+    | (muxState_2_1 ? auto_out_1_rdata : 32'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_rresp =
-    (muxState_3_0 ? auto_out_0_rresp : 2'h0)
-    | (muxState_3_2 ? auto_out_2_rresp : 2'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign auto_in_rlast = _in_0_rT_4;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign auto_out_2_awvalid = in_0_awvalid & requestAWIO_0_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :153:45, :241:40, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
-  assign auto_out_2_awid = auto_in_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_2_awaddr = auto_in_awaddr[27:0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :171:28
-  assign auto_out_2_wvalid = in_0_wvalid & _awIn_0_io_deq_bits[2];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :70:47, :80:73, :160:43, :241:40
-  assign auto_out_2_wdata = auto_in_wdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_2_wstrb = auto_in_wstrb;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_2_bready = auto_in_bready & (idle_4 ? readys_readys_1[2] : state_4_2);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
-  assign auto_out_2_arvalid = auto_in_arvalid & requestARIO_0_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :241:40, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
-  assign auto_out_2_arid = auto_in_arid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_2_araddr = auto_in_araddr[27:0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :171:28
-  assign auto_out_2_rready = auto_in_rready & (idle_3 ? readys_readys[2] : state_3_2);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+    (muxState_2_0 ? auto_out_0_rresp : 2'h0)
+    | (muxState_2_1 ? auto_out_1_rresp : 2'h0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :281:23, src/main/scala/chisel3/util/Mux.scala:30:73
+  assign auto_in_rlast = _in_0_rT_2;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_out_1_awvalid = in_0_awvalid & requestAWIO_0_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :153:45, :241:40, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
+  assign auto_out_1_awid = auto_in_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
+  assign auto_out_1_awaddr = auto_in_awaddr[27:0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :171:28
   assign auto_out_1_wvalid = in_0_wvalid & _awIn_0_io_deq_bits[1];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :70:47, :80:73, :160:43, :241:40
+  assign auto_out_1_wdata = auto_in_wdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
+  assign auto_out_1_wstrb = auto_in_wstrb;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
+  assign auto_out_1_bready = auto_in_bready & (idle_3 ? readys_readys_1[1] : state_3_1);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
   assign auto_out_1_arvalid = auto_in_arvalid & requestARIO_0_1;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :241:40, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_1_arid = auto_in_arid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_1_araddr = auto_in_araddr[29:0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  assign auto_out_1_rready = auto_in_rready & (idle_3 ? readys_readys[1] : state_3_1);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+  assign auto_out_1_araddr = auto_in_araddr[27:0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :171:28
+  assign auto_out_1_rready = auto_in_rready & (idle_2 ? readys_readys[1] : state_2_1);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
   assign auto_out_0_awvalid = in_0_awvalid & requestAWIO_0_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, :153:45, :241:40
   assign auto_out_0_awid = auto_in_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   assign auto_out_0_awaddr = auto_in_awaddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
@@ -1228,12 +1151,12 @@ module AXI4Xbar_1(	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   assign auto_out_0_wvalid = in_0_wvalid & _awIn_0_io_deq_bits[0];	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :70:47, :80:73, :160:43, :241:40
   assign auto_out_0_wdata = auto_in_wdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   assign auto_out_0_wstrb = auto_in_wstrb;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_0_bready = auto_in_bready & (idle_4 ? readys_readys_1[0] : state_4_0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+  assign auto_out_0_bready = auto_in_bready & (idle_3 ? readys_readys_1[0] : state_3_0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
   assign auto_out_0_arvalid = auto_in_arvalid & requestARIO_0_0;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :67:97, :241:40
   assign auto_out_0_arid = auto_in_arid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   assign auto_out_0_araddr = auto_in_araddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
   assign auto_out_0_arsize = auto_in_arsize;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9
-  assign auto_out_0_rready = auto_in_rready & (idle_3 ? readys_readys[0] : state_3_0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
+  assign auto_out_0_rready = auto_in_rready & (idle_2 ? readys_readys[0] : state_2_0);	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:56:9, :261:23, :267:73, :280:24, :289:24, :291:31, rocket-chip/src/main/scala/tilelink/Arbiter.scala:26:18
 endmodule
 
 module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
@@ -1247,20 +1170,10 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   output        auto_in_pready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_in_pslverr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [31:0] auto_in_prdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_out_6_psel,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_out_6_penable,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_out_6_pwrite,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_out_6_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [2:0]  auto_out_6_pprot,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_out_6_pwdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [3:0]  auto_out_6_pstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_out_6_pready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_out_6_pslverr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [31:0] auto_out_6_prdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output        auto_out_5_psel,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_5_penable,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_5_pwrite,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [29:0] auto_out_5_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [31:0] auto_out_5_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [2:0]  auto_out_5_pprot,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [31:0] auto_out_5_pwdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [3:0]  auto_out_5_pstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
@@ -1270,7 +1183,7 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   output        auto_out_4_psel,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_4_penable,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_4_pwrite,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [28:0] auto_out_4_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [29:0] auto_out_4_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [2:0]  auto_out_4_pprot,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [31:0] auto_out_4_pwdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [3:0]  auto_out_4_pstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
@@ -1290,7 +1203,7 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   output        auto_out_2_psel,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_2_penable,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
                 auto_out_2_pwrite,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_out_2_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
+  output [28:0] auto_out_2_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [2:0]  auto_out_2_pprot,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [31:0] auto_out_2_pwdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
   output [3:0]  auto_out_2_pstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
@@ -1329,51 +1242,42 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
      ~(auto_in_paddr[28]),
      auto_in_paddr[16],
      auto_in_paddr[13:12]} == 6'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire        sel_2 = {~(auto_in_paddr[31]), auto_in_paddr[29:28]} == 3'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
   wire [16:0] _GEN_0 = auto_in_paddr[28:12] ^ 17'h10002;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  wire        sel_3 =
+  wire        sel_2 =
     {auto_in_paddr[31],
      auto_in_paddr[29],
      _GEN_0[16],
      auto_in_paddr[16],
      _GEN_0[1:0]} == 6'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
   wire [16:0] _GEN_1 = auto_in_paddr[28:12] ^ 17'h10011;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  wire        sel_4 =
+  wire        sel_3 =
     {auto_in_paddr[31], auto_in_paddr[29], _GEN_1[16], _GEN_1[4], _GEN_1[1:0]} == 6'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire        sel_5 = {auto_in_paddr[31], auto_in_paddr[29:28] ^ 2'h2} == 3'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
-  wire [3:0]  _sel_T_36 = auto_in_paddr[31:28] ^ 4'hA;	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
-  wire        sel_6 = {_sel_T_36[3], _sel_T_36[1:0]} == 3'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
+  wire        sel_4 = {auto_in_paddr[31], auto_in_paddr[29:28] ^ 2'h2} == 3'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
+  wire [3:0]  _sel_T_31 = auto_in_paddr[31:28] ^ 4'hA;	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
+  wire        sel_5 = {_sel_T_31[3], _sel_T_31[1:0]} == 3'h0;	// rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{31,41,46,59}
   assign auto_in_pready =
     ~(sel_0 & ~auto_out_0_pready | sel_1 & ~auto_out_1_pready | sel_2 & ~auto_out_2_pready
       | sel_3 & ~auto_out_3_pready | sel_4 & ~auto_out_4_pready | sel_5
-      & ~auto_out_5_pready | sel_6 & ~auto_out_6_pready);	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, :51:{21,44}, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
+      & ~auto_out_5_pready);	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, :51:{21,44}, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_pslverr =
     sel_0 & auto_out_0_pslverr | sel_1 & auto_out_1_pslverr | sel_2 & auto_out_2_pslverr
-    | sel_3 & auto_out_3_pslverr | sel_4 & auto_out_4_pslverr | sel_5 & auto_out_5_pslverr
-    | sel_6 & auto_out_6_pslverr;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
+    | sel_3 & auto_out_3_pslverr | sel_4 & auto_out_4_pslverr | sel_5
+    & auto_out_5_pslverr;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_in_prdata =
     (sel_0 ? auto_out_0_prdata : 32'h0) | (sel_1 ? auto_out_1_prdata : 32'h0)
     | (sel_2 ? auto_out_2_prdata : 32'h0) | (sel_3 ? auto_out_3_prdata : 32'h0)
-    | (sel_4 ? auto_out_4_prdata : 32'h0) | (sel_5 ? auto_out_5_prdata : 32'h0)
-    | (sel_6 ? auto_out_6_prdata : 32'h0);	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
-  assign auto_out_6_psel = sel_6 & auto_in_psel;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :47:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
-  assign auto_out_6_penable = sel_6 & auto_in_penable;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :48:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
-  assign auto_out_6_pwrite = auto_in_pwrite;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_6_paddr = auto_in_paddr;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_6_pprot = auto_in_pprot;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_6_pwdata = auto_in_pwdata;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_6_pstrb = auto_in_pstrb;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
+    | (sel_4 ? auto_out_4_prdata : 32'h0) | (sel_5 ? auto_out_5_prdata : 32'h0);	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :44:87, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}, src/main/scala/chisel3/util/Mux.scala:30:73
   assign auto_out_5_psel = sel_5 & auto_in_psel;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :47:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_5_penable = sel_5 & auto_in_penable;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :48:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_5_pwrite = auto_in_pwrite;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_5_paddr = auto_in_paddr[29:0];	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
+  assign auto_out_5_paddr = auto_in_paddr;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_5_pprot = auto_in_pprot;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_5_pwdata = auto_in_pwdata;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_5_pstrb = auto_in_pstrb;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_4_psel = sel_4 & auto_in_psel;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :47:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_4_penable = sel_4 & auto_in_penable;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :48:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_4_pwrite = auto_in_pwrite;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_4_paddr = auto_in_paddr[28:0];	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
+  assign auto_out_4_paddr = auto_in_paddr[29:0];	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
   assign auto_out_4_pprot = auto_in_pprot;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_4_pwdata = auto_in_pwdata;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_4_pstrb = auto_in_pstrb;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
@@ -1387,7 +1291,7 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_2_psel = sel_2 & auto_in_psel;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :47:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_2_penable = sel_2 & auto_in_penable;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, :48:28, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:{41,46,59}
   assign auto_out_2_pwrite = auto_in_pwrite;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
-  assign auto_out_2_paddr = auto_in_paddr;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
+  assign auto_out_2_paddr = auto_in_paddr[28:0];	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9, rocket-chip/src/main/scala/diplomacy/Parameters.scala:137:31
   assign auto_out_2_pprot = auto_in_pprot;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_2_pwdata = auto_in_pwdata;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_2_pstrb = auto_in_pstrb;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
@@ -1407,7 +1311,7 @@ module APBFanout(	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
   assign auto_out_0_pstrb = auto_in_pstrb;	// rocket-chip/src/main/scala/amba/apb/Xbar.scala:24:9
 endmodule
 
-// external module ysyx_00000000
+// external module ysyx_24080006
 
 module CPU(	// src/CPU.scala:33:9
   input         clock,	// src/CPU.scala:33:9
@@ -1722,128 +1626,6 @@ module APBSPI(	// src/device/SPI.scala:42:9
   );	// src/device/SPI.scala:46:22
 endmodule
 
-// external module psram_top_apb
-
-module APBPSRAM(	// src/device/PSRAM.scala:46:9
-  input         clock,	// src/device/PSRAM.scala:46:9
-                reset,	// src/device/PSRAM.scala:46:9
-                auto_in_psel,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_in_penable,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_in_pwrite,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [31:0] auto_in_paddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [2:0]  auto_in_pprot,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [31:0] auto_in_pwdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [3:0]  auto_in_pstrb,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_in_pready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_in_pslverr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_in_prdata,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        qspi_bundle_sck,	// src/device/PSRAM.scala:48:25
-                qspi_bundle_ce_n,	// src/device/PSRAM.scala:48:25
-  inout  [3:0]  qspi_bundle_dio	// src/device/PSRAM.scala:48:25
-);
-
-  psram_top_apb mpsram (	// src/device/PSRAM.scala:50:24
-    .clock      (clock),
-    .reset      (reset),
-    .in_psel    (auto_in_psel),
-    .in_penable (auto_in_penable),
-    .in_pwrite  (auto_in_pwrite),
-    .in_paddr   (auto_in_paddr),
-    .in_pprot   (auto_in_pprot),
-    .in_pwdata  (auto_in_pwdata),
-    .in_pstrb   (auto_in_pstrb),
-    .in_pready  (auto_in_pready),
-    .in_pslverr (auto_in_pslverr),
-    .in_prdata  (auto_in_prdata),
-    .qspi_sck   (qspi_bundle_sck),
-    .qspi_ce_n  (qspi_bundle_ce_n),
-    .qspi_dio   (qspi_bundle_dio)
-  );	// src/device/PSRAM.scala:50:24
-endmodule
-
-// external module MROMHelper
-
-module AXI4MROM(	// src/device/MROM.scala:45:9
-  input         clock,	// src/device/MROM.scala:45:9
-                reset,	// src/device/MROM.scala:45:9
-                auto_in_awvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-                auto_in_wvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_in_arready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_in_arvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [3:0]  auto_in_arid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input  [29:0] auto_in_araddr,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  input         auto_in_rready,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output        auto_in_rvalid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [3:0]  auto_in_rid,	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-  output [31:0] auto_in_rdata	// rocket-chip/src/main/scala/diplomacy/LazyModule.scala:374:18
-);
-
-  wire [31:0] _mrom_rdata;	// src/device/MROM.scala:48:22
-  reg         state;	// src/device/MROM.scala:51:24
-  wire        _nodeIn_rid_T = ~state & auto_in_arvalid;	// src/device/MROM.scala:51:24, :52:24, src/main/scala/chisel3/util/Decoupled.scala:51:35
-  reg  [31:0] nodeIn_rdata_r;	// src/device/MROM.scala:61:32
-  reg  [3:0]  nodeIn_rid_r;	// src/device/MROM.scala:62:30
-  `ifndef SYNTHESIS	// src/device/MROM.scala:71:11
-    always @(posedge clock) begin	// src/device/MROM.scala:71:11
-      if (~reset & auto_in_awvalid) begin	// src/device/MROM.scala:71:11
-        if (`ASSERT_VERBOSE_COND_)	// src/device/MROM.scala:71:11
-          $error("Assertion failed: do not support write operations\n    at MROM.scala:71 assert(!in.aw.valid, \"do not support write operations\")\n");	// src/device/MROM.scala:71:11
-        if (`STOP_COND_)	// src/device/MROM.scala:71:11
-          $fatal;	// src/device/MROM.scala:71:11
-      end
-      if (~reset & auto_in_wvalid) begin	// src/device/MROM.scala:71:11, :72:11
-        if (`ASSERT_VERBOSE_COND_)	// src/device/MROM.scala:72:11
-          $error("Assertion failed: do not support write operations\n    at MROM.scala:72 assert(!in. w.valid, \"do not support write operations\")\n");	// src/device/MROM.scala:72:11
-        if (`STOP_COND_)	// src/device/MROM.scala:72:11
-          $fatal;	// src/device/MROM.scala:72:11
-      end
-    end // always @(posedge)
-  `endif // not def SYNTHESIS
-  always @(posedge clock) begin	// src/device/MROM.scala:45:9
-    if (reset)	// src/device/MROM.scala:45:9
-      state <= 1'h0;	// src/device/MROM.scala:45:9, :51:24
-    else if (state)	// src/device/MROM.scala:51:24
-      state <= ~(auto_in_rready & state);	// src/device/MROM.scala:51:24, :54:19, src/main/scala/chisel3/util/Decoupled.scala:51:35
-    else	// src/device/MROM.scala:51:24
-      state <= _nodeIn_rid_T;	// src/device/MROM.scala:51:24, src/main/scala/chisel3/util/Decoupled.scala:51:35
-    if (_nodeIn_rid_T) begin	// src/main/scala/chisel3/util/Decoupled.scala:51:35
-      nodeIn_rdata_r <= _mrom_rdata;	// src/device/MROM.scala:48:22, :61:32
-      nodeIn_rid_r <= auto_in_arid;	// src/device/MROM.scala:62:30
-    end
-  end // always @(posedge)
-  `ifdef ENABLE_INITIAL_REG_	// src/device/MROM.scala:45:9
-    `ifdef FIRRTL_BEFORE_INITIAL	// src/device/MROM.scala:45:9
-      `FIRRTL_BEFORE_INITIAL	// src/device/MROM.scala:45:9
-    `endif // FIRRTL_BEFORE_INITIAL
-    initial begin	// src/device/MROM.scala:45:9
-      automatic logic [31:0] _RANDOM[0:1];	// src/device/MROM.scala:45:9
-      `ifdef INIT_RANDOM_PROLOG_	// src/device/MROM.scala:45:9
-        `INIT_RANDOM_PROLOG_	// src/device/MROM.scala:45:9
-      `endif // INIT_RANDOM_PROLOG_
-      `ifdef RANDOMIZE_REG_INIT	// src/device/MROM.scala:45:9
-        for (logic [1:0] i = 2'h0; i < 2'h2; i += 2'h1) begin
-          _RANDOM[i[0]] = `RANDOM;	// src/device/MROM.scala:45:9
-        end	// src/device/MROM.scala:45:9
-        state = _RANDOM[1'h0][0];	// src/device/MROM.scala:45:9, :51:24
-        nodeIn_rdata_r = {_RANDOM[1'h0][31:1], _RANDOM[1'h1][0]};	// src/device/MROM.scala:45:9, :51:24, :61:32
-        nodeIn_rid_r = _RANDOM[1'h1][4:1];	// src/device/MROM.scala:45:9, :61:32, :62:30
-      `endif // RANDOMIZE_REG_INIT
-    end // initial
-    `ifdef FIRRTL_AFTER_INITIAL	// src/device/MROM.scala:45:9
-      `FIRRTL_AFTER_INITIAL	// src/device/MROM.scala:45:9
-    `endif // FIRRTL_AFTER_INITIAL
-  `endif // ENABLE_INITIAL_REG_
-  MROMHelper mrom (	// src/device/MROM.scala:48:22
-    .raddr ({2'h0, auto_in_araddr}),	// src/device/MROM.scala:45:9, :56:19
-    .ren   (_nodeIn_rid_T),	// src/main/scala/chisel3/util/Decoupled.scala:51:35
-    .rdata (_mrom_rdata)
-  );	// src/device/MROM.scala:48:22
-  assign auto_in_arready = ~state;	// src/device/MROM.scala:45:9, :51:24, :52:24
-  assign auto_in_rvalid = state;	// src/device/MROM.scala:45:9, :51:24
-  assign auto_in_rid = nodeIn_rid_r;	// src/device/MROM.scala:45:9, :62:30
-  assign auto_in_rdata = nodeIn_rdata_r;	// src/device/MROM.scala:45:9, :61:32
-endmodule
-
 // VCS coverage exclude_file
 module mem_2048x32(	// rocket-chip/src/main/scala/util/DescribedSRAM.scala:17:26
   input  [10:0] R0_addr,
@@ -2045,8 +1827,8 @@ module APBSDRAM(	// src/device/SDRAM.scala:87:9
                 sdram_bundle_we,	// src/device/SDRAM.scala:89:26
   output [12:0] sdram_bundle_a,	// src/device/SDRAM.scala:89:26
   output [1:0]  sdram_bundle_ba,	// src/device/SDRAM.scala:89:26
-                sdram_bundle_dqm,	// src/device/SDRAM.scala:89:26
-  inout  [15:0] sdram_bundle_dq	// src/device/SDRAM.scala:89:26
+  output [3:0]  sdram_bundle_dqm,	// src/device/SDRAM.scala:89:26
+  inout  [31:0] sdram_bundle_dq	// src/device/SDRAM.scala:89:26
 );
 
   sdram_top_apb msdram (	// src/device/SDRAM.scala:91:24
@@ -3611,46 +3393,43 @@ module SynchronizerShiftReg_w1_d10(	// rocket-chip/src/main/scala/util/Synchroni
   );	// rocket-chip/src/main/scala/util/ShiftReg.scala:45:23
 endmodule
 
-module ysyxSoCASIC(	// src/SoC.scala:59:9
-  input         clock,	// src/SoC.scala:59:9
-                reset,	// src/SoC.scala:59:9
-  output        spi_sck,	// src/SoC.scala:86:17
-  output [7:0]  spi_ss,	// src/SoC.scala:86:17
-  output        spi_mosi,	// src/SoC.scala:86:17
-  input         spi_miso,	// src/SoC.scala:86:17
-                uart_rx,	// src/SoC.scala:87:18
-  output        uart_tx,	// src/SoC.scala:87:18
-                psram_sck,	// src/SoC.scala:88:19
-                psram_ce_n,	// src/SoC.scala:88:19
-  inout  [3:0]  psram_dio,	// src/SoC.scala:88:19
-  output        sdram_clk,	// src/SoC.scala:89:19
-                sdram_cke,	// src/SoC.scala:89:19
-                sdram_cs,	// src/SoC.scala:89:19
-                sdram_ras,	// src/SoC.scala:89:19
-                sdram_cas,	// src/SoC.scala:89:19
-                sdram_we,	// src/SoC.scala:89:19
-  output [12:0] sdram_a,	// src/SoC.scala:89:19
-  output [1:0]  sdram_ba,	// src/SoC.scala:89:19
-                sdram_dqm,	// src/SoC.scala:89:19
-  inout  [15:0] sdram_dq,	// src/SoC.scala:89:19
-  output [15:0] gpio_out,	// src/SoC.scala:90:18
-  input  [15:0] gpio_in,	// src/SoC.scala:90:18
-  output [7:0]  gpio_seg_0,	// src/SoC.scala:90:18
-                gpio_seg_1,	// src/SoC.scala:90:18
-                gpio_seg_2,	// src/SoC.scala:90:18
-                gpio_seg_3,	// src/SoC.scala:90:18
-                gpio_seg_4,	// src/SoC.scala:90:18
-                gpio_seg_5,	// src/SoC.scala:90:18
-                gpio_seg_6,	// src/SoC.scala:90:18
-                gpio_seg_7,	// src/SoC.scala:90:18
-  input         ps2_clk,	// src/SoC.scala:91:17
-                ps2_data,	// src/SoC.scala:91:17
-  output [7:0]  vga_r,	// src/SoC.scala:92:17
-                vga_g,	// src/SoC.scala:92:17
-                vga_b,	// src/SoC.scala:92:17
-  output        vga_hsync,	// src/SoC.scala:92:17
-                vga_vsync,	// src/SoC.scala:92:17
-                vga_valid	// src/SoC.scala:92:17
+module ysyxSoCASIC(	// src/SoC.scala:61:9
+  input         clock,	// src/SoC.scala:61:9
+                reset,	// src/SoC.scala:61:9
+  output        spi_sck,	// src/SoC.scala:88:17
+  output [7:0]  spi_ss,	// src/SoC.scala:88:17
+  output        spi_mosi,	// src/SoC.scala:88:17
+  input         spi_miso,	// src/SoC.scala:88:17
+                uart_rx,	// src/SoC.scala:89:18
+  output        uart_tx,	// src/SoC.scala:89:18
+                sdram_clk,	// src/SoC.scala:91:19
+                sdram_cke,	// src/SoC.scala:91:19
+                sdram_cs,	// src/SoC.scala:91:19
+                sdram_ras,	// src/SoC.scala:91:19
+                sdram_cas,	// src/SoC.scala:91:19
+                sdram_we,	// src/SoC.scala:91:19
+  output [12:0] sdram_a,	// src/SoC.scala:91:19
+  output [1:0]  sdram_ba,	// src/SoC.scala:91:19
+  output [3:0]  sdram_dqm,	// src/SoC.scala:91:19
+  inout  [31:0] sdram_dq,	// src/SoC.scala:91:19
+  output [15:0] gpio_out,	// src/SoC.scala:92:18
+  input  [15:0] gpio_in,	// src/SoC.scala:92:18
+  output [7:0]  gpio_seg_0,	// src/SoC.scala:92:18
+                gpio_seg_1,	// src/SoC.scala:92:18
+                gpio_seg_2,	// src/SoC.scala:92:18
+                gpio_seg_3,	// src/SoC.scala:92:18
+                gpio_seg_4,	// src/SoC.scala:92:18
+                gpio_seg_5,	// src/SoC.scala:92:18
+                gpio_seg_6,	// src/SoC.scala:92:18
+                gpio_seg_7,	// src/SoC.scala:92:18
+  input         ps2_clk,	// src/SoC.scala:93:17
+                ps2_data,	// src/SoC.scala:93:17
+  output [7:0]  vga_r,	// src/SoC.scala:94:17
+                vga_g,	// src/SoC.scala:94:17
+                vga_b,	// src/SoC.scala:94:17
+  output        vga_hsync,	// src/SoC.scala:94:17
+                vga_vsync,	// src/SoC.scala:94:17
+                vga_valid	// src/SoC.scala:94:17
 );
 
   wire        _cpu_reset_chain_io_q;	// rocket-chip/src/main/scala/util/ShiftReg.scala:45:23
@@ -3747,13 +3526,6 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   wire [3:0]  _axi4ram_auto_in_rid;	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
   wire [31:0] _axi4ram_auto_in_rdata;	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
   wire [1:0]  _axi4ram_auto_in_rresp;	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-  wire        _lmrom_auto_in_arready;	// src/SoC.scala:43:25
-  wire        _lmrom_auto_in_rvalid;	// src/SoC.scala:43:25
-  wire [3:0]  _lmrom_auto_in_rid;	// src/SoC.scala:43:25
-  wire [31:0] _lmrom_auto_in_rdata;	// src/SoC.scala:43:25
-  wire        _lpsram_auto_in_pready;	// src/SoC.scala:42:26
-  wire        _lpsram_auto_in_pslverr;	// src/SoC.scala:42:26
-  wire [31:0] _lpsram_auto_in_prdata;	// src/SoC.scala:42:26
   wire        _lspi_auto_in_pready;	// src/SoC.scala:38:25
   wire        _lspi_auto_in_pslverr;	// src/SoC.scala:38:25
   wire [31:0] _lspi_auto_in_prdata;	// src/SoC.scala:38:25
@@ -3790,24 +3562,17 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   wire        _apbxbar_auto_in_pready;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_in_pslverr;	// src/SoC.scala:29:27
   wire [31:0] _apbxbar_auto_in_prdata;	// src/SoC.scala:29:27
-  wire        _apbxbar_auto_out_6_psel;	// src/SoC.scala:29:27
-  wire        _apbxbar_auto_out_6_penable;	// src/SoC.scala:29:27
-  wire        _apbxbar_auto_out_6_pwrite;	// src/SoC.scala:29:27
-  wire [31:0] _apbxbar_auto_out_6_paddr;	// src/SoC.scala:29:27
-  wire [2:0]  _apbxbar_auto_out_6_pprot;	// src/SoC.scala:29:27
-  wire [31:0] _apbxbar_auto_out_6_pwdata;	// src/SoC.scala:29:27
-  wire [3:0]  _apbxbar_auto_out_6_pstrb;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_5_psel;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_5_penable;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_5_pwrite;	// src/SoC.scala:29:27
-  wire [29:0] _apbxbar_auto_out_5_paddr;	// src/SoC.scala:29:27
+  wire [31:0] _apbxbar_auto_out_5_paddr;	// src/SoC.scala:29:27
   wire [2:0]  _apbxbar_auto_out_5_pprot;	// src/SoC.scala:29:27
   wire [31:0] _apbxbar_auto_out_5_pwdata;	// src/SoC.scala:29:27
   wire [3:0]  _apbxbar_auto_out_5_pstrb;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_4_psel;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_4_penable;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_4_pwrite;	// src/SoC.scala:29:27
-  wire [28:0] _apbxbar_auto_out_4_paddr;	// src/SoC.scala:29:27
+  wire [29:0] _apbxbar_auto_out_4_paddr;	// src/SoC.scala:29:27
   wire [2:0]  _apbxbar_auto_out_4_pprot;	// src/SoC.scala:29:27
   wire [31:0] _apbxbar_auto_out_4_pwdata;	// src/SoC.scala:29:27
   wire [3:0]  _apbxbar_auto_out_4_pstrb;	// src/SoC.scala:29:27
@@ -3821,7 +3586,7 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   wire        _apbxbar_auto_out_2_psel;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_2_penable;	// src/SoC.scala:29:27
   wire        _apbxbar_auto_out_2_pwrite;	// src/SoC.scala:29:27
-  wire [31:0] _apbxbar_auto_out_2_paddr;	// src/SoC.scala:29:27
+  wire [28:0] _apbxbar_auto_out_2_paddr;	// src/SoC.scala:29:27
   wire [2:0]  _apbxbar_auto_out_2_pprot;	// src/SoC.scala:29:27
   wire [31:0] _apbxbar_auto_out_2_pwdata;	// src/SoC.scala:29:27
   wire [3:0]  _apbxbar_auto_out_2_pstrb;	// src/SoC.scala:29:27
@@ -3850,22 +3615,16 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   wire [31:0] _axi4xbar_1_auto_in_rdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire [1:0]  _axi4xbar_1_auto_in_rresp;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_in_rlast;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire        _axi4xbar_1_auto_out_2_awvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [3:0]  _axi4xbar_1_auto_out_2_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [27:0] _axi4xbar_1_auto_out_2_awaddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire        _axi4xbar_1_auto_out_2_wvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [31:0] _axi4xbar_1_auto_out_2_wdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [3:0]  _axi4xbar_1_auto_out_2_wstrb;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire        _axi4xbar_1_auto_out_2_bready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire        _axi4xbar_1_auto_out_2_arvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [3:0]  _axi4xbar_1_auto_out_2_arid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [27:0] _axi4xbar_1_auto_out_2_araddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire        _axi4xbar_1_auto_out_2_rready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_out_1_awvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire [3:0]  _axi4xbar_1_auto_out_1_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire [27:0] _axi4xbar_1_auto_out_1_awaddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_out_1_wvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire [31:0] _axi4xbar_1_auto_out_1_wdata;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire [3:0]  _axi4xbar_1_auto_out_1_wstrb;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire        _axi4xbar_1_auto_out_1_bready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_out_1_arvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire [3:0]  _axi4xbar_1_auto_out_1_arid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-  wire [29:0] _axi4xbar_1_auto_out_1_araddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+  wire [27:0] _axi4xbar_1_auto_out_1_araddr;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_out_1_rready;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire        _axi4xbar_1_auto_out_0_awvalid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
   wire [3:0]  _axi4xbar_1_auto_out_0_awid;	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
@@ -3999,37 +3758,27 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_in_rdata     (_axi4xbar_1_auto_in_rdata),
     .auto_in_rresp     (_axi4xbar_1_auto_in_rresp),
     .auto_in_rlast     (_axi4xbar_1_auto_in_rlast),
-    .auto_out_2_awready     (_axi4ram_auto_in_awready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_awvalid     (_axi4xbar_1_auto_out_2_awvalid),
-    .auto_out_2_awid   (_axi4xbar_1_auto_out_2_awid),
-    .auto_out_2_awaddr (_axi4xbar_1_auto_out_2_awaddr),
-    .auto_out_2_wready      (_axi4ram_auto_in_wready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_wvalid      (_axi4xbar_1_auto_out_2_wvalid),
-    .auto_out_2_wdata  (_axi4xbar_1_auto_out_2_wdata),
-    .auto_out_2_wstrb  (_axi4xbar_1_auto_out_2_wstrb),
-    .auto_out_2_bready      (_axi4xbar_1_auto_out_2_bready),
-    .auto_out_2_bvalid      (_axi4ram_auto_in_bvalid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_bid    (_axi4ram_auto_in_bid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_bresp  (_axi4ram_auto_in_bresp),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_arready     (_axi4ram_auto_in_arready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_arvalid     (_axi4xbar_1_auto_out_2_arvalid),
-    .auto_out_2_arid   (_axi4xbar_1_auto_out_2_arid),
-    .auto_out_2_araddr (_axi4xbar_1_auto_out_2_araddr),
-    .auto_out_2_rready      (_axi4xbar_1_auto_out_2_rready),
-    .auto_out_2_rvalid      (_axi4ram_auto_in_rvalid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_rid    (_axi4ram_auto_in_rid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_rdata  (_axi4ram_auto_in_rdata),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
-    .auto_out_2_rresp  (_axi4ram_auto_in_rresp),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_awready     (_axi4ram_auto_in_awready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
     .auto_out_1_awvalid     (_axi4xbar_1_auto_out_1_awvalid),
+    .auto_out_1_awid   (_axi4xbar_1_auto_out_1_awid),
+    .auto_out_1_awaddr (_axi4xbar_1_auto_out_1_awaddr),
+    .auto_out_1_wready      (_axi4ram_auto_in_wready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
     .auto_out_1_wvalid      (_axi4xbar_1_auto_out_1_wvalid),
-    .auto_out_1_arready     (_lmrom_auto_in_arready),	// src/SoC.scala:43:25
+    .auto_out_1_wdata  (_axi4xbar_1_auto_out_1_wdata),
+    .auto_out_1_wstrb  (_axi4xbar_1_auto_out_1_wstrb),
+    .auto_out_1_bready      (_axi4xbar_1_auto_out_1_bready),
+    .auto_out_1_bvalid      (_axi4ram_auto_in_bvalid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_bid    (_axi4ram_auto_in_bid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_bresp  (_axi4ram_auto_in_bresp),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_arready     (_axi4ram_auto_in_arready),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
     .auto_out_1_arvalid     (_axi4xbar_1_auto_out_1_arvalid),
     .auto_out_1_arid   (_axi4xbar_1_auto_out_1_arid),
     .auto_out_1_araddr (_axi4xbar_1_auto_out_1_araddr),
     .auto_out_1_rready      (_axi4xbar_1_auto_out_1_rready),
-    .auto_out_1_rvalid      (_lmrom_auto_in_rvalid),	// src/SoC.scala:43:25
-    .auto_out_1_rid    (_lmrom_auto_in_rid),	// src/SoC.scala:43:25
-    .auto_out_1_rdata  (_lmrom_auto_in_rdata),	// src/SoC.scala:43:25
+    .auto_out_1_rvalid      (_axi4ram_auto_in_rvalid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_rid    (_axi4ram_auto_in_rid),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_rdata  (_axi4ram_auto_in_rdata),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
+    .auto_out_1_rresp  (_axi4ram_auto_in_rresp),	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
     .auto_out_0_awready     (_axi42apb_auto_in_awready),	// src/amba/AXI4ToAPB.scala:103:30
     .auto_out_0_awvalid     (_axi4xbar_1_auto_out_0_awvalid),
     .auto_out_0_awid   (_axi4xbar_1_auto_out_0_awid),
@@ -4065,16 +3814,6 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_in_pready     (_apbxbar_auto_in_pready),
     .auto_in_pslverr    (_apbxbar_auto_in_pslverr),
     .auto_in_prdata     (_apbxbar_auto_in_prdata),
-    .auto_out_6_psel    (_apbxbar_auto_out_6_psel),
-    .auto_out_6_penable (_apbxbar_auto_out_6_penable),
-    .auto_out_6_pwrite  (_apbxbar_auto_out_6_pwrite),
-    .auto_out_6_paddr   (_apbxbar_auto_out_6_paddr),
-    .auto_out_6_pprot   (_apbxbar_auto_out_6_pprot),
-    .auto_out_6_pwdata  (_apbxbar_auto_out_6_pwdata),
-    .auto_out_6_pstrb   (_apbxbar_auto_out_6_pstrb),
-    .auto_out_6_pready  (_lsdram_apb_auto_in_pready),	// src/SoC.scala:47:60
-    .auto_out_6_pslverr (_lsdram_apb_auto_in_pslverr),	// src/SoC.scala:47:60
-    .auto_out_6_prdata  (_lsdram_apb_auto_in_prdata),	// src/SoC.scala:47:60
     .auto_out_5_psel    (_apbxbar_auto_out_5_psel),
     .auto_out_5_penable (_apbxbar_auto_out_5_penable),
     .auto_out_5_pwrite  (_apbxbar_auto_out_5_pwrite),
@@ -4082,9 +3821,9 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_out_5_pprot   (_apbxbar_auto_out_5_pprot),
     .auto_out_5_pwdata  (_apbxbar_auto_out_5_pwdata),
     .auto_out_5_pstrb   (_apbxbar_auto_out_5_pstrb),
-    .auto_out_5_pready  (_lvga_auto_in_pready),	// src/SoC.scala:37:24
-    .auto_out_5_pslverr (_lvga_auto_in_pslverr),	// src/SoC.scala:37:24
-    .auto_out_5_prdata  (_lvga_auto_in_prdata),	// src/SoC.scala:37:24
+    .auto_out_5_pready  (_lsdram_apb_auto_in_pready),	// src/SoC.scala:47:60
+    .auto_out_5_pslverr (_lsdram_apb_auto_in_pslverr),	// src/SoC.scala:47:60
+    .auto_out_5_prdata  (_lsdram_apb_auto_in_prdata),	// src/SoC.scala:47:60
     .auto_out_4_psel    (_apbxbar_auto_out_4_psel),
     .auto_out_4_penable (_apbxbar_auto_out_4_penable),
     .auto_out_4_pwrite  (_apbxbar_auto_out_4_pwrite),
@@ -4092,9 +3831,9 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_out_4_pprot   (_apbxbar_auto_out_4_pprot),
     .auto_out_4_pwdata  (_apbxbar_auto_out_4_pwdata),
     .auto_out_4_pstrb   (_apbxbar_auto_out_4_pstrb),
-    .auto_out_4_pready  (_lkeyboard_auto_in_pready),	// src/SoC.scala:36:29
-    .auto_out_4_pslverr (_lkeyboard_auto_in_pslverr),	// src/SoC.scala:36:29
-    .auto_out_4_prdata  (_lkeyboard_auto_in_prdata),	// src/SoC.scala:36:29
+    .auto_out_4_pready  (_lvga_auto_in_pready),	// src/SoC.scala:37:24
+    .auto_out_4_pslverr (_lvga_auto_in_pslverr),	// src/SoC.scala:37:24
+    .auto_out_4_prdata  (_lvga_auto_in_prdata),	// src/SoC.scala:37:24
     .auto_out_3_psel    (_apbxbar_auto_out_3_psel),
     .auto_out_3_penable (_apbxbar_auto_out_3_penable),
     .auto_out_3_pwrite  (_apbxbar_auto_out_3_pwrite),
@@ -4102,9 +3841,9 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_out_3_pprot   (_apbxbar_auto_out_3_pprot),
     .auto_out_3_pwdata  (_apbxbar_auto_out_3_pwdata),
     .auto_out_3_pstrb   (_apbxbar_auto_out_3_pstrb),
-    .auto_out_3_pready  (_lgpio_auto_in_pready),	// src/SoC.scala:35:25
-    .auto_out_3_pslverr (_lgpio_auto_in_pslverr),	// src/SoC.scala:35:25
-    .auto_out_3_prdata  (_lgpio_auto_in_prdata),	// src/SoC.scala:35:25
+    .auto_out_3_pready  (_lkeyboard_auto_in_pready),	// src/SoC.scala:36:29
+    .auto_out_3_pslverr (_lkeyboard_auto_in_pslverr),	// src/SoC.scala:36:29
+    .auto_out_3_prdata  (_lkeyboard_auto_in_prdata),	// src/SoC.scala:36:29
     .auto_out_2_psel    (_apbxbar_auto_out_2_psel),
     .auto_out_2_penable (_apbxbar_auto_out_2_penable),
     .auto_out_2_pwrite  (_apbxbar_auto_out_2_pwrite),
@@ -4112,9 +3851,9 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .auto_out_2_pprot   (_apbxbar_auto_out_2_pprot),
     .auto_out_2_pwdata  (_apbxbar_auto_out_2_pwdata),
     .auto_out_2_pstrb   (_apbxbar_auto_out_2_pstrb),
-    .auto_out_2_pready  (_lpsram_auto_in_pready),	// src/SoC.scala:42:26
-    .auto_out_2_pslverr (_lpsram_auto_in_pslverr),	// src/SoC.scala:42:26
-    .auto_out_2_prdata  (_lpsram_auto_in_prdata),	// src/SoC.scala:42:26
+    .auto_out_2_pready  (_lgpio_auto_in_pready),	// src/SoC.scala:35:25
+    .auto_out_2_pslverr (_lgpio_auto_in_pslverr),	// src/SoC.scala:35:25
+    .auto_out_2_prdata  (_lgpio_auto_in_prdata),	// src/SoC.scala:35:25
     .auto_out_1_psel    (_apbxbar_auto_out_1_psel),
     .auto_out_1_penable (_apbxbar_auto_out_1_penable),
     .auto_out_1_pwrite  (_apbxbar_auto_out_1_pwrite),
@@ -4138,7 +3877,7 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   );	// src/SoC.scala:29:27
   CPU cpu (	// src/SoC.scala:30:23
     .clock                         (clock),
-    .reset                         (_cpu_reset_chain_io_q | reset),	// rocket-chip/src/main/scala/util/ShiftReg.scala:45:23, src/SoC.scala:62:64
+    .reset                         (_cpu_reset_chain_io_q | reset),	// rocket-chip/src/main/scala/util/ShiftReg.scala:45:23, src/SoC.scala:64:64
     .auto_master_out_awready      (_axi4xbar_auto_in_awready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
     .auto_master_out_awvalid      (_cpu_auto_master_out_awvalid),
     .auto_master_out_awid    (_cpu_auto_master_out_awid),
@@ -4188,13 +3927,13 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   APBGPIO lgpio (	// src/SoC.scala:35:25
     .clock             (clock),
     .reset             (reset),
-    .auto_in_psel      (_apbxbar_auto_out_3_psel),	// src/SoC.scala:29:27
-    .auto_in_penable   (_apbxbar_auto_out_3_penable),	// src/SoC.scala:29:27
-    .auto_in_pwrite    (_apbxbar_auto_out_3_pwrite),	// src/SoC.scala:29:27
-    .auto_in_paddr     (_apbxbar_auto_out_3_paddr),	// src/SoC.scala:29:27
-    .auto_in_pprot     (_apbxbar_auto_out_3_pprot),	// src/SoC.scala:29:27
-    .auto_in_pwdata    (_apbxbar_auto_out_3_pwdata),	// src/SoC.scala:29:27
-    .auto_in_pstrb     (_apbxbar_auto_out_3_pstrb),	// src/SoC.scala:29:27
+    .auto_in_psel      (_apbxbar_auto_out_2_psel),	// src/SoC.scala:29:27
+    .auto_in_penable   (_apbxbar_auto_out_2_penable),	// src/SoC.scala:29:27
+    .auto_in_pwrite    (_apbxbar_auto_out_2_pwrite),	// src/SoC.scala:29:27
+    .auto_in_paddr     (_apbxbar_auto_out_2_paddr),	// src/SoC.scala:29:27
+    .auto_in_pprot     (_apbxbar_auto_out_2_pprot),	// src/SoC.scala:29:27
+    .auto_in_pwdata    (_apbxbar_auto_out_2_pwdata),	// src/SoC.scala:29:27
+    .auto_in_pstrb     (_apbxbar_auto_out_2_pstrb),	// src/SoC.scala:29:27
     .auto_in_pready    (_lgpio_auto_in_pready),
     .auto_in_pslverr   (_lgpio_auto_in_pslverr),
     .auto_in_prdata    (_lgpio_auto_in_prdata),
@@ -4212,13 +3951,13 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   APBKeyboard lkeyboard (	// src/SoC.scala:36:29
     .clock           (clock),
     .reset           (reset),
-    .auto_in_psel    (_apbxbar_auto_out_4_psel),	// src/SoC.scala:29:27
-    .auto_in_penable (_apbxbar_auto_out_4_penable),	// src/SoC.scala:29:27
-    .auto_in_pwrite  (_apbxbar_auto_out_4_pwrite),	// src/SoC.scala:29:27
-    .auto_in_paddr   (_apbxbar_auto_out_4_paddr),	// src/SoC.scala:29:27
-    .auto_in_pprot   (_apbxbar_auto_out_4_pprot),	// src/SoC.scala:29:27
-    .auto_in_pwdata  (_apbxbar_auto_out_4_pwdata),	// src/SoC.scala:29:27
-    .auto_in_pstrb   (_apbxbar_auto_out_4_pstrb),	// src/SoC.scala:29:27
+    .auto_in_psel    (_apbxbar_auto_out_3_psel),	// src/SoC.scala:29:27
+    .auto_in_penable (_apbxbar_auto_out_3_penable),	// src/SoC.scala:29:27
+    .auto_in_pwrite  (_apbxbar_auto_out_3_pwrite),	// src/SoC.scala:29:27
+    .auto_in_paddr   (_apbxbar_auto_out_3_paddr),	// src/SoC.scala:29:27
+    .auto_in_pprot   (_apbxbar_auto_out_3_pprot),	// src/SoC.scala:29:27
+    .auto_in_pwdata  (_apbxbar_auto_out_3_pwdata),	// src/SoC.scala:29:27
+    .auto_in_pstrb   (_apbxbar_auto_out_3_pstrb),	// src/SoC.scala:29:27
     .auto_in_pready  (_lkeyboard_auto_in_pready),
     .auto_in_pslverr (_lkeyboard_auto_in_pslverr),
     .auto_in_prdata  (_lkeyboard_auto_in_prdata),
@@ -4228,13 +3967,13 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   APBVGA lvga (	// src/SoC.scala:37:24
     .clock            (clock),
     .reset            (reset),
-    .auto_in_psel     (_apbxbar_auto_out_5_psel),	// src/SoC.scala:29:27
-    .auto_in_penable  (_apbxbar_auto_out_5_penable),	// src/SoC.scala:29:27
-    .auto_in_pwrite   (_apbxbar_auto_out_5_pwrite),	// src/SoC.scala:29:27
-    .auto_in_paddr    (_apbxbar_auto_out_5_paddr),	// src/SoC.scala:29:27
-    .auto_in_pprot    (_apbxbar_auto_out_5_pprot),	// src/SoC.scala:29:27
-    .auto_in_pwdata   (_apbxbar_auto_out_5_pwdata),	// src/SoC.scala:29:27
-    .auto_in_pstrb    (_apbxbar_auto_out_5_pstrb),	// src/SoC.scala:29:27
+    .auto_in_psel     (_apbxbar_auto_out_4_psel),	// src/SoC.scala:29:27
+    .auto_in_penable  (_apbxbar_auto_out_4_penable),	// src/SoC.scala:29:27
+    .auto_in_pwrite   (_apbxbar_auto_out_4_pwrite),	// src/SoC.scala:29:27
+    .auto_in_paddr    (_apbxbar_auto_out_4_paddr),	// src/SoC.scala:29:27
+    .auto_in_pprot    (_apbxbar_auto_out_4_pprot),	// src/SoC.scala:29:27
+    .auto_in_pwdata   (_apbxbar_auto_out_4_pwdata),	// src/SoC.scala:29:27
+    .auto_in_pstrb    (_apbxbar_auto_out_4_pstrb),	// src/SoC.scala:29:27
     .auto_in_pready   (_lvga_auto_in_pready),
     .auto_in_pslverr  (_lvga_auto_in_pslverr),
     .auto_in_prdata   (_lvga_auto_in_prdata),
@@ -4263,57 +4002,26 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
     .spi_bundle_mosi (spi_mosi),
     .spi_bundle_miso (spi_miso)
   );	// src/SoC.scala:38:25
-  APBPSRAM lpsram (	// src/SoC.scala:42:26
-    .clock            (clock),
-    .reset            (reset),
-    .auto_in_psel     (_apbxbar_auto_out_2_psel),	// src/SoC.scala:29:27
-    .auto_in_penable  (_apbxbar_auto_out_2_penable),	// src/SoC.scala:29:27
-    .auto_in_pwrite   (_apbxbar_auto_out_2_pwrite),	// src/SoC.scala:29:27
-    .auto_in_paddr    (_apbxbar_auto_out_2_paddr),	// src/SoC.scala:29:27
-    .auto_in_pprot    (_apbxbar_auto_out_2_pprot),	// src/SoC.scala:29:27
-    .auto_in_pwdata   (_apbxbar_auto_out_2_pwdata),	// src/SoC.scala:29:27
-    .auto_in_pstrb    (_apbxbar_auto_out_2_pstrb),	// src/SoC.scala:29:27
-    .auto_in_pready   (_lpsram_auto_in_pready),
-    .auto_in_pslverr  (_lpsram_auto_in_pslverr),
-    .auto_in_prdata   (_lpsram_auto_in_prdata),
-    .qspi_bundle_sck  (psram_sck),
-    .qspi_bundle_ce_n (psram_ce_n),
-    .qspi_bundle_dio  (psram_dio)
-  );	// src/SoC.scala:42:26
-  AXI4MROM lmrom (	// src/SoC.scala:43:25
-    .clock                (clock),
-    .reset                (reset),
-    .auto_in_awvalid     (_axi4xbar_1_auto_out_1_awvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_wvalid      (_axi4xbar_1_auto_out_1_wvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_arready     (_lmrom_auto_in_arready),
-    .auto_in_arvalid     (_axi4xbar_1_auto_out_1_arvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_arid   (_axi4xbar_1_auto_out_1_arid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_araddr (_axi4xbar_1_auto_out_1_araddr),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_rready      (_axi4xbar_1_auto_out_1_rready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_rvalid      (_lmrom_auto_in_rvalid),
-    .auto_in_rid    (_lmrom_auto_in_rid),
-    .auto_in_rdata  (_lmrom_auto_in_rdata)
-  );	// src/SoC.scala:43:25
   AXI4RAM axi4ram (	// rocket-chip/src/main/scala/amba/axi4/SRAM.scala:139:29
     .clock                (clock),
     .reset                (reset),
     .auto_in_awready     (_axi4ram_auto_in_awready),
-    .auto_in_awvalid     (_axi4xbar_1_auto_out_2_awvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_awid   (_axi4xbar_1_auto_out_2_awid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_awaddr (_axi4xbar_1_auto_out_2_awaddr),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_awvalid     (_axi4xbar_1_auto_out_1_awvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_awid   (_axi4xbar_1_auto_out_1_awid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_awaddr (_axi4xbar_1_auto_out_1_awaddr),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
     .auto_in_wready      (_axi4ram_auto_in_wready),
-    .auto_in_wvalid      (_axi4xbar_1_auto_out_2_wvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_wdata  (_axi4xbar_1_auto_out_2_wdata),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_wstrb  (_axi4xbar_1_auto_out_2_wstrb),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_bready      (_axi4xbar_1_auto_out_2_bready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_wvalid      (_axi4xbar_1_auto_out_1_wvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_wdata  (_axi4xbar_1_auto_out_1_wdata),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_wstrb  (_axi4xbar_1_auto_out_1_wstrb),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_bready      (_axi4xbar_1_auto_out_1_bready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
     .auto_in_bvalid      (_axi4ram_auto_in_bvalid),
     .auto_in_bid    (_axi4ram_auto_in_bid),
     .auto_in_bresp  (_axi4ram_auto_in_bresp),
     .auto_in_arready     (_axi4ram_auto_in_arready),
-    .auto_in_arvalid     (_axi4xbar_1_auto_out_2_arvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_arid   (_axi4xbar_1_auto_out_2_arid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_araddr (_axi4xbar_1_auto_out_2_araddr),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
-    .auto_in_rready      (_axi4xbar_1_auto_out_2_rready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_arvalid     (_axi4xbar_1_auto_out_1_arvalid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_arid   (_axi4xbar_1_auto_out_1_arid),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_araddr (_axi4xbar_1_auto_out_1_araddr),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
+    .auto_in_rready      (_axi4xbar_1_auto_out_1_rready),	// rocket-chip/src/main/scala/amba/axi4/Xbar.scala:230:30
     .auto_in_rvalid      (_axi4ram_auto_in_rvalid),
     .auto_in_rid    (_axi4ram_auto_in_rid),
     .auto_in_rdata  (_axi4ram_auto_in_rdata),
@@ -4322,13 +4030,13 @@ module ysyxSoCASIC(	// src/SoC.scala:59:9
   APBSDRAM lsdram_apb (	// src/SoC.scala:47:60
     .clock            (clock),
     .reset            (reset),
-    .auto_in_psel     (_apbxbar_auto_out_6_psel),	// src/SoC.scala:29:27
-    .auto_in_penable  (_apbxbar_auto_out_6_penable),	// src/SoC.scala:29:27
-    .auto_in_pwrite   (_apbxbar_auto_out_6_pwrite),	// src/SoC.scala:29:27
-    .auto_in_paddr    (_apbxbar_auto_out_6_paddr),	// src/SoC.scala:29:27
-    .auto_in_pprot    (_apbxbar_auto_out_6_pprot),	// src/SoC.scala:29:27
-    .auto_in_pwdata   (_apbxbar_auto_out_6_pwdata),	// src/SoC.scala:29:27
-    .auto_in_pstrb    (_apbxbar_auto_out_6_pstrb),	// src/SoC.scala:29:27
+    .auto_in_psel     (_apbxbar_auto_out_5_psel),	// src/SoC.scala:29:27
+    .auto_in_penable  (_apbxbar_auto_out_5_penable),	// src/SoC.scala:29:27
+    .auto_in_pwrite   (_apbxbar_auto_out_5_pwrite),	// src/SoC.scala:29:27
+    .auto_in_paddr    (_apbxbar_auto_out_5_paddr),	// src/SoC.scala:29:27
+    .auto_in_pprot    (_apbxbar_auto_out_5_pprot),	// src/SoC.scala:29:27
+    .auto_in_pwdata   (_apbxbar_auto_out_5_pwdata),	// src/SoC.scala:29:27
+    .auto_in_pstrb    (_apbxbar_auto_out_5_pstrb),	// src/SoC.scala:29:27
     .auto_in_pready   (_lsdram_apb_auto_in_pready),
     .auto_in_pslverr  (_lsdram_apb_auto_in_pslverr),
     .auto_in_prdata   (_lsdram_apb_auto_in_prdata),
@@ -4532,67 +4240,56 @@ endmodule
 
 // external module flash
 
-// external module bitrev
-
-// external module psram
-
 // external module sdram
 
-module ysyxSoCFull(	// src/SoC.scala:111:9
-  input         clock,	// src/SoC.scala:111:9
-                reset,	// src/SoC.scala:111:9
-  output [15:0] externalPins_gpio_out,	// src/SoC.scala:148:26
-  input  [15:0] externalPins_gpio_in,	// src/SoC.scala:148:26
-  output [7:0]  externalPins_gpio_seg_0,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_1,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_2,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_3,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_4,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_5,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_6,	// src/SoC.scala:148:26
-                externalPins_gpio_seg_7,	// src/SoC.scala:148:26
-  input         externalPins_ps2_clk,	// src/SoC.scala:148:26
-                externalPins_ps2_data,	// src/SoC.scala:148:26
-  output [7:0]  externalPins_vga_r,	// src/SoC.scala:148:26
-                externalPins_vga_g,	// src/SoC.scala:148:26
-                externalPins_vga_b,	// src/SoC.scala:148:26
-  output        externalPins_vga_hsync,	// src/SoC.scala:148:26
-                externalPins_vga_vsync,	// src/SoC.scala:148:26
-                externalPins_vga_valid,	// src/SoC.scala:148:26
-  input         externalPins_uart_rx,	// src/SoC.scala:148:26
-  output        externalPins_uart_tx	// src/SoC.scala:148:26
+module ysyxSoCFull(	// src/SoC.scala:113:9
+  input         clock,	// src/SoC.scala:113:9
+                reset,	// src/SoC.scala:113:9
+  output [15:0] externalPins_gpio_out,	// src/SoC.scala:150:26
+  input  [15:0] externalPins_gpio_in,	// src/SoC.scala:150:26
+  output [7:0]  externalPins_gpio_seg_0,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_1,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_2,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_3,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_4,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_5,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_6,	// src/SoC.scala:150:26
+                externalPins_gpio_seg_7,	// src/SoC.scala:150:26
+  input         externalPins_ps2_clk,	// src/SoC.scala:150:26
+                externalPins_ps2_data,	// src/SoC.scala:150:26
+  output [7:0]  externalPins_vga_r,	// src/SoC.scala:150:26
+                externalPins_vga_g,	// src/SoC.scala:150:26
+                externalPins_vga_b,	// src/SoC.scala:150:26
+  output        externalPins_vga_hsync,	// src/SoC.scala:150:26
+                externalPins_vga_vsync,	// src/SoC.scala:150:26
+                externalPins_vga_valid,	// src/SoC.scala:150:26
+  input         externalPins_uart_rx,	// src/SoC.scala:150:26
+  output        externalPins_uart_tx	// src/SoC.scala:150:26
 );
 
-  wire        _bitrev_miso;	// src/SoC.scala:138:24
-  wire        _flash_miso;	// src/SoC.scala:135:23
-  wire        _asic_spi_sck;	// src/SoC.scala:107:24
-  wire [7:0]  _asic_spi_ss;	// src/SoC.scala:107:24
-  wire        _asic_spi_mosi;	// src/SoC.scala:107:24
-  wire        _asic_psram_sck;	// src/SoC.scala:107:24
-  wire        _asic_psram_ce_n;	// src/SoC.scala:107:24
-  wire        _asic_sdram_clk;	// src/SoC.scala:107:24
-  wire        _asic_sdram_cke;	// src/SoC.scala:107:24
-  wire        _asic_sdram_cs;	// src/SoC.scala:107:24
-  wire        _asic_sdram_ras;	// src/SoC.scala:107:24
-  wire        _asic_sdram_cas;	// src/SoC.scala:107:24
-  wire        _asic_sdram_we;	// src/SoC.scala:107:24
-  wire [12:0] _asic_sdram_a;	// src/SoC.scala:107:24
-  wire [1:0]  _asic_sdram_ba;	// src/SoC.scala:107:24
-  wire [1:0]  _asic_sdram_dqm;	// src/SoC.scala:107:24
-  wire [3:0]  _dio_wire;	// src/SoC.scala:143:23
-  wire [15:0] _dq_wire;	// src/SoC.scala:145:23
-  ysyxSoCASIC asic (	// src/SoC.scala:107:24
+  wire        _flash_miso;	// src/SoC.scala:137:23
+  wire        _asic_spi_sck;	// src/SoC.scala:109:24
+  wire [7:0]  _asic_spi_ss;	// src/SoC.scala:109:24
+  wire        _asic_spi_mosi;	// src/SoC.scala:109:24
+  wire        _asic_sdram_clk;	// src/SoC.scala:109:24
+  wire        _asic_sdram_cke;	// src/SoC.scala:109:24
+  wire        _asic_sdram_cs;	// src/SoC.scala:109:24
+  wire        _asic_sdram_ras;	// src/SoC.scala:109:24
+  wire        _asic_sdram_cas;	// src/SoC.scala:109:24
+  wire        _asic_sdram_we;	// src/SoC.scala:109:24
+  wire [12:0] _asic_sdram_a;	// src/SoC.scala:109:24
+  wire [1:0]  _asic_sdram_ba;	// src/SoC.scala:109:24
+  wire [3:0]  _asic_sdram_dqm;	// src/SoC.scala:109:24
+  wire [31:0] _dq_wire;	// src/SoC.scala:147:23
+  ysyxSoCASIC asic (	// src/SoC.scala:109:24
     .clock      (clock),
     .reset      (reset),
     .spi_sck    (_asic_spi_sck),
     .spi_ss     (_asic_spi_ss),
     .spi_mosi   (_asic_spi_mosi),
-    .spi_miso   (_bitrev_miso & _flash_miso),	// src/SoC.scala:135:23, :138:24, :141:69
+    .spi_miso   (_flash_miso),	// src/SoC.scala:137:23
     .uart_rx    (externalPins_uart_rx),
     .uart_tx    (externalPins_uart_tx),
-    .psram_sck  (_asic_psram_sck),
-    .psram_ce_n (_asic_psram_ce_n),
-    .psram_dio  (_dio_wire),
     .sdram_clk  (_asic_sdram_clk),
     .sdram_cke  (_asic_sdram_cke),
     .sdram_cs   (_asic_sdram_cs),
@@ -4621,36 +4318,25 @@ module ysyxSoCFull(	// src/SoC.scala:111:9
     .vga_hsync  (externalPins_vga_hsync),
     .vga_vsync  (externalPins_vga_vsync),
     .vga_valid  (externalPins_vga_valid)
-  );	// src/SoC.scala:107:24
-  flash flash (	// src/SoC.scala:135:23
-    .sck  (_asic_spi_sck),	// src/SoC.scala:107:24
-    .ss   (_asic_spi_ss[0]),	// src/SoC.scala:107:24, :137:32
-    .mosi (_asic_spi_mosi),	// src/SoC.scala:107:24
+  );	// src/SoC.scala:109:24
+  flash flash (	// src/SoC.scala:137:23
+    .sck  (_asic_spi_sck),	// src/SoC.scala:109:24
+    .ss   (_asic_spi_ss[0]),	// src/SoC.scala:109:24, :139:32
+    .mosi (_asic_spi_mosi),	// src/SoC.scala:109:24
     .miso (_flash_miso)
-  );	// src/SoC.scala:135:23
-  bitrev bitrev (	// src/SoC.scala:138:24
-    .sck  (_asic_spi_sck),	// src/SoC.scala:107:24
-    .ss   (_asic_spi_ss[7]),	// src/SoC.scala:107:24, :140:33
-    .mosi (_asic_spi_mosi),	// src/SoC.scala:107:24
-    .miso (_bitrev_miso)
-  );	// src/SoC.scala:138:24
-  psram psram (	// src/SoC.scala:143:23
-    .sck  (_asic_psram_sck),	// src/SoC.scala:107:24
-    .ce_n (_asic_psram_ce_n),	// src/SoC.scala:107:24
-    .dio  (_dio_wire)
-  );	// src/SoC.scala:143:23
-  sdram sdram (	// src/SoC.scala:145:23
-    .clk (_asic_sdram_clk),	// src/SoC.scala:107:24
-    .cke (_asic_sdram_cke),	// src/SoC.scala:107:24
-    .cs  (_asic_sdram_cs),	// src/SoC.scala:107:24
-    .ras (_asic_sdram_ras),	// src/SoC.scala:107:24
-    .cas (_asic_sdram_cas),	// src/SoC.scala:107:24
-    .we  (_asic_sdram_we),	// src/SoC.scala:107:24
-    .a   (_asic_sdram_a),	// src/SoC.scala:107:24
-    .ba  (_asic_sdram_ba),	// src/SoC.scala:107:24
-    .dqm (_asic_sdram_dqm),	// src/SoC.scala:107:24
+  );	// src/SoC.scala:137:23
+  sdram sdram (	// src/SoC.scala:147:23
+    .clk (_asic_sdram_clk),	// src/SoC.scala:109:24
+    .cke (_asic_sdram_cke),	// src/SoC.scala:109:24
+    .cs  (_asic_sdram_cs),	// src/SoC.scala:109:24
+    .ras (_asic_sdram_ras),	// src/SoC.scala:109:24
+    .cas (_asic_sdram_cas),	// src/SoC.scala:109:24
+    .we  (_asic_sdram_we),	// src/SoC.scala:109:24
+    .a   (_asic_sdram_a),	// src/SoC.scala:109:24
+    .ba  (_asic_sdram_ba),	// src/SoC.scala:109:24
+    .dqm (_asic_sdram_dqm),	// src/SoC.scala:109:24
     .dq  (_dq_wire)
-  );	// src/SoC.scala:145:23
+  );	// src/SoC.scala:147:23
 endmodule
 
 module ysyxSoCTop(	// src/Top.scala:13:7
@@ -4683,20 +4369,4 @@ module ysyxSoCTop(	// src/Top.scala:13:7
     .externalPins_uart_tx    (/* unused */)
   );	// src/Top.scala:18:20
 endmodule
-
-
-// ----- 8< ----- FILE "./MROMHelper.v" ----- 8< -----
-
-module MROMHelper(
-  input [31:0] raddr,
-  input ren,
-  output reg [31:0] rdata
-);
-import "DPI-C" function void mrom_read(input int raddr, output int rdata);
-always @(*) begin
-  if (ren) mrom_read(raddr, rdata);
-  else rdata = 0;
-end
-endmodule
-    
 

@@ -1,12 +1,12 @@
 // 反汇编时机：每次IFU取指后
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
-static bool LOG = 0;
+static bool LOG  = 0;
 static bool WAVE = 0;
-static bool SDB = 0;
+static bool SDB  = 0;
 
 static bool DIFF_EN = 0;
-static bool IT_EN = 0;
-static bool FT_EN = 0;
+static bool IT_EN   = 0;
+static bool FT_EN   = 0;
 static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
@@ -66,7 +66,7 @@ extern "C" void ebreak()
 }
 
 static int64_t cycle = 0; // to controll sdb
-static uint64_t inst_ipc = 0;
+static uint64_t ipc_inst = 0;
 static char iringbuf[16][128];
 static int iringbuf_index = 0;
 static void print_iringbuf()
@@ -343,17 +343,96 @@ static void ftrace_print()
 {
     printf("%s", ftrace_buf);
 }
+
+uint32_t curr_type = 1;
+static uint64_t exu_cnt = 0;
+extern "C" void EXU_CNT()
+{
+    exu_cnt++;
+}
+static uint64_t load_i = 0;
+static uint64_t load_c = 0;
+static uint64_t store_i = 0;
+static uint64_t store_c = 0;
+extern "C" void LSU_CNT(uint32_t load_en, uint32_t cnt)
+{
+    if (load_en)
+    {
+        load_i++;
+        load_c += cnt;
+    }
+    else
+    {
+        store_i++;
+        store_c += cnt;
+    }
+}
+static uint64_t compute_cnt = 0;
+static uint64_t loadstore_cnt = 0;
+static uint64_t system_cnt = 0;
+static uint64_t branch_cnt = 0;
+static uint64_t jump_cnt = 0;
+extern "C" void INST_CNT(uint32_t type)
+{
+    curr_type = type;
+    switch (type)
+    {
+    case 0:
+        compute_cnt++;
+        break;
+    case 1:
+        loadstore_cnt++;
+        break;
+    case 2:
+        system_cnt++;
+        break;
+    case 3:
+        branch_cnt++;
+        break;
+    case 4:
+        jump_cnt++;
+        break;
+    default:
+        break;
+    }
+}
 static bool initial = true;
 static bool SKIP = 0;
 extern "C" void SKIP_DIFFTEST()
 {
     SKIP = 1;
 }
-extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
+static uint64_t compute_cycle = 0;
+static uint64_t loadstore_cycle = 0;
+static uint64_t system_cycle = 0;
+static uint64_t branch_cycle = 0;
+static uint64_t jump_cycle = 0;
+extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t type_cnt)
 {
+    switch (curr_type)
+    {
+    case 0:
+        compute_cycle += type_cnt;
+        break;
+    case 1:
+        loadstore_cycle += type_cnt;
+        break;
+    case 2:
+        system_cycle += type_cnt;
+        break;
+    case 3:
+        branch_cycle += type_cnt;
+        break;
+    case 4:
+        jump_cycle += type_cnt;
+        break;
+    default:
+        break;
+    }
+
     uint32_t ist = inst;
     cycle--;
-    inst_ipc++;
+    ipc_inst++;
     PC = pc;
 
     if (FT_EN && ft_pc != 0)
@@ -433,7 +512,47 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc)
             iringbuf_index = 0;
     }
 }
+uint64_t ipc_cycle = 0;
+static void print_ipc()
+{
+    double num;
 
+    printf("\033[1;93mifu%8ld exu%8ld  inst    cycle     cpi\n", ipc_inst, exu_cnt);
+
+    num = (double)compute_cnt / (double)ipc_inst;
+    printf("%.3f%% compute_cnt   %8ld %8ld  ", num, compute_cnt, compute_cycle);
+    num = (double)compute_cycle / (double)compute_cnt;
+    printf("%5.3f\n", num);
+
+    num = (double)loadstore_cnt / (double)ipc_inst;
+    printf("%.3f%% loadstore_cnt %8ld %8ld  ", num, loadstore_cnt, loadstore_cycle);
+    num = (double)loadstore_cycle / (double)loadstore_cnt;
+    printf("%5.3f\n", num);
+
+    num = (double)system_cnt / (double)ipc_inst;
+    printf("%.3f%% system_cnt    %8ld %8ld  ", num, system_cnt, system_cycle);
+    num = (double)system_cycle / (double)system_cnt;
+    printf("%5.3f\n", num);
+
+    num = (double)branch_cnt / (double)ipc_inst;
+    printf("%.3f%% branch_cnt    %8ld %8ld  ", num, branch_cnt, branch_cycle);
+    num = (double)branch_cycle / (double)branch_cnt;
+    printf("%5.3f\n", num);
+
+    num = (double)jump_cnt / (double)ipc_inst;
+    printf("%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
+    num = (double)jump_cycle / (double)jump_cnt;
+    printf("%5.3f\n", num);
+    
+    num = (double)load_c / (double)load_i;
+    printf("LOAD_DELAY  = %8ld / %8ld = %6.4f\n", load_c, load_i, num);
+    num = (double)store_c / (double)store_i;
+    printf("STORE_DELAY = %8ld / %8ld = %6.4f\n", store_c, store_i, num);
+    num = (double)(load_c + store_c) / (double)(load_i + store_i);
+    printf("AVER_DELAY  = %8ld / %8ld = %6.4f\n", (load_c + store_c), (load_i + store_i), num);
+    num = (double)ipc_inst / (double)ipc_cycle;
+    printf("IPC         = %8ld / %8ld = %6.4f\n\033[0m", ipc_inst, ipc_cycle, num);
+}
 static uint32_t mem[MAX_IMG] = {
     0x00000413,
     0x00009117,
@@ -1077,7 +1196,6 @@ static int cmd_si(char *args)
     return 0;
 }
 
-// extern void print_iringbuf();
 static int cmd_info(char *args)
 {
     char *arg = strtok(NULL, " ");
@@ -1095,6 +1213,10 @@ static int cmd_info(char *args)
         print_wp();
     else if (strcmp(arg, "i") == 0)
         print_iringbuf();
+    else if (strcmp(arg, "f") == 0)
+        ftrace_print();
+    else if (strcmp(arg, "c") == 0)
+        print_ipc();
     else
         printf("Unknown command '%s'\n", arg);
     return 0;
@@ -1266,14 +1388,13 @@ int main(int argc, char **argv)
     if (WAVE)
         tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
     uint64_t wave = 0;
-    uint64_t abort_endless_loop = 0;
 
     uint32_t reg_mirror[16];
     for (int i = 0; i < 16; i++)
     {
         reg_mirror[i] = 0;
     }
-    while (!contextp->gotFinish() && ebreak_n && (abort_endless_loop < (uint64_t)ABORT_NUM || ABORT_NUM == 0))
+    while (!contextp->gotFinish() && ebreak_n && (ipc_cycle < (uint64_t)ABORT_NUM || ABORT_NUM == 0))
     {
 
         contextp->timeInc(1);
@@ -1328,7 +1449,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                abort_endless_loop++;
+                ipc_cycle++;
             }
         }
         top->eval();
@@ -1346,10 +1467,7 @@ int main(int argc, char **argv)
     free(img_file);
     if (FT_EN)
         ; // ftrace_print();
-
-    double ipc_num;
-    ipc_num = (double)inst_ipc / (double)abort_endless_loop;
-    printf("\033[1;36mIPC = %ld / %ld = %.5f\n\033[0m", inst_ipc, abort_endless_loop, ipc_num);
+    print_ipc();
     if (!TRAP)
     {
         printf("\033[1;31mHIT BAD TRAP\033[0m\n");

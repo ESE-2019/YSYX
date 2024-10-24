@@ -135,6 +135,11 @@ assign axi_lsu.awburst = 2'h0;
 
 assign axi_lsu.wlast   = 1'b0;
 
+`ifdef SIM_MODE
+logic [31:0] lsu_cnt;
+import "DPI-C" function void LSU_CNT(input int load_en, input int cnt);
+`endif
+
     always_ff @ (posedge clock) begin//fsm 3 for axi
         unique if (reset) begin
             axi_lsu.arvalid <= '0;
@@ -156,6 +161,7 @@ assign axi_lsu.wlast   = 1'b0;
             unique case (curr)
             IDLE: begin
                 if (exu.valid) begin
+                    lsu_cnt <= 1;
                     if (exu.load) begin // load / read
                         axi_lsu.arvalid <= 1;
                         axi_lsu.rready  <= 0;
@@ -196,6 +202,9 @@ assign axi_lsu.wlast   = 1'b0;
                 end
             end
             EXEC: begin
+                `ifdef SIM_MODE
+                lsu_cnt <= lsu_cnt + 1;
+                `endif
                 if (axi_lsu.arready)
                     axi_lsu.arvalid <= 0;
                 if (axi_lsu.awready)
@@ -204,11 +213,17 @@ assign axi_lsu.wlast   = 1'b0;
                     axi_lsu.wvalid  <= 0;
                 if (axi_lsu.bvalid) begin
                     axi_lsu.bready  <= 1;
+                    `ifdef SIM_MODE
+                    LSU_CNT(0, lsu_cnt);
+                    `endif
                     //$display("[LSU] 0x%08x write [0x%08x]", axi_lsu.awaddr, axi_lsu.wdata);
                 end
                 if (axi_lsu.rvalid) begin
                     axi_lsu.rready  <= 1;
                     wbu.alu_res <= Mr(axi_lsu.rdata, Mr_param_addr, Mr_param_funct3);
+                    `ifdef SIM_MODE
+                    LSU_CNT(1, lsu_cnt);
+                    `endif
                     //$display("[LSU] 0x%08x read [0x%08x]", axi_lsu.araddr, axi_lsu.rdata);
                 end
             end
@@ -282,7 +297,7 @@ assign axi_lsu.wlast   = 1'b0;
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
                         //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
                         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
-                        INSIDE(addr, 32'h4000_0000, 32'hffff_ffff) ; // OTHERS
+                        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff) ; // SDRAM
     endfunction
 
     import "DPI-C" function void SKIP_DIFFTEST();
