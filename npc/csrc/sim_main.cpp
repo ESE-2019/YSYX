@@ -1,7 +1,7 @@
 // 反汇编时机：每次IFU取指后
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 static bool LOG  = 0;
-static bool WAVE = 0;
+static bool WAVE = 1;
 static bool SDB  = 0;
 
 static bool DIFF_EN = 0;
@@ -71,15 +71,13 @@ static char iringbuf[16][128];
 static int iringbuf_index = 0;
 static void print_iringbuf()
 {
-    // Log("print_iringbuf begin");
     for (int i = 0; i < 16; i++)
     {
         if (i == iringbuf_index)
-            printf("^^^^^^^^^^^-^^-^^-^^-^^\n");
+            printf("----------^^^^^^^^^^^-^^-^^-^^-^^\n");
         else
-            printf("%s\n", iringbuf[i]);
+            printf("[IRingBuf]%s\n", iringbuf[i]);
     }
-    // Log("print_iringbuf end");
 }
 
 #define NR_WP 32

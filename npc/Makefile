@@ -1,5 +1,6 @@
 TOPNAME = ysyxSoCFull
 INC_PATH ?=
+SIM_IMG ?=
 
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
@@ -27,7 +28,6 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
-VSRCS += $(shell find $(abspath ../riscv32e) -name "ysyx*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
@@ -69,9 +69,9 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 
 all: default
 
-sim: run
+sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	gtkwave ./build/wave.fst &
+	@$^ -IMG=$(SIM_IMG)
 
 wave:
 	gtkwave ./build/wave.fst &

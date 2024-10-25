@@ -26,8 +26,7 @@ image: image-dep
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	make -C /home/ubuntu/ysyx-workbench/npc
-	/home/ubuntu/ysyx-workbench/npc/build/ysyxSoCFull -IMG=$(IMAGE).bin
+	make -C /home/ubuntu/ysyx-workbench/npc sim -SIM_IMG=$(IMAGE).bin
 
 .PHONY: insert-arg
 
