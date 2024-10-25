@@ -12,9 +12,10 @@ SECTIONS {
   _etext = .;
   .rodata : {
     *(.rodata*)
+    *(.srodata*)
   }
   .data : {
-    *(.data)
+    *(.data*)
   } : data
   edata = .;
   _data = .;
@@ -22,7 +23,7 @@ SECTIONS {
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
-    *(.scommon)
+    *(.scommon*)
   }
   _stack_top = ALIGN(0x1000);
   . = _stack_top + 0x8000;

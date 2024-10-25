@@ -554,20 +554,6 @@ static void print_ipc()
     printf("IPC         = %8ld / %8ld = %6.4f\n\033[0m", ipc_inst, ipc_cycle, num);
 }
 static uint32_t mem[MAX_IMG] = {
-    0x00000413,
-    0x00009117,
-    0xffc10113,
-    0x00c000ef,
-    0x00000513,
-    0x00008067,
-    0xff410113,
-    0x00000517,
-    0x01c50513,
-    0x00112423,
-    0xfe9ff0ef,
-    0x00050513,
-    0x00100073};
-static uint32_t char_test[] = {
     0x100007b7,
     0x04100713,
     0x00e78023,
@@ -575,6 +561,7 @@ static uint32_t char_test[] = {
     0x00a00713,
     0x00e78023,
     0x00100073};
+
 static uint32_t pmem_readC(uint32_t addr)
 {
     uint32_t add = (((addr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
@@ -591,13 +578,6 @@ extern "C" void flash_read(int32_t addr, int32_t *data)
     *data = mem[add];
     if (FLASH_TRACE)
         printf("\e[34m[flash_read] ADDR = 0x%08x VALUE = 0x%08x\n\e[0m", addr, *data);
-}
-extern "C" void mrom_read(int32_t addr, int32_t *data)
-{
-    printf("mrom read\n");
-    assert(0);
-    // uint32_t add = (((addr & ~0x3u) - 0x20000000u) / 0x4) % MAX_IMG;
-    // *data = mem[add];
 }
 
 static char *img_file = NULL;
@@ -632,71 +612,6 @@ static long load_img()
 
     fclose(fp);
     return index;
-}
-
-extern "C" int pmem_read(uint32_t raddr)
-{
-
-    if (LOG)
-        fprintf(log_file, "[CPU");
-    return pmem_readC(raddr & ~0x3u);
-}
-
-extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)
-{ // mask: 1 3 15
-    uint32_t shamt = waddr & 0x3;
-    wmask = wmask >> shamt; // new
-    switch (shamt)
-    {
-    case 0:
-        shamt = 0;
-        break;
-    case 1:
-        shamt = 8;
-        break;
-    case 2:
-        shamt = 16;
-        break;
-    case 3:
-        shamt = 24;
-        break;
-    default:
-        printf("[0]pmem_write err\n");
-        assert(0);
-        break;
-    }
-    wdata = wdata >> shamt;
-    uint32_t add = (((waddr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
-    uint32_t data1, data2;
-    switch (wmask)
-    {
-    case 1:
-        if (LOG)
-            fprintf(log_file, "[lb-");
-        data1 = pmem_readC(waddr);
-        data1 = data1 & (~(0x000000FF << shamt));
-        data2 = (wdata & 0x000000FF) << shamt;
-        mem[add] = data1 | data2;
-        break;
-    case 3:
-        if (LOG)
-            fprintf(log_file, "[lh-");
-        data1 = pmem_readC(waddr);
-        data1 = data1 & (~(0x0000FFFF << shamt));
-        data2 = (wdata & 0x0000FFFF) << shamt;
-        mem[add] = data1 | data2;
-        break;
-    case 15:
-        mem[add] = wdata;
-        break;
-    default:
-        printf("[1]pmem_write err\n");
-        assert(0);
-        break;
-    }
-    if (LOG)
-        fprintf(log_file, "[WRITE-%d] addr: 0x%08x value: 0x%08x\n", wmask,
-                waddr & ~0x3u, mem[add]);
 }
 
 typedef struct token

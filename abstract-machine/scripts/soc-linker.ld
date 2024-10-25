@@ -1,119 +1,139 @@
 ENTRY(_start)
 
-PHDRS {  
-  entry PT_LOAD;
-  bootloader PT_LOAD; 
-  text PT_LOAD;   
-  data PT_LOAD;
-  bss  PT_LOAD;
-}
-
 MEMORY {
-  flash (rx)  : ORIGIN = 0x30000000, LENGTH = 16M
-  sdram (rwx) : ORIGIN = 0xa0000000, LENGTH = 32M
-  sram  (rwx) : ORIGIN = 0x0f000000, LENGTH = 8K
+  FLASH (rx)  : ORIGIN = 0x30000000, LENGTH = 16M - 1
+  SDRAM (rwx) : ORIGIN = 0xa0000000, LENGTH = 32M - 1
+  SRAM  (rwx) : ORIGIN = 0x0f000000, LENGTH =  8K - 1
 }
 
 SECTIONS {
-  . = ORIGIN(flash);
+  . = ORIGIN(FLASH);
   .entry : {  
-    KEEP(*(entry))
-    . = ALIGN(0x4);
-  } > flash : entry
+    *(entry)
+    . = ALIGN(4);
+  } > FLASH
 
+
+  /* bootloader */
+  .balign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_bootloader_vma_start = .);
+  } > SRAM AT > FLASH
+
+  .blalign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_bootloader_lma_start = .);
+  } > FLASH AT > FLASH
+  
   .bootloader : {
-    _bootloader_vma_start = .;
-    KEEP(*(.bootloader))
-    . = ALIGN(0x4);
-    _bootloader_vma_end = .;
-  } > sram AT > flash : bootloader
-  _bootloader_lma_start = LOADADDR(.bootloader);
+    *(.bootloader)
+    . = ALIGN(4);
+    PROVIDE(_bootloader_vma_end = .);
+  } > SRAM AT > FLASH
+
+
+  /* text */
+  .talign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_text_vma_start = .);
+  } > SDRAM AT > FLASH
+
+  .tlalign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_text_lma_start = .);
+  } > FLASH AT > FLASH
 
   .text : {
-    _text_vma_start = .;
-    KEEP(*(.text*))
-    . = ALIGN(0x4);
-    KEEP(*(.rodata*))
-    . = ALIGN(0x4);
-    KEEP(*(.srodata*))
-    . = ALIGN(0x4);
-    _text_vma_end = .;
-  } > sdram AT > flash : text
-  _text_lma_start = LOADADDR(.text);
-    etext = .;
-  _etext = .;
+    *(.text)
+    *(.text*)
+    . = ALIGN(4);    
+    PROVIDE(_text_vma_end = .);
+  } > SDRAM AT > FLASH
 
-  .data : { 
-    _data_vma_start = .;
+  
+  /* data */
+  .dalign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_data_vma_start = .);
+  } > SDRAM AT > FLASH
 
-    /* section information for initial. 
-     __fsymtab_start = .;
+  .dlalign :
+  {
+    . = ALIGN(4);
+    PROVIDE(_data_lma_start = .);
+  } > FLASH AT > FLASH
+
+  .data : {
+    *(.data)
+    *(.data*)
+    *(.sdata)
+    *(.sdata*)
+    *(.rodata)
+    *(.rodata*)
+    *(.srodata)
+    *(.srodata*)
+
+
+    . = ALIGN(4);
+    __fsymtab_start = .;
     KEEP(*(FSymTab))
     __fsymtab_end = .;
-    . = ALIGN(8);
+    . = ALIGN(4);
     __vsymtab_start = .;
     KEEP(*(VSymTab))
     __vsymtab_end = .;
-    . = ALIGN(8);
+    . = ALIGN(4);
     __rt_init_start = .;
     KEEP(*(SORT(.rti_fn*)))
     __rt_init_end = .;
-    . = ALIGN(8);
+    . = ALIGN(4);
     __rt_utest_tc_tab_start = .;
     KEEP(*(UtestTcTab))
     __rt_utest_tc_tab_end = .;
-    . = ALIGN(8);
+    . = ALIGN(4);
     __am_apps_data_start = .;
     *(__am_apps.data*)
     *(__am_apps.sdata*)
     __am_apps_data_end = .;
-    . = ALIGN(8);
-     section information for initial. */
-    
-    KEEP(*(.data*))
-    . = ALIGN(0x4);
-    KEEP(*(.sdata*))
-    . = ALIGN(0x4);
-    _data_vma_end = .;
-  } > sdram AT > flash : data
-  _data_lma_start = LOADADDR(.data);
-   edata = .;
-  _data = .;
+
+    . = ALIGN(4);
+    PROVIDE(_data_vma_end = .);
+  } > SDRAM AT > FLASH
   
 
+  
+  /* bss */
   .bss : {
-	  _bss_start = .;
+    *(.bss)
+    *(.bss*)
+    *(.sbss)
+    *(.sbss*)
+    *(.scommon)
+    *(.scommon*)
+    *(COMMON*)
 
-    /* section information for initial. 
+
+
     __am_apps_bss_start = .;
     *(__am_apps.bss*)
     *(__am_apps.sbss*)
     *(__am_apps.scommon*)
     __am_apps_bss_end = .;
-    /* section information for initial. */
     
-    *(.bss*)
-    . = ALIGN(0x4);
-    *(.sbss*)
-    . = ALIGN(0x4);
-    *(.scommon*)
-  } > sdram : bss
+  } > SDRAM
 
- 
-  end = .;
-  _end = .;
-
-  _heap_start = ALIGN(0x4);
-  . = ORIGIN(sdram) + LENGTH(sdram) - 0x100;
-  _heap_end = ALIGN(0x4);
-
-
-  . = _bootloader_vma_end + 0x4;
-  _stack_top = ALIGN(0x4);
-  . = ORIGIN(sram) + LENGTH(sram) - 0x100;
-  . = ALIGN(0x4);
-  _stack_pointer = .;
-  
+    _stack_top = ALIGN(4);
+    . = . + 0x8000;
+    _stack_pointer = ALIGN(4);
+    
+    _heap_start = ALIGN(4);
+    . = ORIGIN(SDRAM) + LENGTH(SDRAM) - 3;
+    _heap_end = ALIGN(4);
   
 
 }

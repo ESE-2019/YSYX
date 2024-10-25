@@ -129,7 +129,7 @@ $(IMAGE).elf: $(LINKAGE) $(LDSCRIPTS)
 ifneq ($(filter $(ARCH),native),)
 	@$(CXX) -o $@ -Wl,--whole-archive $(LINKAGE) -Wl,-no-whole-archive $(LDFLAGS_CXX)
 else
-	@$(LD) $(LDFLAGS) -o $@ --start-group $(LINKAGE) --end-group
+	@$(LD) $(LDFLAGS) -o $@ --whole-archive --start-group $(LINKAGE) --end-group -no-whole-archive
 endif
 
 ### Rule (archive): objects (`*.o`) -> `ARCHIVE.a` (ar)
