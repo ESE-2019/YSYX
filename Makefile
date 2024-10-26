@@ -46,6 +46,7 @@ _default:
 clean:
 	make -C ./abstract-machine clean
 	make -C ./fceux-am clean
-	make -C ./nemu clean
-	make -C ./npc clean
+	rm -rf ./nemu/build/
+	rm -rf ./npc/build/
+	rm -rf ./nvboard/build/
 
