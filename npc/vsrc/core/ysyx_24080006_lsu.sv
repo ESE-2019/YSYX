@@ -295,9 +295,8 @@ import "DPI-C" function void LSU_CNT(input int load_en, input int cnt);
 
     function automatic logic INSIDE_MEM (input logic [31:0] addr);
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
-                        //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
                         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
-                        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff) ; // SDRAM
+                        INSIDE(addr, 32'h8000_0000, 32'h81ff_ffff) ; // SDRAM
     endfunction
 
     import "DPI-C" function void SKIP_DIFFTEST();

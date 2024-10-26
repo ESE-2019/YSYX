@@ -1,12 +1,12 @@
 // 反汇编时机：每次IFU取指后
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
-static bool LOG  = 0;
+static bool LOG = 0;
 static bool WAVE = 1;
-static bool SDB  = 0;
+static bool SDB = 1;
 
-static bool DIFF_EN = 0;
-static bool IT_EN   = 0;
-static bool FT_EN   = 0;
+static bool DIFF_EN = 1;
+static bool IT_EN = 1;
+static bool FT_EN = 1;
 static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
@@ -541,7 +541,7 @@ static void print_ipc()
     printf("%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
     num = (double)jump_cycle / (double)jump_cnt;
     printf("%5.3f\n", num);
-    
+
     num = (double)load_c / (double)load_i;
     printf("LOAD_DELAY  = %8ld / %8ld = %6.4f\n", load_c, load_i, num);
     num = (double)store_c / (double)store_i;
@@ -1270,6 +1270,16 @@ int main(int argc, char **argv)
         if (strcmp(argv[i_argc], "-sdb") == 0)
         {
             SDB = true;
+        }
+        if (strcmp(argv[i_argc], "-fast") == 0)
+        {
+            LOG = 0;
+            WAVE = 0;
+            SDB = 0;
+            DIFF_EN = 0;
+            IT_EN = 0;
+            FT_EN = 0;
+            FLASH_TRACE = 0;
         }
     }
     load_img();

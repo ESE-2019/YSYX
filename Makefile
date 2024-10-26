@@ -41,12 +41,11 @@ endef
 _default:
 	@echo "Please run 'make' under subprojects."
 
-.PHONY: .git_commit .clean_index _default clean
+clear:
+	make -C $(AM_HOME)/../fceux-am clean	
+	rm -rf $(AM_HOME)/am/build/
+	rm -rf $(AM_HOME)/klib/build/
+	rm -rf $(NEMU_HOME)/build/
+	rm -rf $(NPC_HOME)/build/
 
-clean:
-	make -C ./abstract-machine clean
-	make -C ./fceux-am clean
-	rm -rf ./nemu/build/
-	rm -rf ./npc/build/
-	rm -rf ./nvboard/build/
-
+.PHONY: .git_commit .clean_index _default clear

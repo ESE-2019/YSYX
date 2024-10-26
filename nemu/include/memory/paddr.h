@@ -37,13 +37,19 @@ static inline bool in_pmem(paddr_t addr) {
   return (addr >= CONFIG_MBASE) &&  ((addr - CONFIG_MBASE) < CONFIG_MSIZE);
 }
 
-static inline bool in_soc_mrom(paddr_t addr) {
+#ifdef CONFIG_TARGET_SHARE
+static inline bool in_soc_flash(paddr_t addr) {
   return (addr >= SOC_FLASH_MBASE) && ((addr - SOC_FLASH_MBASE) < SOC_FLASH_MSIZE);
 }
 
 static inline bool in_soc_sram(paddr_t addr) {
   return (addr >= SOC_SRAM_MBASE) && ((addr - SOC_SRAM_MBASE) < SOC_SRAM_MSIZE);
 }
+
+static inline bool in_soc_sdram(paddr_t addr) {
+  return (addr >= SOC_SDRAM_MBASE) && ((addr - SOC_SDRAM_MBASE) < SOC_SDRAM_MSIZE);
+}
+#endif
 
 word_t paddr_read(paddr_t addr, int len);
 void paddr_write(paddr_t addr, int len, word_t data);

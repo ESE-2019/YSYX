@@ -181,7 +181,7 @@ assign axi_ifu.arburst = 2'h1;
         INSIDE_MEM =    INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) || // SRAM
                         //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
                         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) || // FLASH
-                        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff) ; // SDRAM
+                        INSIDE(addr, 32'h8000_0000, 32'h81ff_ffff) ; // SDRAM
     endfunction
     always_ff @ (posedge clock) begin
         if (curr == EXEC && !INSIDE_MEM(pc)) begin

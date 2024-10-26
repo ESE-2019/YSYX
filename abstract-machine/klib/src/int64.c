@@ -352,7 +352,7 @@ uint32_t __inline __builtin_clzll(uint64_t value) {
 #if !defined(__ARCH_RISCV64_MYCPU)
 /* Returns: a / b */
 
-COMPILER_RT_ABI di_int
+COMPILER_RT_ABI di_int __attribute__((section(".klib"))) 
 __divdi3(di_int a, di_int b)
 {
     const int bits_in_dword_m1 = (int)(sizeof(di_int) * CHAR_BIT) - 1;
@@ -366,7 +366,7 @@ __divdi3(di_int a, di_int b)
 
 /* Returns: a / b, *rem = a % b  */
 
-COMPILER_RT_ABI di_int
+COMPILER_RT_ABI di_int __attribute__((section(".klib"))) 
 __divmoddi4(di_int a, di_int b, di_int* rem)
 {
   di_int d = __divdi3(a,b);
@@ -376,7 +376,7 @@ __divmoddi4(di_int a, di_int b, di_int* rem)
 
 /* Returns: a % b */
 
-COMPILER_RT_ABI di_int
+COMPILER_RT_ABI di_int __attribute__((section(".klib"))) 
 __moddi3(di_int a, di_int b)
 {
     const int bits_in_dword_m1 = (int)(sizeof(di_int) * CHAR_BIT) - 1;
@@ -391,7 +391,7 @@ __moddi3(di_int a, di_int b)
 
 /* Returns: a / b */
 
-COMPILER_RT_ABI du_int
+COMPILER_RT_ABI du_int __attribute__((section(".klib"))) 
 __udivdi3(du_int a, du_int b)
 {
     return __udivmoddi4(a, b, 0);
@@ -399,7 +399,7 @@ __udivdi3(du_int a, du_int b)
 
 /* Returns: a % b */
 
-COMPILER_RT_ABI du_int
+COMPILER_RT_ABI du_int __attribute__((section(".klib"))) 
 __umoddi3(du_int a, du_int b)
 {
     du_int r;
@@ -409,7 +409,7 @@ __umoddi3(du_int a, du_int b)
 #endif
 
 
-COMPILER_RT_ABI du_int
+COMPILER_RT_ABI du_int __attribute__((section(".klib"))) 
 __udivmoddi4(du_int a, du_int b, du_int* rem)
 {
     const unsigned n_uword_bits = sizeof(su_int) * CHAR_BIT;
@@ -623,7 +623,7 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
 
 // Precondition: a != 0
 
-COMPILER_RT_ABI si_int __clzsi2(si_int a) {
+COMPILER_RT_ABI si_int __attribute__((section(".klib"))) __clzsi2(si_int a) {
   su_int x = (su_int)a;
   si_int t = ((x & 0xFFFF0000) == 0) << 4; // if (x is small) t = 16 else 0
   x >>= 16 - t;                            // x = [0 - 0xFFFF]
@@ -658,7 +658,7 @@ COMPILER_RT_ABI si_int __clzsi2(si_int a) {
 
 // Precondition: a != 0
 
-COMPILER_RT_ABI si_int __ctzsi2(si_int a) {
+COMPILER_RT_ABI si_int __attribute__((section(".klib"))) __ctzsi2(si_int a) {
   su_int x = (su_int)a;
   si_int t = ((x & 0x0000FFFF) == 0)
              << 4; // if (x has no small bits) t = 16 else 0
@@ -700,7 +700,7 @@ typedef unsigned su_int;
 #define CHAR_BIT __CHAR_BIT__
 
 
-si_int __ctzdi2(di_int a) {
+si_int __attribute__((section(".klib"))) __ctzdi2(di_int a) {
   dwords x;
   x.all = a;
   const si_int f = -(x.s.low == 0);
@@ -708,7 +708,7 @@ si_int __ctzdi2(di_int a) {
          (f & ((si_int)(sizeof(si_int) * CHAR_BIT)));
 }
 
-si_int __clzdi2(di_int a) {
+si_int __attribute__((section(".klib"))) __clzdi2(di_int a) {
   dwords x;
   x.all = a;
   const si_int f = -(x.s.high == 0);

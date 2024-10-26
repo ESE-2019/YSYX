@@ -1,8 +1,15 @@
 ENTRY(_start)
-
+PHDRS {
+    entry PT_LOAD;
+    bootloader PT_LOAD;
+    klib PT_LOAD;
+    text PT_LOAD;
+    data PT_LOAD;
+    bss PT_LOAD;
+    }
 MEMORY {
   FLASH (rx)  : ORIGIN = 0x30000000, LENGTH = 16M - 1
-  SDRAM (rwx) : ORIGIN = 0xa0000000, LENGTH = 32M - 1
+  SDRAM (rwx) : ORIGIN = 0x80000000, LENGTH = 32M - 1
   SRAM  (rwx) : ORIGIN = 0x0f000000, LENGTH =  8K - 1
 }
 
@@ -11,16 +18,10 @@ SECTIONS {
   .entry : {  
     *(entry)
     . = ALIGN(4);
-  } > FLASH
+  } > FLASH : entry
 
 
   /* bootloader */
-  .balign :
-  {
-    . = ALIGN(4);
-    PROVIDE(_bootloader_vma_start = .);
-  } > SRAM AT > FLASH
-
   .blalign :
   {
     . = ALIGN(4);
@@ -28,19 +29,29 @@ SECTIONS {
   } > FLASH AT > FLASH
   
   .bootloader : {
+    . = ALIGN(4);
+    PROVIDE(_bootloader_vma_start = .);
     *(.bootloader)
     . = ALIGN(4);
     PROVIDE(_bootloader_vma_end = .);
-  } > SRAM AT > FLASH
+  } > SRAM AT > FLASH : bootloader
 
-
-  /* text */
-  .talign :
+  /* bootloader */
+  .klalign :
   {
     . = ALIGN(4);
-    PROVIDE(_text_vma_start = .);
-  } > SDRAM AT > FLASH
+    PROVIDE(_klib_lma_start = .);
+  } > FLASH AT > FLASH
+  
+  .klib : {
+    . = ALIGN(4);
+    PROVIDE(_klib_vma_start = .);
+    *(.klib)
+    . = ALIGN(4);
+    PROVIDE(_klib_vma_end = .);
+  } > SRAM AT > FLASH : klib
 
+  /* text */
   .tlalign :
   {
     . = ALIGN(4);
@@ -48,20 +59,19 @@ SECTIONS {
   } > FLASH AT > FLASH
 
   .text : {
+    . = ALIGN(4);
+    PROVIDE(_text_vma_start = .);
     *(.text)
+    . = ALIGN(4);
     *(.text*)
-    . = ALIGN(4);    
+    . = ALIGN(4);
+    *(.eh_frame)
+    . = ALIGN(4);
     PROVIDE(_text_vma_end = .);
-  } > SDRAM AT > FLASH
+  } > SDRAM AT > FLASH : text
 
   
   /* data */
-  .dalign :
-  {
-    . = ALIGN(4);
-    PROVIDE(_data_vma_start = .);
-  } > SDRAM AT > FLASH
-
   .dlalign :
   {
     . = ALIGN(4);
@@ -69,13 +79,22 @@ SECTIONS {
   } > FLASH AT > FLASH
 
   .data : {
+    . = ALIGN(4);
+    PROVIDE(_data_vma_start = .);
     *(.data)
+    . = ALIGN(4);
     *(.data*)
+    . = ALIGN(4);
     *(.sdata)
+    . = ALIGN(4);
     *(.sdata*)
+    . = ALIGN(4);
     *(.rodata)
+    . = ALIGN(4);
     *(.rodata*)
+    . = ALIGN(4);
     *(.srodata)
+    . = ALIGN(4);
     *(.srodata*)
 
 
@@ -103,21 +122,26 @@ SECTIONS {
 
     . = ALIGN(4);
     PROVIDE(_data_vma_end = .);
-  } > SDRAM AT > FLASH
+  } > SDRAM AT > FLASH : data
   
 
   
   /* bss */
   .bss : {
     *(.bss)
+    . = ALIGN(4);
     *(.bss*)
+    . = ALIGN(4);
     *(.sbss)
+    . = ALIGN(4);
     *(.sbss*)
+    . = ALIGN(4);
     *(.scommon)
+    . = ALIGN(4);
     *(.scommon*)
+    . = ALIGN(4);
     *(COMMON*)
-
-
+    . = ALIGN(4);
 
     __am_apps_bss_start = .;
     *(__am_apps.bss*)
@@ -125,10 +149,10 @@ SECTIONS {
     *(__am_apps.scommon*)
     __am_apps_bss_end = .;
     
-  } > SDRAM
+  } > SDRAM : bss
 
     _stack_top = ALIGN(4);
-    . = . + 0x8000;
+    . = . + 0x10000;
     _stack_pointer = ALIGN(4);
     
     _heap_start = ALIGN(4);

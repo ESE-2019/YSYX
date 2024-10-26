@@ -11,7 +11,7 @@ int main(const char *args);
 Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] = MAINARGS_PLACEHOLDER; // defined in CFLAGS
 
-void putch(char ch)
+void __attribute__((section(".klib"))) putch(char ch)
 {
     while ((inb(SOC_UART_LSR) & (1 << 5)) == 0)
         ;
@@ -94,6 +94,11 @@ static inline void memcpy_bootloader(void *vma_start, void *vma_end, void *lma_s
 
 void __attribute__((section(".bootloader"))) _bootloader()
 {
+    extern char _klib_vma_start;
+    extern char _klib_vma_end;
+    extern char _klib_lma_start;
+    memcpy_bootloader(&_klib_vma_start, &_klib_vma_end, &_klib_lma_start);
+    
     extern char _text_vma_start;
     extern char _text_vma_end;
     extern char _text_lma_start;

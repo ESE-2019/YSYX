@@ -1,6 +1,7 @@
 .section entry, "ax"
 .globl _start
 .type _start, @function
+.align 2
 
 _start:
   la sp, _stack_pointer

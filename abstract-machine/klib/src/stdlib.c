@@ -5,18 +5,18 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 static unsigned long int next = 1;
 
-int rand(void)
+int __attribute__((section(".klib"))) rand(void)
 {
   // RAND_MAX assumed to be 32767
   next = next * 1103515245 + 12345;
   return (unsigned int)(next / 65536) % 32768;
 }
 
-void srand(unsigned int seed) { next = seed; }
+void __attribute__((section(".klib"))) srand(unsigned int seed) { next = seed; }
 
-int abs(int x) { return (x < 0 ? -x : x); }
+int __attribute__((section(".klib"))) abs(int x) { return (x < 0 ? -x : x); }
 
-int atoi(const char *nptr)
+int __attribute__((section(".klib"))) atoi(const char *nptr)
 {
   int x = 0;
   while (*nptr == ' ')
@@ -32,7 +32,7 @@ int atoi(const char *nptr)
 }
 
 static void *heap_ = NULL;
-void *malloc(size_t size)
+void __attribute__((section(".klib"))) *malloc(size_t size)
 {
   if (heap_ == NULL)
   {
@@ -55,6 +55,6 @@ void *malloc(size_t size)
   }
 }
 
-void free(void *ptr) {}
+void __attribute__((section(".klib"))) free(void *ptr) {}
 
 #endif

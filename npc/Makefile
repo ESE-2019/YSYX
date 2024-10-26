@@ -1,6 +1,7 @@
 TOPNAME = ysyxSoCFull
 INC_PATH ?=
 SIM_IMG ?=
+SIM_FLAGS ?=
 
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
@@ -39,7 +40,7 @@ VERILATOR_CFLAGS += -CFLAGS -I/usr/lib/llvm-14/include \
 	-CFLAGS -std=c++14 -CFLAGS -fno-exceptions -CFLAGS -D_GNU_SOURCE -CFLAGS -D__STDC_CONSTANT_MACROS -CFLAGS -D__STDC_LIMIT_MACROS \
 	-CFLAGS -Ofast -CFLAGS -fexceptions \
 	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
-	-LDFLAGS /home/ubuntu/ysyx-workbench/riscv32e/libdisasm.so \
+	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/libdisasm.so \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
 	-LDFLAGS -lLLVM-14 -LDFLAGS -flto
 ifneq ($(words $(CURDIR)),1)
@@ -71,7 +72,7 @@ all: default
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$^ -IMG=$(SIM_IMG)
+	@$^ -IMG=$(SIM_IMG) $(SIM_FLAGS)
 
 wave:
 	gtkwave ./build/wave.fst &
@@ -82,6 +83,6 @@ run: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: default all clean run
+.PHONY: default all run clean
 
 include ../Makefile
