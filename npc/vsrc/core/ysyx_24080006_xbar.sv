@@ -1,60 +1,60 @@
-module ysyx_24080006_xbar(
+module ysyx_24080006_xbar (
     ysyx_24080006_axi.slave  axi,
     ysyx_24080006_axi.master axi_sram,
     ysyx_24080006_axi.master axi_soc
-    );
+);
 
-    // write channel
-    assign axi.awready = axi.awaddr >= 32'h8000_0000 ? axi_sram.awready : axi_soc.awready;
-    assign axi_sram.awvalid = axi.awaddr >= 32'h8000_0000 ? axi.awvalid : 0;
-    assign axi_soc.awvalid = axi.awaddr < 32'h8000_0000 ? axi.awvalid : 0;
-    assign axi_sram.awaddr = axi.awaddr;
-    assign axi_sram.awid = axi.awid;
-    assign axi_sram.awlen = axi.awlen;
-    assign axi_sram.awsize = axi.awsize;
-    assign axi_sram.awburst = axi.awburst;
-    assign axi_soc.awaddr = axi.awaddr;
-    assign axi_soc.awid = axi.awid;
-    assign axi_soc.awlen = axi.awlen;
-    assign axi_soc.awsize = axi.awsize;
-    assign axi_soc.awburst = axi.awburst;
+  // write channel
+  assign axi.awready = axi.awaddr >= 32'h8000_0000 ? axi_sram.awready : axi_soc.awready;
+  assign axi_sram.awvalid = axi.awaddr >= 32'h8000_0000 ? axi.awvalid : 0;
+  assign axi_soc.awvalid = axi.awaddr < 32'h8000_0000 ? axi.awvalid : 0;
+  assign axi_sram.awaddr = axi.awaddr;
+  assign axi_sram.awid = axi.awid;
+  assign axi_sram.awlen = axi.awlen;
+  assign axi_sram.awsize = axi.awsize;
+  assign axi_sram.awburst = axi.awburst;
+  assign axi_soc.awaddr = axi.awaddr;
+  assign axi_soc.awid = axi.awid;
+  assign axi_soc.awlen = axi.awlen;
+  assign axi_soc.awsize = axi.awsize;
+  assign axi_soc.awburst = axi.awburst;
 
-    assign axi.wready = axi.awaddr >= 32'h8000_0000 ? axi_sram.wready : axi_soc.wready;
-    assign axi_sram.wvalid = axi.awaddr >= 32'h8000_0000 ? axi.wvalid : 0;
-    assign axi_soc.wvalid = axi.awaddr < 32'h8000_0000 ? axi.wvalid : 0;
-    assign axi_sram.wdata = axi.wdata;
-    assign axi_sram.wstrb = axi.wstrb;
-    assign axi_sram.wlast = axi.wlast;
-    assign axi_soc.wdata = axi.wdata;
-    assign axi_soc.wstrb = axi.wstrb;
-    assign axi_soc.wlast = axi.wlast;
+  assign axi.wready = axi.awaddr >= 32'h8000_0000 ? axi_sram.wready : axi_soc.wready;
+  assign axi_sram.wvalid = axi.awaddr >= 32'h8000_0000 ? axi.wvalid : 0;
+  assign axi_soc.wvalid = axi.awaddr < 32'h8000_0000 ? axi.wvalid : 0;
+  assign axi_sram.wdata = axi.wdata;
+  assign axi_sram.wstrb = axi.wstrb;
+  assign axi_sram.wlast = axi.wlast;
+  assign axi_soc.wdata = axi.wdata;
+  assign axi_soc.wstrb = axi.wstrb;
+  assign axi_soc.wlast = axi.wlast;
 
-    assign axi_sram.bready = axi.awaddr >= 32'h8000_0000 ? axi.bready : 0;
-    assign axi_soc.bready = axi.awaddr < 32'h8000_0000 ? axi.bready : 0;
-    assign axi.bvalid = axi.awaddr >= 32'h8000_0000 ? axi_sram.bvalid : axi_soc.bvalid;
-    //assign axi.bresp = axi.bresp;
-    //assign axi.bid = axi.bid;
+  assign axi_sram.bready = axi.awaddr >= 32'h8000_0000 ? axi.bready : 0;
+  assign axi_soc.bready = axi.awaddr < 32'h8000_0000 ? axi.bready : 0;
+  assign axi.bvalid = axi.awaddr >= 32'h8000_0000 ? axi_sram.bvalid : axi_soc.bvalid;
+  //assign axi.bresp = axi.bresp;
+  //assign axi.bid = axi.bid;
 
 
-    // read channel
-    assign axi.arready = axi.araddr >= 32'h8000_0000 ? axi_sram.arready : axi_soc.arready;
-    assign axi_sram.arvalid = axi.araddr >= 32'h8000_0000 ? axi.arvalid : 0;
-    assign axi_soc.arvalid = axi.araddr < 32'h8000_0000 ? axi.arvalid : 0;
-    assign axi_sram.araddr = axi.araddr;
-    assign axi_sram.arid = axi.arid;
-    assign axi_sram.arlen = axi.arlen;
-    assign axi_sram.arsize = axi.arsize;
-    assign axi_sram.arburst = axi.arburst;
-    assign axi_soc.araddr = axi.araddr;
-    assign axi_soc.arid = axi.arid;
-    assign axi_soc.arlen = axi.arlen;
-    assign axi_soc.arsize = axi.arsize;
-    assign axi_soc.arburst = axi.arburst;
+  // read channel
+  assign axi.arready = axi.araddr >= 32'h8000_0000 ? axi_sram.arready : axi_soc.arready;
+  assign axi_sram.arvalid = axi.araddr >= 32'h8000_0000 ? axi.arvalid : 0;
+  assign axi_soc.arvalid = axi.araddr < 32'h8000_0000 ? axi.arvalid : 0;
+  assign axi_sram.araddr = axi.araddr;
+  assign axi_sram.arid = axi.arid;
+  assign axi_sram.arlen = axi.arlen;
+  assign axi_sram.arsize = axi.arsize;
+  assign axi_sram.arburst = axi.arburst;
+  assign axi_soc.araddr = axi.araddr;
+  assign axi_soc.arid = axi.arid;
+  assign axi_soc.arlen = axi.arlen;
+  assign axi_soc.arsize = axi.arsize;
+  assign axi_soc.arburst = axi.arburst;
 
-    assign axi_sram.rready = axi.araddr >= 32'h8000_0000 ? axi.rready : 0;
-    assign axi_soc.rready = axi.araddr < 32'h8000_0000 ? axi.rready : 0;
-    assign axi.rvalid = axi.araddr >= 32'h8000_0000 ? axi_sram.rvalid : axi_soc.rvalid;
-    assign axi.rdata = axi.araddr >= 32'h8000_0000 ? axi_sram.rdata : axi_soc.rdata;
+  assign axi_sram.rready = axi.araddr >= 32'h8000_0000 ? axi.rready : 0;
+  assign axi_soc.rready = axi.araddr < 32'h8000_0000 ? axi.rready : 0;
+  assign axi.rvalid = axi.araddr >= 32'h8000_0000 ? axi_sram.rvalid : axi_soc.rvalid;
+  assign axi.rdata = axi.araddr >= 32'h8000_0000 ? axi_sram.rdata : axi_soc.rdata;
 
 endmodule
 

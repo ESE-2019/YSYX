@@ -97,7 +97,7 @@ SECTIONS {
     . = ALIGN(4);
     *(.srodata*)
 
-
+    *(.tohost) /* for riscv-test */
     . = ALIGN(4);
     __fsymtab_start = .;
     KEEP(*(FSymTab))
@@ -142,7 +142,7 @@ SECTIONS {
     . = ALIGN(4);
     *(COMMON*)
     . = ALIGN(4);
-
+    
     __am_apps_bss_start = .;
     *(__am_apps.bss*)
     *(__am_apps.sbss*)
