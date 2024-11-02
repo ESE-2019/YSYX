@@ -1,18 +1,18 @@
-module ysyx_24080006_lsu (
+module ysyx_24080006_lsu
+  import ysyx_24080006_pkg::*;
+(
     input logic clock,
     input logic reset,
 
-    ysyx_24080006_axi.master axi_lsu,
-    ysyx_24080006_uif.prev   exu,
-    ysyx_24080006_uif.next   wbu
+    input  logic   wbu2lsu_ready,
+    output logic   lsu2exu_ready,
+    input  stage_t exu2lsu,
+    output stage_t lsu2wbu,
+
+    ysyx_24080006_axi.master axi_lsu
 );
 
-  enum logic [1:0] {
-    IDLE,
-    EXEC,
-    WAIT
-  }
-      curr, next;
+  fsm_e curr, next;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -25,8 +25,8 @@ module ysyx_24080006_lsu (
   always_comb begin  //fsm 2
     unique case (curr)
       IDLE: begin
-        if (exu.valid) begin
-          if (exu.load || exu.store) next = EXEC;
+        if (exu2lsu.valid) begin
+          if (exu2lsu.load || exu2lsu.store) next = EXEC;
           else next = WAIT;
         end else next = IDLE;
       end
@@ -35,7 +35,7 @@ module ysyx_24080006_lsu (
         else next = EXEC;
       end
       WAIT: begin
-        if (wbu.ready) next = IDLE;
+        if (wbu2lsu_ready) next = IDLE;
         else next = WAIT;
       end
     endcase
@@ -43,40 +43,40 @@ module ysyx_24080006_lsu (
 
   always_ff @(posedge clock) begin  //fsm 3 for control
     unique if (reset) begin
-      exu.ready <= 1;
-      wbu.valid <= 0;
+      lsu2exu_ready <= 1;
+      lsu2wbu.valid <= 0;
     end else begin
       unique case (curr)
         IDLE: begin
-          if (exu.valid) begin
-            if (exu.load || exu.store) begin
-              exu.ready <= 0;
-              wbu.valid <= 0;
+          if (exu2lsu.valid) begin
+            if (exu2lsu.load || exu2lsu.store) begin
+              lsu2exu_ready <= 0;
+              lsu2wbu.valid <= 0;
             end else begin  // bypass
-              exu.ready <= 0;
-              wbu.valid <= 1;
+              lsu2exu_ready <= 0;
+              lsu2wbu.valid <= 1;
             end
           end else begin
-            exu.ready <= 1;
-            wbu.valid <= 0;
+            lsu2exu_ready <= 1;
+            lsu2wbu.valid <= 0;
           end
         end
         EXEC: begin
           if (axi_lsu.rvalid || axi_lsu.bvalid) begin
-            exu.ready <= 0;
-            wbu.valid <= 1;
+            lsu2exu_ready <= 0;
+            lsu2wbu.valid <= 1;
           end else begin
-            exu.ready <= 0;
-            wbu.valid <= 0;
+            lsu2exu_ready <= 0;
+            lsu2wbu.valid <= 0;
           end
         end
         WAIT: begin
-          if (wbu.ready) begin
-            exu.ready <= 1;
-            wbu.valid <= 0;
+          if (wbu2lsu_ready) begin
+            lsu2exu_ready <= 1;
+            lsu2wbu.valid <= 0;
           end else begin
-            exu.ready <= 0;
-            wbu.valid <= 1;
+            lsu2exu_ready <= 0;
+            lsu2wbu.valid <= 1;
           end
         end
       endcase
@@ -136,51 +136,51 @@ module ysyx_24080006_lsu (
   always_ff @(posedge clock) begin  //fsm 3 for axi
     unique if (reset) begin
       axi_lsu.arvalid <= '0;
-      axi_lsu.rready <= '0;
+      axi_lsu.rready  <= '0;
       axi_lsu.awvalid <= '0;
-      axi_lsu.wvalid <= '0;
-      axi_lsu.bready <= '0;
-      axi_lsu.araddr <= '0;
-      axi_lsu.awaddr <= '0;
-      axi_lsu.wdata <= '0;
-      axi_lsu.wstrb <= '0;
-      axi_lsu.arsize <= '0;
-      axi_lsu.awsize <= '0;
-      wbu.alu_res <= '0;
-      Mr_param_addr <= '0;
+      axi_lsu.wvalid  <= '0;
+      axi_lsu.bready  <= '0;
+      axi_lsu.araddr  <= '0;
+      axi_lsu.awaddr  <= '0;
+      axi_lsu.wdata   <= '0;
+      axi_lsu.wstrb   <= '0;
+      axi_lsu.arsize  <= '0;
+      axi_lsu.awsize  <= '0;
+      lsu2wbu.alu_res <= '0;
+      Mr_param_addr   <= '0;
       Mr_param_funct3 <= '0;
     end else begin
       unique case (curr)
         IDLE: begin
-          if (exu.valid) begin
+          if (exu2lsu.valid) begin
             lsu_cnt <= 1;
-            if (exu.load) begin  // load / read
+            if (exu2lsu.load) begin  // load / read
               axi_lsu.arvalid <= 1;
               axi_lsu.rready  <= 0;
               axi_lsu.awvalid <= 0;
               axi_lsu.wvalid  <= 0;
               axi_lsu.bready  <= 0;
-              axi_lsu.arsize  <= {1'b0, exu.funct3[1:0]};
-              axi_lsu.araddr  <= exu.alu_res;
-              Mr_param_addr   <= exu.alu_res[1:0];
-              Mr_param_funct3 <= exu.funct3;
-            end else if (exu.store) begin  // store / write
+              axi_lsu.arsize  <= {1'b0, exu2lsu.funct3[1:0]};
+              axi_lsu.araddr  <= exu2lsu.alu_res;
+              Mr_param_addr   <= exu2lsu.alu_res[1:0];
+              Mr_param_funct3 <= exu2lsu.funct3;
+            end else if (exu2lsu.store) begin  // store / write
               axi_lsu.arvalid <= 0;
               axi_lsu.rready  <= 0;
               axi_lsu.awvalid <= 1;
               axi_lsu.wvalid  <= 1;
               axi_lsu.bready  <= 0;
-              axi_lsu.awaddr  <= exu.alu_res;
-              axi_lsu.wdata   <= exu.sdata << (8 * exu.alu_res[1:0]);
-              axi_lsu.awsize  <= exu.funct3;
-              axi_lsu.wstrb   <= WSTRB_LUT[exu.funct3[1:0]] << exu.alu_res[1:0];
+              axi_lsu.awaddr  <= exu2lsu.alu_res;
+              axi_lsu.wdata   <= exu2lsu.sdata << (8 * exu2lsu.alu_res[1:0]);
+              axi_lsu.awsize  <= exu2lsu.funct3;
+              axi_lsu.wstrb   <= WSTRB_LUT[exu2lsu.funct3[1:0]] << exu2lsu.alu_res[1:0];
             end else begin  // bypass
               axi_lsu.arvalid <= 0;
-              axi_lsu.rready <= 0;
+              axi_lsu.rready  <= 0;
               axi_lsu.awvalid <= 0;
-              axi_lsu.wvalid <= 0;
-              axi_lsu.bready <= 0;
-              wbu.alu_res <= exu.alu_res;
+              axi_lsu.wvalid  <= 0;
+              axi_lsu.bready  <= 0;
+              lsu2wbu.alu_res <= exu2lsu.alu_res;
             end
           end else begin
             axi_lsu.arvalid <= 0;
@@ -205,8 +205,8 @@ module ysyx_24080006_lsu (
             //$display("[LSU] 0x%08x write [0x%08x]", axi_lsu.awaddr, axi_lsu.wdata);
           end
           if (axi_lsu.rvalid) begin
-            axi_lsu.rready <= 1;
-            wbu.alu_res <= Mr(axi_lsu.rdata, Mr_param_addr, Mr_param_funct3);
+            axi_lsu.rready  <= 1;
+            lsu2wbu.alu_res <= Mr(axi_lsu.rdata, Mr_param_addr, Mr_param_funct3);
 `ifdef SIM_MODE
             LSU_CNT(1, lsu_cnt);
 `endif
@@ -214,7 +214,7 @@ module ysyx_24080006_lsu (
           end
         end
         WAIT: begin
-          if (wbu.ready) begin
+          if (wbu2lsu_ready) begin
             axi_lsu.arvalid <= 0;
             axi_lsu.rready  <= 0;
             axi_lsu.awvalid <= 0;
@@ -236,27 +236,27 @@ module ysyx_24080006_lsu (
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      wbu.dnpc <= '0;
-      wbu.rd_addr <= '0;
-      wbu.wb <= '0;
-      wbu.jump <= '0;
-      wbu.branch <= '0;
-      wbu.csr_addr <= '0;
-      wbu.csr_we <= '0;
-      wbu.csr_wdata <= '0;
-      wbu.ecall <= '0;
-      wbu.pc <= '0;
-    end else if (curr == IDLE && exu.valid) begin
-      wbu.dnpc <= exu.dnpc;
-      wbu.rd_addr <= exu.rd_addr;
-      wbu.wb <= exu.wb;
-      wbu.jump <= exu.jump;  //may be merged
-      wbu.branch <= exu.branch;  //^^^^^^^^^
-      wbu.csr_addr <= exu.csr_addr;
-      wbu.csr_we <= exu.csr_we;
-      wbu.csr_wdata <= exu.csr_wdata;
-      wbu.ecall <= exu.ecall;
-      wbu.pc <= exu.pc;
+      lsu2wbu.dnpc <= '0;
+      lsu2wbu.rd_addr <= '0;
+      lsu2wbu.wb <= '0;
+      lsu2wbu.jump <= '0;
+      lsu2wbu.branch <= '0;
+      lsu2wbu.csr_addr <= '0;
+      lsu2wbu.csr_we <= '0;
+      lsu2wbu.csr_wdata <= '0;
+      lsu2wbu.ecall <= '0;
+      lsu2wbu.pc <= '0;
+    end else if (curr == IDLE && exu2lsu.valid) begin
+      lsu2wbu.dnpc <= exu2lsu.dnpc;
+      lsu2wbu.rd_addr <= exu2lsu.rd_addr;
+      lsu2wbu.wb <= exu2lsu.wb;
+      lsu2wbu.jump <= exu2lsu.jump;
+      lsu2wbu.branch <= exu2lsu.branch;
+      lsu2wbu.csr_addr <= exu2lsu.csr_addr;
+      lsu2wbu.csr_we <= exu2lsu.csr_we;
+      lsu2wbu.csr_wdata <= exu2lsu.csr_wdata;
+      lsu2wbu.ecall <= exu2lsu.ecall;
+      lsu2wbu.pc <= exu2lsu.pc;
     end
 
   end
@@ -270,7 +270,6 @@ module ysyx_24080006_lsu (
   function automatic logic INSIDE_PERIP(input logic [31:0] addr);
     INSIDE_PERIP = INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) ||  // CLINT
         INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
-        //INSIDE(addr, 32'h1000_1000, 32'h1000_1fff) || // SPI
         INSIDE(addr, 32'h1000_2000, 32'h1000_200f) ||  // GPIO
         INSIDE(addr, 32'h1001_1000, 32'h1001_1007) ||  // PS2
         INSIDE(addr, 32'h2100_0000, 32'h211f_ffff);  // VGA
@@ -285,7 +284,7 @@ module ysyx_24080006_lsu (
   import "DPI-C" function void SKIP_DIFFTEST();
 
   always_ff @(posedge clock) begin
-    if (curr == EXEC && exu.store) begin
+    if (curr == EXEC && exu2lsu.store) begin
       if (INSIDE_PERIP(axi_lsu.awaddr)) begin
         SKIP_DIFFTEST();
       end else if (INSIDE_MEM(axi_lsu.awaddr));
@@ -294,7 +293,7 @@ module ysyx_24080006_lsu (
         $finish;
       end
     end
-    if (curr == EXEC && exu.load) begin
+    if (curr == EXEC && exu2lsu.load) begin
       if (INSIDE_PERIP(axi_lsu.araddr)) begin
         SKIP_DIFFTEST();
       end else if (INSIDE_MEM(axi_lsu.araddr));

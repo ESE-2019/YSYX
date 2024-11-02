@@ -1,4 +1,6 @@
-module ysyx_24080006_wbu (
+module ysyx_24080006_wbu
+  import ysyx_24080006_pkg::*;
+(
     input logic clock,
     input logic reset,
 
@@ -10,17 +12,19 @@ module ysyx_24080006_wbu (
     output logic [11:0] csr_waddr,
     output logic [31:0] csr_wdata,
 
-    ysyx_24080006_uif.prev lsu,
-    ysyx_24080006_uif.next ifu
+    input  logic   ifu2wbu_ready,
+    output logic   wbu2lsu_ready,
+    input  stage_t lsu2wbu,
+    output stage_t wbu2ifu
 );
 
-  enum logic [1:0] {
+  typedef enum logic [1:0] {
     IDLE,
     EXEC,
     WAIT,
     RST
-  }
-      curr, next;
+  } WBU_STATE;
+  WBU_STATE curr, next;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -33,11 +37,11 @@ module ysyx_24080006_wbu (
   always_comb begin  //fsm 2
     unique case (curr)
       IDLE: begin
-        if (lsu.valid) next = EXEC;
+        if (lsu2wbu.valid) next = EXEC;
         else next = IDLE;
       end
       EXEC, WAIT: begin
-        if (ifu.ready) next = IDLE;
+        if (ifu2wbu_ready) next = IDLE;
         else next = WAIT;
       end
       RST: next = IDLE;
@@ -46,31 +50,31 @@ module ysyx_24080006_wbu (
 
   always_ff @(posedge clock) begin  //fsm 3 for control
     unique if (reset) begin
-      lsu.ready <= 0;
-      ifu.valid <= 0;
+      wbu2lsu_ready <= 0;
+      wbu2ifu.valid <= 0;
     end else begin
       unique case (curr)
         IDLE: begin
-          if (lsu.valid) begin
-            lsu.ready <= 0;
-            ifu.valid <= 1;
+          if (lsu2wbu.valid) begin
+            wbu2lsu_ready <= 0;
+            wbu2ifu.valid <= 1;
           end else begin
-            lsu.ready <= 1;
-            ifu.valid <= 0;
+            wbu2lsu_ready <= 1;
+            wbu2ifu.valid <= 0;
           end
         end
         EXEC, WAIT: begin
-          if (ifu.ready) begin
-            lsu.ready <= 1;
-            ifu.valid <= 0;
+          if (ifu2wbu_ready) begin
+            wbu2lsu_ready <= 1;
+            wbu2ifu.valid <= 0;
           end else begin
-            lsu.ready <= 0;
-            ifu.valid <= 1;
+            wbu2lsu_ready <= 0;
+            wbu2ifu.valid <= 1;
           end
         end
         RST: begin
-          lsu.ready <= 0;
-          ifu.valid <= 1;
+          wbu2lsu_ready <= 0;
+          wbu2ifu.valid <= 1;
         end
       endcase
     end
@@ -85,20 +89,20 @@ module ysyx_24080006_wbu (
       csr_waddr <= '0;
       csr_wdata <= '0;
     end else begin
-      if (curr == IDLE && lsu.valid) begin
-        if (lsu.wb) begin  // TODO unnecessary
-          rd <= lsu.rd_addr;
-          wdata <= lsu.alu_res;
-          we <= lsu.wb;
-        end else if (lsu.csr_we) begin
-          rd <= lsu.rd_addr;
-          wdata <= lsu.csr_wdata;
+      if (curr == IDLE && lsu2wbu.valid) begin
+        if (lsu2wbu.wb) begin  // TODO unnecessary?
+          rd <= lsu2wbu.rd_addr;
+          wdata <= lsu2wbu.alu_res;
+          we <= lsu2wbu.wb;
+        end else if (lsu2wbu.csr_we) begin
+          rd <= lsu2wbu.rd_addr;
+          wdata <= lsu2wbu.csr_wdata;
           we <= 1'b1;
-          csr_we <= lsu.csr_we;
-          csr_waddr <= lsu.csr_addr;
-          csr_wdata <= lsu.alu_res;
-        end else if (lsu.ecall) begin
-          csr_we <= 1'b1;  //lsu.csr_we;
+          csr_we <= lsu2wbu.csr_we;
+          csr_waddr <= lsu2wbu.csr_addr;
+          csr_wdata <= lsu2wbu.alu_res;
+        end else if (lsu2wbu.ecall) begin
+          csr_we <= 1'b1;  //lsu2wbu.csr_we;
           csr_waddr <= 12'h342;
           csr_wdata <= 32'd11;
         end else begin
@@ -122,15 +126,15 @@ module ysyx_24080006_wbu (
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      ifu.dnpc <= '0;
-      ifu.jump <= '0;
-      ifu.branch <= '0;
-      ifu.rd_addr <= '0;
-    end else if (curr == IDLE && lsu.valid) begin
-      ifu.dnpc <= lsu.dnpc;
-      ifu.jump <= lsu.jump;  //may be merged
-      ifu.branch <= lsu.branch;  //^^^^^^^^^
-      ifu.rd_addr <= (lsu.wb) ? lsu.rd_addr : '0;
+      wbu2ifu.dnpc <= '0;
+      wbu2ifu.jump <= '0;
+      wbu2ifu.branch <= '0;
+      wbu2ifu.rd_addr <= '0;
+    end else if (curr == IDLE && lsu2wbu.valid) begin
+      wbu2ifu.dnpc <= lsu2wbu.dnpc;
+      wbu2ifu.jump <= lsu2wbu.jump;
+      wbu2ifu.branch <= lsu2wbu.branch;
+      wbu2ifu.rd_addr <= (lsu2wbu.wb) ? lsu2wbu.rd_addr : '0;
     end
 
   end

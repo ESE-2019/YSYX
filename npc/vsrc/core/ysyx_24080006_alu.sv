@@ -1,20 +1,11 @@
-module ysyx_24080006_alu (
-    input  logic [31:0] src1,
-    input  logic [31:0] src2,
-    input  logic [ 3:0] ctrl,
-    output logic [31:0] alu_out,
-    output logic        not_zero  // only used for BEQ BNE
+module ysyx_24080006_alu
+  import ysyx_24080006_pkg::*;
+(
+    input logic [31:0] src1,
+    input logic [31:0] src2,
+    input alu_op_e alu_op,
+    output logic [31:0] alu_res
 );
-  localparam	ADD  = 4'b0000,
-		SUB  = 4'b1000,
-		SLL  = 4'b0001,
-		SLT  = 4'b0010,
-		SLTU = 4'b0011,
-		XOR  = 4'b0100,
-		SRL  = 4'b0101,
-		SRA  = 4'b1101,
-		OR   = 4'b0110,
-		AND  = 4'b0111;
 
   //add
   logic [33:0] add_res_t;
@@ -24,9 +15,9 @@ module ysyx_24080006_alu (
   assign srcB_t = {src2, 1'b0};
   always_comb begin
     srcB = srcB_t;
-    case (ctrl)
+    case (alu_op)
       ADD: srcB = srcB_t;
-      SUB, SLT, SLTU: srcB = ~srcB_t;
+      SUB, SLT, SLTU, BEQ, BNE, BLT, BGE, BLTU, BGEU: srcB = ~srcB_t;
       default: ;
     endcase
   end
@@ -36,11 +27,11 @@ module ysyx_24080006_alu (
   logic comp_res;
   always_comb begin
     comp_res = add_res_t[33];
-    case (ctrl)
-      SLT:
+    case (alu_op)
+      SLT, BLT, BGE:
       comp_res = add_res_t[32] ^  //detect overflow
       ((!srcA[32] && srcB_t[32] && add_res_t[32]) || (srcA[32] && !srcB_t[32] && !add_res_t[32]));
-      SLTU: comp_res = !add_res_t[33];  //caution
+      SLTU, BLTU, BGEU: comp_res = !add_res_t[33];  //caution
       default: ;
     endcase
   end
@@ -53,28 +44,22 @@ module ysyx_24080006_alu (
 
   always_comb begin
     shift_src = src1;
-    case (ctrl)
+    case (alu_op)
       SLL: for (int i = 0; i < 32; i++) shift_src[i] = src1[31-i];
       SRL, SRA: shift_src = src1;
       default: ;
     endcase
   end
 
-  always_comb begin
-    shift_res = src1 >> shift;
-    case (ctrl)
-      SLL, SRL: shift_res = shift_src >> shift;
-      //SRA: shift_res = $signed(shift_src) >>> shift;
-      SRA: shift_res = {32{src1[31]}} << (31 - shift) | src1 >> shift;
-      default: ;
-    endcase
-  end
+  wire [32:0] shift_entity = {(alu_op == SRA) & shift_src[31], shift_src};
+  wire [32:0] shift_entity_res = ({33{shift_entity[32]}} << (32 - shift)) | (shift_entity >> shift);
+  assign shift_res = shift_entity_res[31:0];
 
   //and or xor
   logic [31:0] bit_res;
   always_comb begin
     bit_res = src1 & src2;
-    case (ctrl)
+    case (alu_op)
       AND: bit_res = src1 & src2;
       OR: bit_res = src1 | src2;
       XOR: bit_res = src1 ^ src2;
@@ -82,18 +67,21 @@ module ysyx_24080006_alu (
     endcase
   end
 
+  wire not_zero = |add_res;
+
   always_comb begin
-    alu_out = add_res;
-    case (ctrl)
-      ADD, SUB: alu_out = add_res;
-      SLT, SLTU: alu_out = {31'b0, comp_res};
-      SLL: for (int i = 0; i < 32; i++) alu_out[i] = shift_res[31-i];
-      SRL, SRA: alu_out = shift_res;
-      AND, OR, XOR: alu_out = bit_res;
+    alu_res = add_res;
+    case (alu_op)
+      ADD, SUB: alu_res = add_res;
+      BEQ: alu_res = {31'b0, ~not_zero};
+      BNE: alu_res = {31'b0, not_zero};
+      SLT, SLTU, BLT, BLTU: alu_res = {31'b0, comp_res};
+      BGE, BGEU: alu_res = {31'b0, ~comp_res};
+      SLL: for (int i = 0; i < 32; i++) alu_res[i] = shift_res[31-i];
+      SRL, SRA: alu_res = shift_res;
+      AND, OR, XOR: alu_res = bit_res;
       default: ;
     endcase
   end
-
-  assign not_zero = |add_res;
 
 endmodule

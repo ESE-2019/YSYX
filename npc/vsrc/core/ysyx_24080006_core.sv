@@ -3,8 +3,9 @@ module ysyx_24080006_core (
     input logic reset,
     ysyx_24080006_axi.master axi
 );
-
-  ysyx_24080006_uif ifu2idu (), idu2exu (), exu2lsu (), lsu2wbu (), wbu2ifu ();
+  import ysyx_24080006_pkg::*;
+  stage_t ifu2idu, idu2exu, exu2lsu, lsu2wbu, wbu2ifu;
+  logic ifu2wbu_ready, idu2ifu_ready, exu2idu_ready, lsu2exu_ready, wbu2lsu_ready;
 
   ysyx_24080006_axi axi_ifu (), axi_lsu ();
   ysyx_24080006_arb ARB (.*);
@@ -29,34 +30,14 @@ module ysyx_24080006_core (
 
   ysyx_24080006_csr CSR (.*);
 
-  ysyx_24080006_ifu IFU (
-      .*,
-      .wbu(wbu2ifu),
-      .idu(ifu2idu)
-  );
+  ysyx_24080006_ifu IFU (.*);
 
-  ysyx_24080006_idu IDU (
-      .*,
-      .ifu(ifu2idu),
-      .exu(idu2exu)
-  );
+  ysyx_24080006_idu IDU (.*);
 
-  ysyx_24080006_exu EXU (
-      .*,
-      .idu(idu2exu),
-      .lsu(exu2lsu)
-  );
+  ysyx_24080006_exu EXU (.*);
 
-  ysyx_24080006_lsu LSU (
-      .*,
-      .exu(exu2lsu),
-      .wbu(lsu2wbu)
-  );
+  ysyx_24080006_lsu LSU (.*);
 
-  ysyx_24080006_wbu WBU (
-      .*,
-      .lsu(lsu2wbu),
-      .ifu(wbu2ifu)
-  );
+  ysyx_24080006_wbu WBU (.*);
 
 endmodule

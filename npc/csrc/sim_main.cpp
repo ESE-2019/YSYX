@@ -50,7 +50,7 @@ static uint32_t expr(char *e, bool *success);
 
 static FILE *log_file;
 
-#define MAX_IMG (0x01000000 / 4)
+#define MAX_IMG (0x08000000 / 4)
 #define MEM_BASE 0x80000000
 
 static bool ebreak_n = true;
@@ -568,6 +568,73 @@ static uint32_t pmem_readC(uint32_t addr)
         fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u,
                 ret);
     return ret;
+}
+
+extern "C" int pmem_read(uint32_t raddr)
+{
+
+    if (LOG)
+        fprintf(log_file, "[CPU");
+    return pmem_readC(raddr & ~0x3u);
+}
+
+extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)
+{ // mask: 1 3 15
+    uint32_t shamt = waddr & 0x3;
+    wmask = wmask >> shamt;
+    switch (shamt)
+    {
+    case 0:
+        shamt = 0;
+        break;
+    case 1:
+        shamt = 8;
+        break;
+    case 2:
+        shamt = 16;
+        break;
+    case 3:
+        shamt = 24;
+        break;
+    default:
+        printf("[0]pmem_write err\n");
+        assert(0);
+        break;
+    }
+    wdata = wdata >> shamt;
+    
+
+    uint32_t add = (((waddr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
+    uint32_t data1, data2;
+    switch (wmask)
+    {
+    case 1:
+        if (LOG)
+            fprintf(log_file, "[lb-");
+        data1 = pmem_readC(waddr);
+        data1 = data1 & (~(0x000000FF << shamt));
+        data2 = (wdata & 0x000000FF) << shamt;
+        mem[add] = data1 | data2;
+        break;
+    case 3:
+        if (LOG)
+            fprintf(log_file, "[lh-");
+        data1 = pmem_readC(waddr);
+        data1 = data1 & (~(0x0000FFFF << shamt));
+        data2 = (wdata & 0x0000FFFF) << shamt;
+        mem[add] = data1 | data2;
+        break;
+    case 15:
+        mem[add] = wdata;
+        break;
+    default:
+        printf("[%d]pmem_write err\n", wmask);
+        assert(0);
+        break;
+    }
+    if (LOG)
+        fprintf(log_file, "[WRITE-%d] addr: 0x%08x value: 0x%08x\n", wmask,
+                waddr & ~0x3u, mem[add]);
 }
 
 extern "C" void flash_read(int32_t addr, int32_t *data)

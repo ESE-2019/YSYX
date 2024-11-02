@@ -3,7 +3,7 @@ interface ysyx_24080006_uif;
   logic valid;
   logic ready;
 
-  logic [31:0] pc, inst, imm, dnpc;
+  logic [31:0] pc, inst, dnpc;
 
   logic [31:0] sdata;  // store data, i.e., rs2_val
 
@@ -28,7 +28,6 @@ interface ysyx_24080006_uif;
 
       input pc,
       input inst,
-      input imm,
       input dnpc,
 
       input sdata,
@@ -52,7 +51,6 @@ interface ysyx_24080006_uif;
 
       output pc,
       output inst,
-      output imm,
       output dnpc,
 
       output sdata,

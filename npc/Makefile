@@ -2,6 +2,7 @@ TOPNAME = ysyxSoCFull
 INC_PATH ?=
 SIM_IMG ?=
 SIM_FLAGS ?=
+SIM_MODE ?= -DSOC_MODE=1
 
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
@@ -9,7 +10,7 @@ VERILATOR_CFLAGS += -MMD --build -cc --exe \
 	
 #VERILATOR_CFLAGS += --debug
 
-VERILATOR_CFLAGS += -DSIM_MODE=1  -DSOC_MODE=1
+VERILATOR_CFLAGS += -DSIM_MODE=1  $(SIM_MODE)
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -28,7 +29,8 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
+VSRCS = $(NPC_HOME)/vsrc/ysyx_24080006_pkg.svh
+VSRCS += $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")

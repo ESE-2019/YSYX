@@ -1,11 +1,18 @@
-module ysyx_24080006_ifu (
+module ysyx_24080006_ifu
+  import ysyx_24080006_pkg::*;
+(
     input logic clock,
     input logic reset,
 
-    ysyx_24080006_axi.master axi_ifu,
-    ysyx_24080006_uif.prev   wbu,
-    ysyx_24080006_uif.next   idu
+    input  logic   idu2ifu_ready,
+    output logic   ifu2wbu_ready,
+    input  stage_t wbu2ifu,
+    output stage_t ifu2idu,
+
+    ysyx_24080006_axi.master axi_ifu
 );
+
+  fsm_e curr, next;
 
   logic [31:0] pc;
 `ifdef SOC_MODE
@@ -14,12 +21,7 @@ module ysyx_24080006_ifu (
   localparam RST_ADDR = 32'h8000_0000 - 32'h4;
 `endif
 
-  enum logic [1:0] {
-    IDLE,
-    EXEC,
-    WAIT
-  }
-      curr, next;
+
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -32,7 +34,7 @@ module ysyx_24080006_ifu (
   always_comb begin  //fsm 2
     unique case (curr)
       IDLE: begin
-        if (wbu.valid) next = EXEC;
+        if (wbu2ifu.valid) next = EXEC;
         else next = IDLE;
       end
       EXEC: begin
@@ -40,7 +42,7 @@ module ysyx_24080006_ifu (
         else next = EXEC;
       end
       WAIT: begin
-        if (idu.ready) next = IDLE;
+        if (idu2ifu_ready) next = IDLE;
         else next = WAIT;
       end
     endcase
@@ -48,35 +50,35 @@ module ysyx_24080006_ifu (
 
   always_ff @(posedge clock) begin  //fsm 3 for control
     unique if (reset) begin
-      wbu.ready <= 1;
-      idu.valid <= 0;
+      ifu2wbu_ready <= 1;
+      ifu2idu.valid <= 0;
     end else begin
       unique case (curr)
         IDLE: begin
-          if (wbu.valid) begin
-            wbu.ready <= 0;
-            idu.valid <= 0;
+          if (wbu2ifu.valid) begin
+            ifu2wbu_ready <= 0;
+            ifu2idu.valid <= 0;
           end else begin
-            wbu.ready <= 1;
-            idu.valid <= 0;
+            ifu2wbu_ready <= 1;
+            ifu2idu.valid <= 0;
           end
         end
         EXEC: begin
           if (axi_ifu.rvalid) begin
-            wbu.ready <= 0;
-            idu.valid <= 1;
+            ifu2wbu_ready <= 0;
+            ifu2idu.valid <= 1;
           end else begin
-            wbu.ready <= 0;
-            idu.valid <= 0;
+            ifu2wbu_ready <= 0;
+            ifu2idu.valid <= 0;
           end
         end
         WAIT: begin
-          if (idu.ready) begin
-            wbu.ready <= 1;
-            idu.valid <= 0;
+          if (idu2ifu_ready) begin
+            ifu2wbu_ready <= 1;
+            ifu2idu.valid <= 0;
           end else begin
-            wbu.ready <= 0;
-            idu.valid <= 1;
+            ifu2wbu_ready <= 0;
+            ifu2idu.valid <= 1;
           end
         end
       endcase
@@ -98,13 +100,13 @@ module ysyx_24080006_ifu (
     unique if (reset) begin
       axi_ifu.arvalid <= 0;
       axi_ifu.rready <= 0;
-      idu.inst <= '0;
+      ifu2idu.inst <= '0;
       pc <= RST_ADDR;
 `ifdef SIM_MODE
       ftrace   <= RST_ADDR;
       type_cnt <= 0;
 `endif
-      idu.pc <= '0;
+      ifu2idu.pc <= '0;
 `ifdef SIM_MODE
       type_cnt <= 1;
 `endif
@@ -114,10 +116,10 @@ module ysyx_24080006_ifu (
 `ifdef SIM_MODE
           type_cnt <= type_cnt + 1;
 `endif
-          if (wbu.valid) begin
+          if (wbu2ifu.valid) begin
             axi_ifu.arvalid <= 1;
             axi_ifu.rready  <= 0;
-            if (wbu.jump || wbu.branch) pc <= wbu.dnpc;
+            if (wbu2ifu.jump || wbu2ifu.branch) pc <= wbu2ifu.dnpc;
             else pc <= pc + 32'h4;
           end else begin
             axi_ifu.arvalid <= 0;
@@ -128,14 +130,14 @@ module ysyx_24080006_ifu (
           if (axi_ifu.arready) axi_ifu.arvalid <= 0;
           if (axi_ifu.rvalid) begin
             axi_ifu.rready <= 1;
-            idu.inst <= axi_ifu.rdata;
+            ifu2idu.inst   <= axi_ifu.rdata;
 `ifdef SIM_MODE
-            dbg(axi_ifu.rdata, pc, (wbu.jump ? ftrace : 0), type_cnt);
+            dbg(axi_ifu.rdata, pc, (wbu2ifu.jump ? ftrace : 0), type_cnt);
             type_cnt <= 1;
-            if (wbu.jump || wbu.branch) ftrace <= wbu.dnpc;
+            if (wbu2ifu.jump || wbu2ifu.branch) ftrace <= wbu2ifu.dnpc;
             else ftrace <= ftrace + 32'h4;
 `endif
-            idu.pc <= pc;
+            ifu2idu.pc <= pc;
           end else begin
 `ifdef SIM_MODE
             type_cnt <= type_cnt + 1;
@@ -162,16 +164,14 @@ module ysyx_24080006_ifu (
   function automatic logic INSIDE(input logic [31:0] addr, left, right);
     INSIDE = addr >= left && addr <= right;
   endfunction
-
   function automatic logic INSIDE_MEM(input logic [31:0] addr);
     INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
-        //INSIDE(addr, 32'h2000_0000, 32'h2000_0fff) || // MROM
         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
         INSIDE(addr, 32'h8000_0000, 32'h81ff_ffff);  // SDRAM
   endfunction
   always_ff @(posedge clock) begin
     if (curr == EXEC && !INSIDE_MEM(pc)) begin
-      $display("[IFU]addr error 0x%08x", pc);
+      $display("[ifu2idu]addr error 0x%08x", pc);
       $finish;
     end
   end

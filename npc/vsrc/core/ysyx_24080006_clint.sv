@@ -1,6 +1,6 @@
 module ysyx_24080006_clint (
-    input clock,
-    reset,
+    input logic clock,
+    input logic reset,
     ysyx_24080006_axi.slave axi_clint
 );
   logic [63:0] mtime;
@@ -9,7 +9,7 @@ module ysyx_24080006_clint (
     if (reset) begin
       mtime <= '0;
     end else begin
-      mtime <= mtime + 64'b100;
+      mtime <= mtime + 64'b1;
     end
   end
   always_ff @(posedge clock) begin

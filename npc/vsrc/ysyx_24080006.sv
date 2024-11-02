@@ -1,7 +1,7 @@
 module ysyx_24080006 (
     input  logic        clock,
-    reset,
-    io_interrupt,
+    input  logic        reset,
+    input  logic        io_interrupt,
     // AXI4 Master Interface
     input  logic        io_master_awready,
     output logic        io_master_awvalid,
@@ -73,7 +73,7 @@ module ysyx_24080006 (
     output logic [ 3:0] io_slave_rid
 );
 
-`ifdef TEST_MODE
+`ifdef NPC_MODE
   //axi
   ysyx_24080006_axi axi (), axi_core (), axi_sram (), axi_tmp (), axi_jtag ();
   sram sram (
