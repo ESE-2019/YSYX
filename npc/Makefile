@@ -29,7 +29,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
-VSRCS = $(NPC_HOME)/vsrc/ysyx_24080006_pkg.svh
+VSRCS += $(shell find $(abspath ./vsrc) -name "*.svh")
 VSRCS += $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
@@ -41,6 +41,7 @@ VERILATOR_CFLAGS += -I$(SOC_PATH)/perip/uart16550/rtl -I$(SOC_PATH)/perip/spi/rt
 VERILATOR_CFLAGS += -CFLAGS -I/usr/lib/llvm-14/include \
 	-CFLAGS -std=c++14 -CFLAGS -fno-exceptions -CFLAGS -D_GNU_SOURCE -CFLAGS -D__STDC_CONSTANT_MACROS -CFLAGS -D__STDC_LIMIT_MACROS \
 	-CFLAGS -Ofast -CFLAGS -fexceptions \
+	-CFLAGS -flto \
 	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/libdisasm.so \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
@@ -82,6 +83,12 @@ wave:
 run: $(BIN)
 	@$^
 	
+syn: $(VSRCS)
+	verilator --lint-only --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv
+	verilator -E --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv > $(BUILD_DIR)/top.v
+	sed -i '/^`line/d' $(BUILD_DIR)/top.v
+	verible-verilog-format --inplace $(BUILD_DIR)/top.v
+
 clean:
 	rm -rf $(BUILD_DIR)
 

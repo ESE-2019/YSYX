@@ -153,7 +153,9 @@ module ysyx_24080006_lsu
       unique case (curr)
         IDLE: begin
           if (exu2lsu.valid) begin
+`ifdef SIM_MODE
             lsu_cnt <= 1;
+`endif
             if (exu2lsu.load) begin  // load / read
               axi_lsu.arvalid <= 1;
               axi_lsu.rready  <= 0;
