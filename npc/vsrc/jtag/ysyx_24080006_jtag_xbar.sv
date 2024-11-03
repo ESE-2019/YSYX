@@ -1,60 +1,60 @@
-module ysyx_24080006_jtag_xbar(
+module ysyx_24080006_jtag_xbar (
     ysyx_24080006_axi.slave  axi,
     ysyx_24080006_axi.master axi_soc,
     ysyx_24080006_axi.master axi_jtag
-    );
+);
 
-    // write channel
-    assign axi.awready = axi.awaddr >= 32'h0200_0000 ? axi_soc.awready : axi_jtag.awready;
-    assign axi_soc.awvalid = axi.awaddr >= 32'h0200_0000 ? axi.awvalid : 0;
-    assign axi_jtag.awvalid = axi.awaddr < 32'h0200_0000 ? axi.awvalid : 0;
-    assign axi_soc.awaddr = axi.awaddr;
-    assign axi_soc.awid = axi.awid;
-    assign axi_soc.awlen = axi.awlen;
-    assign axi_soc.awsize = axi.awsize;
-    assign axi_soc.awburst = axi.awburst;
-    assign axi_jtag.awaddr = axi.awaddr;
-    assign axi_jtag.awid = axi.awid;
-    assign axi_jtag.awlen = axi.awlen;
-    assign axi_jtag.awsize = axi.awsize;
-    assign axi_jtag.awburst = axi.awburst;
+  // write channel
+  assign axi.awready = axi.awaddr >= 32'h0200_0000 ? axi_soc.awready : axi_jtag.awready;
+  assign axi_soc.awvalid = axi.awaddr >= 32'h0200_0000 ? axi.awvalid : 0;
+  assign axi_jtag.awvalid = axi.awaddr < 32'h0200_0000 ? axi.awvalid : 0;
+  assign axi_soc.awaddr = axi.awaddr;
+  assign axi_soc.awid = axi.awid;
+  assign axi_soc.awlen = axi.awlen;
+  assign axi_soc.awsize = axi.awsize;
+  assign axi_soc.awburst = axi.awburst;
+  assign axi_jtag.awaddr = axi.awaddr;
+  assign axi_jtag.awid = axi.awid;
+  assign axi_jtag.awlen = axi.awlen;
+  assign axi_jtag.awsize = axi.awsize;
+  assign axi_jtag.awburst = axi.awburst;
 
-    assign axi.wready = axi.awaddr >= 32'h0200_0000 ? axi_soc.wready : axi_jtag.wready;
-    assign axi_soc.wvalid = axi.awaddr >= 32'h0200_0000 ? axi.wvalid : 0;
-    assign axi_jtag.wvalid = axi.awaddr < 32'h0200_0000 ? axi.wvalid : 0;
-    assign axi_soc.wdata = axi.wdata;
-    assign axi_soc.wstrb = axi.wstrb;
-    assign axi_soc.wlast = axi.wlast;
-    assign axi_jtag.wdata = axi.wdata;
-    assign axi_jtag.wstrb = axi.wstrb;
-    assign axi_jtag.wlast = axi.wlast;
+  assign axi.wready = axi.awaddr >= 32'h0200_0000 ? axi_soc.wready : axi_jtag.wready;
+  assign axi_soc.wvalid = axi.awaddr >= 32'h0200_0000 ? axi.wvalid : 0;
+  assign axi_jtag.wvalid = axi.awaddr < 32'h0200_0000 ? axi.wvalid : 0;
+  assign axi_soc.wdata = axi.wdata;
+  assign axi_soc.wstrb = axi.wstrb;
+  assign axi_soc.wlast = axi.wlast;
+  assign axi_jtag.wdata = axi.wdata;
+  assign axi_jtag.wstrb = axi.wstrb;
+  assign axi_jtag.wlast = axi.wlast;
 
-    assign axi_soc.bready = axi.awaddr >= 32'h0200_0000 ? axi.bready : 0;
-    assign axi_jtag.bready = axi.awaddr < 32'h0200_0000 ? axi.bready : 0;
-    assign axi.bvalid = axi.awaddr >= 32'h0200_0000 ? axi_soc.bvalid : axi_jtag.bvalid;
-    //assign axi.bresp = axi.bresp;
-    //assign axi.bid = axi.bid;
+  assign axi_soc.bready = axi.awaddr >= 32'h0200_0000 ? axi.bready : 0;
+  assign axi_jtag.bready = axi.awaddr < 32'h0200_0000 ? axi.bready : 0;
+  assign axi.bvalid = axi.awaddr >= 32'h0200_0000 ? axi_soc.bvalid : axi_jtag.bvalid;
+  //assign axi.bresp = axi.bresp;
+  //assign axi.bid = axi.bid;
 
 
-    // read channel
-    assign axi.arready = axi.araddr >= 32'h0200_0000 ? axi_soc.arready : axi_jtag.arready;
-    assign axi_soc.arvalid = axi.araddr >= 32'h0200_0000 ? axi.arvalid : 0;
-    assign axi_jtag.arvalid = axi.araddr < 32'h0200_0000 ? axi.arvalid : 0;
-    assign axi_soc.araddr = axi.araddr;
-    assign axi_soc.arid = axi.arid;
-    assign axi_soc.arlen = axi.arlen;
-    assign axi_soc.arsize = axi.arsize;
-    assign axi_soc.arburst = axi.arburst;
-    assign axi_jtag.araddr = axi.araddr;
-    assign axi_jtag.arid = axi.arid;
-    assign axi_jtag.arlen = axi.arlen;
-    assign axi_jtag.arsize = axi.arsize;
-    assign axi_jtag.arburst = axi.arburst;
+  // read channel
+  assign axi.arready = axi.araddr >= 32'h0200_0000 ? axi_soc.arready : axi_jtag.arready;
+  assign axi_soc.arvalid = axi.araddr >= 32'h0200_0000 ? axi.arvalid : 0;
+  assign axi_jtag.arvalid = axi.araddr < 32'h0200_0000 ? axi.arvalid : 0;
+  assign axi_soc.araddr = axi.araddr;
+  assign axi_soc.arid = axi.arid;
+  assign axi_soc.arlen = axi.arlen;
+  assign axi_soc.arsize = axi.arsize;
+  assign axi_soc.arburst = axi.arburst;
+  assign axi_jtag.araddr = axi.araddr;
+  assign axi_jtag.arid = axi.arid;
+  assign axi_jtag.arlen = axi.arlen;
+  assign axi_jtag.arsize = axi.arsize;
+  assign axi_jtag.arburst = axi.arburst;
 
-    assign axi_soc.rready = axi.araddr >= 32'h0200_0000 ? axi.rready : 0;
-    assign axi_jtag.rready = axi.araddr < 32'h0200_0000 ? axi.rready : 0;
-    assign axi.rvalid = axi.araddr >= 32'h0200_0000 ? axi_soc.rvalid : axi_jtag.rvalid;
-    assign axi.rdata = axi.araddr >= 32'h0200_0000 ? axi_soc.rdata : axi_jtag.rdata;
+  assign axi_soc.rready = axi.araddr >= 32'h0200_0000 ? axi.rready : 0;
+  assign axi_jtag.rready = axi.araddr < 32'h0200_0000 ? axi.rready : 0;
+  assign axi.rvalid = axi.araddr >= 32'h0200_0000 ? axi_soc.rvalid : axi_jtag.rvalid;
+  assign axi.rdata = axi.araddr >= 32'h0200_0000 ? axi_soc.rdata : axi_jtag.rdata;
 
 endmodule
 

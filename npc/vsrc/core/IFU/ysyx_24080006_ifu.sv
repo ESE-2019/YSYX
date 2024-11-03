@@ -91,23 +91,23 @@ module ysyx_24080006_ifu
     input int inst,
     input int pc,
     input int ft_pc,
-    input int type_cnt
+    input int type_cnt,
+    input int ifu_cnt
   );
   logic [31:0] ftrace, type_cnt;
+  logic [31:0] ifu_cnt;
 `endif
 
   always_ff @(posedge clock) begin  //fsm 3 for axi
     unique if (reset) begin
       axi_ifu.arvalid <= 0;
-      axi_ifu.rready <= 0;
+      axi_ifu.rready <= 1;
       ifu2idu.inst <= '0;
       pc <= RST_ADDR;
+      ifu2idu.pc <= '0;
 `ifdef SIM_MODE
       ftrace   <= RST_ADDR;
       type_cnt <= 0;
-`endif
-      ifu2idu.pc <= '0;
-`ifdef SIM_MODE
       type_cnt <= 1;
 `endif
     end else begin
@@ -115,29 +115,38 @@ module ysyx_24080006_ifu
         IDLE: begin
 `ifdef SIM_MODE
           type_cnt <= type_cnt + 1;
+          ifu_cnt  <= 1;
 `endif
           if (wbu2ifu.valid) begin
             axi_ifu.arvalid <= 1;
-            axi_ifu.rready  <= 0;
-            if (wbu2ifu.jump || wbu2ifu.branch) pc <= wbu2ifu.dnpc;
-            else pc <= pc + 32'h4;
+            axi_ifu.rready  <= 1;
+            if (wbu2ifu.jump || wbu2ifu.branch) begin
+              pc <= wbu2ifu.dnpc;
+            end else begin
+              pc <= pc + 32'h4;
+            end
           end else begin
             axi_ifu.arvalid <= 0;
-            axi_ifu.rready  <= 0;
+            axi_ifu.rready  <= 1;
           end
         end
         EXEC: begin
-          if (axi_ifu.arready) axi_ifu.arvalid <= 0;
+`ifdef SIM_MODE
+          ifu_cnt <= ifu_cnt + 1;
+`endif
+          if (axi_ifu.arready) begin
+            axi_ifu.arvalid <= 0;
+          end
           if (axi_ifu.rvalid) begin
             axi_ifu.rready <= 1;
-            ifu2idu.inst   <= axi_ifu.rdata;
+            ifu2idu.inst <= axi_ifu.rdata;
+            ifu2idu.pc <= pc;
 `ifdef SIM_MODE
-            dbg(axi_ifu.rdata, pc, (wbu2ifu.jump ? ftrace : 0), type_cnt);
+            dbg(axi_ifu.rdata, pc, (wbu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
             type_cnt <= 1;
             if (wbu2ifu.jump || wbu2ifu.branch) ftrace <= wbu2ifu.dnpc;
             else ftrace <= ftrace + 32'h4;
 `endif
-            ifu2idu.pc <= pc;
           end else begin
 `ifdef SIM_MODE
             type_cnt <= type_cnt + 1;
@@ -149,16 +158,11 @@ module ysyx_24080006_ifu
           type_cnt <= type_cnt + 1;
 `endif
           axi_ifu.arvalid <= 0;
-          axi_ifu.rready  <= 0;
+          axi_ifu.rready  <= 1;
         end
       endcase
     end
   end
-
-  assign axi_ifu.arid    = 4'h0;
-  assign axi_ifu.arlen   = 8'h0;
-  assign axi_ifu.arsize  = 3'h2;
-  assign axi_ifu.arburst = 2'h1;
 
 `ifdef SOC_MODE
   function automatic logic INSIDE(input logic [31:0] addr, left, right);

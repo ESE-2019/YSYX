@@ -72,6 +72,11 @@ module ysyx_24080006 (
     output logic        io_slave_rlast,
     output logic [ 3:0] io_slave_rid
 );
+  import ysyx_24080006_pkg::*;
+  logic [IC_N-1:0] ic_index;
+  icache_t ic_rdata, ic_wdata;
+  logic ic_we;
+  ysyx_24080006_icache_sram IC_SRAM (.*);
 
 `ifdef NPC_MODE
   //axi

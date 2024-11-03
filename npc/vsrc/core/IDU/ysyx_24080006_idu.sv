@@ -4,10 +4,10 @@ module ysyx_24080006_idu
     input logic clock,
     input logic reset,
 
-    output logic [ 4:0] rs1_addr,
-    output logic [ 4:0] rs2_addr,
-    input  logic [31:0] rs1_val,
-    input  logic [31:0] rs2_val,
+    output logic [REG_WIDTH-1:0] rs1_addr,
+    output logic [REG_WIDTH-1:0] rs2_addr,
+    input logic [31:0] rs1_val,
+    input logic [31:0] rs2_val,
 
     output logic [11:0] csr_addr,
     input  logic [31:0] csr_rdata,
@@ -91,13 +91,13 @@ module ysyx_24080006_idu
 
   inst_op_e inst_op;
   logic [2:0] funct3;
-  logic [4:0] rd_addr;
+  logic [REG_WIDTH-1:0] rd_addr;
 
   assign inst_op = inst_op_e'(ifu2idu.inst[6:0]);
   assign funct3 = ifu2idu.inst[14:12];
-  assign rs1_addr = ifu2idu.inst[19:15];
-  assign rs2_addr = ifu2idu.inst[24:20];
-  assign rd_addr = ifu2idu.inst[11:7];
+  assign rs1_addr = ifu2idu.inst[15+REG_WIDTH-1:15];
+  assign rs2_addr = ifu2idu.inst[20+REG_WIDTH-1:20];
+  assign rd_addr = ifu2idu.inst[7+REG_WIDTH-1:7];
 
   assign csr_addr = ( ifu2idu.inst == 32'b0000000_00000_00000_000_00000_11100_11 ) ? 12'h305 : // ecall mtvec
       (ifu2idu.inst == 32'b0011000_00010_00000_000_00000_11100_11) ? 12'h341 :  // mret mepc

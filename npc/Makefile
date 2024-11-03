@@ -33,6 +33,8 @@ VSRCS += $(shell find $(abspath ./vsrc) -name "*.svh")
 VSRCS += $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
+FMT_VSRCS := $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv" -or -name "*.svh")
+
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
@@ -84,11 +86,14 @@ run: $(BIN)
 	@$^
 	
 syn: $(VSRCS)
-	verilator --lint-only --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv
-	verilator -E --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv > $(BUILD_DIR)/top.v
+	verilator --lint-only --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv ./vsrc/core/*/*.sv
+	verilator -E --top-module top ./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv ./vsrc/core/*/*.sv> $(BUILD_DIR)/top.v
 	sed -i '/^`line/d' $(BUILD_DIR)/top.v
 	verible-verilog-format --inplace $(BUILD_DIR)/top.v
 
+format: $(FMT_VSRCS)
+	verible-verilog-format --inplace $(FMT_VSRCS)
+	
 clean:
 	rm -rf $(BUILD_DIR)
 

@@ -4,9 +4,9 @@ module ysyx_24080006_wbu
     input logic clock,
     input logic reset,
 
-    output logic [ 4:0] rd,
-    output logic [31:0] wdata,
-    output logic        we,
+    output logic [REG_WIDTH-1:0] rd,
+    output logic [         31:0] wdata,
+    output logic                 reg_we,
 
     output logic        csr_we,
     output logic [11:0] csr_waddr,
@@ -84,7 +84,7 @@ module ysyx_24080006_wbu
     unique if (reset) begin
       rd <= '0;
       wdata <= '0;
-      we <= '0;
+      reg_we <= '0;
       csr_we <= '0;
       csr_waddr <= '0;
       csr_wdata <= '0;
@@ -93,11 +93,11 @@ module ysyx_24080006_wbu
         if (lsu2wbu.wb) begin  // TODO unnecessary?
           rd <= lsu2wbu.rd_addr;
           wdata <= lsu2wbu.alu_res;
-          we <= lsu2wbu.wb;
+          reg_we <= lsu2wbu.wb;
         end else if (lsu2wbu.csr_we) begin
           rd <= lsu2wbu.rd_addr;
           wdata <= lsu2wbu.csr_wdata;
-          we <= 1'b1;
+          reg_we <= 1'b1;
           csr_we <= lsu2wbu.csr_we;
           csr_waddr <= lsu2wbu.csr_addr;
           csr_wdata <= lsu2wbu.alu_res;
@@ -108,7 +108,7 @@ module ysyx_24080006_wbu
         end else begin
           rd <= '0;
           wdata <= '0;
-          we <= '0;
+          reg_we <= '0;
           csr_we <= '0;
           csr_waddr <= '0;
           csr_wdata <= '0;
@@ -116,7 +116,7 @@ module ysyx_24080006_wbu
       end else begin
         rd <= '0;
         wdata <= '0;
-        we <= '0;
+        reg_we <= '0;
         csr_we <= '0;
         csr_waddr <= '0;
         csr_wdata <= '0;
