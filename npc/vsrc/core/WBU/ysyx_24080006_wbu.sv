@@ -129,12 +129,10 @@ module ysyx_24080006_wbu
       wbu2ifu.dnpc <= '0;
       wbu2ifu.jump <= '0;
       wbu2ifu.branch <= '0;
-      wbu2ifu.rd_addr <= '0;
     end else if (curr == IDLE && lsu2wbu.valid) begin
       wbu2ifu.dnpc <= lsu2wbu.dnpc;
       wbu2ifu.jump <= lsu2wbu.jump;
       wbu2ifu.branch <= lsu2wbu.branch;
-      wbu2ifu.rd_addr <= (lsu2wbu.wb) ? lsu2wbu.rd_addr : '0;
     end
 
   end

@@ -1,8 +1,8 @@
 module ysyx_24080006_alu
   import ysyx_24080006_pkg::*;
 (
-    input logic [31:0] src1,
-    input logic [31:0] src2,
+    input logic [31:0] alu_src1,
+    input logic [31:0] alu_src2,
     input alu_op_e alu_op,
     output logic [31:0] alu_res
 );
@@ -11,8 +11,8 @@ module ysyx_24080006_alu
   logic [33:0] add_res_t;
   logic [32:0] srcA, srcB, srcB_t;
   logic [31:0] add_res;
-  assign srcA   = {src1, 1'b1};
-  assign srcB_t = {src2, 1'b0};
+  assign srcA   = {alu_src1, 1'b1};
+  assign srcB_t = {alu_src2, 1'b0};
   always_comb begin
     srcB = srcB_t;
     case (alu_op)
@@ -38,15 +38,15 @@ module ysyx_24080006_alu
   //shift
   logic [31:0] shift_res;
   logic [ 4:0] shift;
-  assign shift = src2[4:0];
+  assign shift = alu_src2[4:0];
 
   logic [31:0] shift_src;
 
   always_comb begin
-    shift_src = src1;
+    shift_src = alu_src1;
     case (alu_op)
-      SLL: for (int i = 0; i < 32; i++) shift_src[i] = src1[31-i];
-      SRL, SRA: shift_src = src1;
+      SLL: for (int i = 0; i < 32; i++) shift_src[i] = alu_src1[31-i];
+      SRL, SRA: shift_src = alu_src1;
       default: ;
     endcase
   end
@@ -58,11 +58,11 @@ module ysyx_24080006_alu
   //and or xor
   logic [31:0] bit_res;
   always_comb begin
-    bit_res = src1 & src2;
+    bit_res = alu_src1 & alu_src2;
     case (alu_op)
-      AND: bit_res = src1 & src2;
-      OR: bit_res = src1 | src2;
-      XOR: bit_res = src1 ^ src2;
+      AND: bit_res = alu_src1 & alu_src2;
+      OR: bit_res = alu_src1 | alu_src2;
+      XOR: bit_res = alu_src1 ^ alu_src2;
       default: ;
     endcase
   end

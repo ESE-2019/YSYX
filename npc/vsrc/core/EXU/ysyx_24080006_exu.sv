@@ -65,9 +65,9 @@ module ysyx_24080006_exu
 
   ysyx_24080006_alu ALU (
       .*,
-      .src1  (idu2exu.alu_src1),
-      .src2  (idu2exu.alu_src2),
-      .alu_op(idu2exu.alu_op)
+      .alu_src1(idu2exu.alu_src1),
+      .alu_src2(idu2exu.alu_src2),
+      .alu_op  (idu2exu.alu_op)
   );
 
   wire branch = idu2exu.branch & alu_res[0];

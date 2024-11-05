@@ -11,10 +11,11 @@ static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
 
-#define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__REG__DOT__regfile
-#define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__ICACHE__DOT__hit_num
-#define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__ICACHE__DOT__skip_num
-#define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__ICACHE__DOT__miss_num
+
+#define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__REG__DOT__regfile
+#define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__hit_num
+#define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__skip_num
+#define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__miss_num
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"
@@ -520,7 +521,7 @@ static void print_ipc()
 {
     double num;
 
-    printf("\033[1;93mifu%8ld exu%8ld   inst    cycle     cpi\n\033[0m", ipc_inst, exu_cnt);
+    printf("\033[1;93m                          inst    cycle     cpi\n\033[0m", ipc_inst);
 
     num = 100 * (double)compute_cnt / (double)ipc_inst;
     printf("\033[1;33m%.3f%% compute_cnt   %8ld %8ld  ", num, compute_cnt, compute_cycle);
