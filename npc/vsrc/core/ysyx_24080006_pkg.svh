@@ -33,8 +33,8 @@ package ysyx_24080006_pkg;
   } alu_op_e;
 
   typedef struct packed {
-    alu_a_e alu_a;
-    alu_b_e alu_b;
+    alu_a_e  alu_a;
+    alu_b_e  alu_b;
     alu_op_e alu_op;
   } alu_set_t;
 
@@ -106,6 +106,8 @@ package ysyx_24080006_pkg;
     logic [1:0] lsu_size;
   } lsu_set_t;
 
+  parameter int unsigned REG_WIDTH = 4;
+
   typedef struct packed {
     logic [REG_WIDTH-1:0] rs1_addr;
     logic [REG_WIDTH-1:0] rs2_addr;
@@ -126,7 +128,7 @@ package ysyx_24080006_pkg;
     logic mret;
   } decoder_t;
 
-  parameter int unsigned REG_WIDTH = 4;
+
 
   typedef struct packed {
     logic valid;
@@ -155,7 +157,7 @@ package ysyx_24080006_pkg;
 
   } stage_t;
 
-  parameter int unsigned IC_M = 2;
+  parameter int unsigned IC_M = 2;  // addr[1:0]
   parameter int unsigned IC_N = 4;
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
 

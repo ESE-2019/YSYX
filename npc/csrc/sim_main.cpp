@@ -252,13 +252,13 @@ static void get_elf_function(const char *filename)
         close(fd);
         return;
     }
-    Elf32_Shdr *shdr = (Elf32_Shdr *)(map + ehdr->e_shoff);
+    Elf32_Shdr *shdr = (Elf32_Shdr *)(uintptr_t(map) + ehdr->e_shoff);
     for (int i = 0; i < ehdr->e_shnum; i++)
     {
         if (shdr[i].sh_type == SHT_SYMTAB || shdr[i].sh_type == SHT_DYNSYM)
         {
-            Elf32_Sym *sym = (Elf32_Sym *)(map + shdr[i].sh_offset);
-            char *strtab = (char *)(map + shdr[shdr[i].sh_link].sh_offset);
+            Elf32_Sym *sym = (Elf32_Sym *)(uintptr_t(map) + shdr[i].sh_offset);
+            char *strtab = (char *)(uintptr_t(map) + shdr[shdr[i].sh_link].sh_offset);
             for (int j = 0; j < shdr[i].sh_size / shdr[i].sh_entsize; j++)
             {
                 if (ELF32_ST_TYPE(sym[j].st_info) == STT_FUNC)
@@ -521,7 +521,7 @@ static void print_ipc()
 {
     double num;
 
-    printf("\033[1;93m                          inst    cycle     cpi\n\033[0m", ipc_inst);
+    printf("\033[1;93m                          inst    cycle     cpi\n\033[0m");
 
     num = 100 * (double)compute_cnt / (double)ipc_inst;
     printf("\033[1;33m%.3f%% compute_cnt   %8ld %8ld  ", num, compute_cnt, compute_cycle);

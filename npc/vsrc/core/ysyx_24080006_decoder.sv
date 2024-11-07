@@ -175,9 +175,15 @@ module ysyx_24080006_decoder
         if (inst[14:12] == 3'b000) begin
           if ({inst[19:15], inst[11:7]} == '0) begin
             unique case (inst[31:20])
-              ECALL: idu.ecall = 1;
-              EBREAK: inst_err = 1;  // use DPI-C to end sim
-              MRET: idu.mret = 1;
+              ECALL: begin
+                idu.ecall = 1;
+                idu.csr_set.csr_name = mtvec;
+              end
+              EBREAK:  inst_err = 1;  // use DPI-C to end sim
+              MRET: begin
+                idu.mret = 1;
+                idu.csr_set.csr_name = mepc;
+              end
               default: inst_err = 1;
             endcase
           end else begin

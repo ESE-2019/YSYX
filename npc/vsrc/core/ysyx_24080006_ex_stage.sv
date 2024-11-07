@@ -149,7 +149,7 @@ module ysyx_24080006_ex_stage
                 axi_lsu.wvalid <= 1;
                 axi_lsu.bready <= 0;
                 axi_lsu.awaddr <= alu_c;
-                axi_lsu.wdata <= rs2_data;// << ({3'b0, alu_c[1:0]} << 3);
+                axi_lsu.wdata <= rs2_data;  // << ({3'b0, alu_c[1:0]} << 3);
                 axi_lsu.awsize <= {1'b0, decoder.lsu_set.lsu_size};
                 //axi_lsu.wstrb <= WSTRB_LUT[decoder.lsu_set.lsu_size] << alu_c[1:0];
                 reg_we <= '0;
@@ -228,6 +228,14 @@ module ysyx_24080006_ex_stage
   ysyx_24080006_alu ALU (
       .*,
       .alu_op(decoder.alu_set.alu_op)
+  );
+  ysyx_24080006_csr CSRU (
+      .*,
+      .ecall(decoder.ecall),
+      .mret(decoder.mret),
+      .pc(ifu2exu.pc),
+      .csr_set(decoder.csr_set),
+      .csr_wdata(rs1_data)
   );
 
   always_comb begin
