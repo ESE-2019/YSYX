@@ -21,11 +21,7 @@ module ysyx_24080006_core
   stage_t ifu2exu;
 
   ysyx_24080006_axi axi_ifu (), axi_icache (), axi_lsu ();
-  // ysyx_24080006_arb ARB (
-  //     .*,
-  //     .axi_ifu(axi_icache)
-  // );
-  // ysyx_24080006_icache ICACHE (.*);
+  decoder_t decoder;
 
   ysyx_24080006_arb ARB (.*);
   ysyx_24080006_if_stage IF (.*);

@@ -5,7 +5,7 @@ module ysyx_24080006_arb (
     ysyx_24080006_axi.slave axi_lsu,
     ysyx_24080006_axi.master axi
 );
-
+  import ysyx_24080006_pkg::*;
   //write channel
   assign axi_lsu.awready = axi.awready;
   assign axi.awvalid     = axi_lsu.awvalid;
@@ -17,8 +17,8 @@ module ysyx_24080006_arb (
 
   assign axi_lsu.wready  = axi.wready;
   assign axi.wvalid      = axi_lsu.wvalid;
-  assign axi.wdata       = axi_lsu.wdata;
-  assign axi.wstrb       = axi_lsu.wstrb;
+  assign axi.wdata       = axi_lsu.wdata << ({3'b0, axi_lsu.awaddr[1:0]} << 3);
+  assign axi.wstrb       = WSTRB_LUT[axi_lsu.awsize[1:0]] << axi_lsu.awaddr[1:0];  //axi_lsu.awsize;
   assign axi.wlast       = axi_lsu.wlast;
 
   assign axi.bready      = axi_lsu.bready;

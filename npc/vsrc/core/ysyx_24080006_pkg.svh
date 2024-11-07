@@ -32,6 +32,12 @@ package ysyx_24080006_pkg;
     BGEU
   } alu_op_e;
 
+  typedef struct packed {
+    alu_a_e alu_a;
+    alu_b_e alu_b;
+    alu_op_e alu_op;
+  } alu_set_t;
+
   typedef enum logic [6:0] {
     LUI    = 7'b0110111,
     AUIPC  = 7'b0010111,
@@ -77,7 +83,7 @@ package ysyx_24080006_pkg;
     mcause,
     mvendorid,
     marchid
-  } csr_e;
+  } csr_name_e;
 
   typedef enum logic [1:0] {
     READ,
@@ -87,25 +93,29 @@ package ysyx_24080006_pkg;
   } csr_op_e;
 
   typedef struct packed {
+    logic csr_enable;
+    logic csr_uimm;
+    csr_name_e csr_name;
+    csr_op_e csr_op;
+  } csr_set_t;
+
+  typedef struct packed {
+    logic lsu_enable;
+    logic lsu_write;
+    logic lsu_sext;
+    logic [1:0] lsu_size;
+  } lsu_set_t;
+
+  typedef struct packed {
     logic [REG_WIDTH-1:0] rs1_addr;
     logic [REG_WIDTH-1:0] rs2_addr;
     logic [REG_WIDTH-1:0] rd_addr;
 
     logic [31:0] imm;
 
-    alu_a_e  alu_a;
-    alu_b_e  alu_b;
-    alu_op_e alu_op;
-
-    logic csr_en;
-    logic csr_uimm;
-    csr_e csr;
-    csr_op_e csr_op;
-
-    logic load;
-    logic store;
-    logic [1:0] strb;
-    logic sext;
+    alu_set_t alu_set;
+    csr_set_t csr_set;
+    lsu_set_t lsu_set;
 
     logic reg_we;
 

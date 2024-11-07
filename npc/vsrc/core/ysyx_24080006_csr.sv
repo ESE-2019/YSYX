@@ -1,12 +1,10 @@
 module ysyx_24080006_csr (
     input logic clock,
     input logic reset,
-    input logic csr_we,
 
-    input logic [31:0] mepc_val,
-    input logic        mepc_en,
-
-    input  logic [11:0] csr_addr,
+    input csr_set_t csr_set,
+    input logic [31:0] pc,
+    
     input  logic [11:0] csr_waddr,
     input  logic [31:0] csr_wdata,
     output logic [31:0] csr_rdata

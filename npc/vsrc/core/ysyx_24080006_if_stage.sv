@@ -129,7 +129,6 @@ module ysyx_24080006_if_stage
   end  // fsm 3 for handshake
 
   always_ff @(posedge clock) begin  // fsm 3 for axi
-    decoder <= idu;
     if (reset) begin
       axi_ifu.arvalid <= 1'b0;
       axi_ifu.rready <= 1'b0;
@@ -137,6 +136,7 @@ module ysyx_24080006_if_stage
       ic_wdata <= '0;
       pc <= RST_ADDR;
       ifu2exu.pc <= '0;
+      decoder <= idu;
     end else begin
       unique case (curr)
         IDLE: begin
@@ -164,6 +164,7 @@ module ysyx_24080006_if_stage
         CHECK: begin
           if (hit) begin
             ifu2exu.pc <= pc;
+            decoder <= idu;
             axi_ifu.arvalid <= 1'b0;
             axi_ifu.rready <= 1'b0;
             ic_we <= 1'b0;
@@ -180,6 +181,7 @@ module ysyx_24080006_if_stage
           if (axi_ifu.rvalid) begin
             axi_ifu.rready <= 1'b1;
             ifu2exu.pc <= pc;
+            decoder <= idu;
             if (!skip_icache) begin
               ic_we <= 1'b1;
               ic_wdata <= {1'b1, tag, axi_ifu.rdata};
