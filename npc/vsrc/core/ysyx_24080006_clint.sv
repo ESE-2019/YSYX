@@ -3,13 +3,16 @@ module ysyx_24080006_clint (
     input logic reset,
     ysyx_24080006_axi.slave axi_clint
 );
-  logic [63:0] mtime;
+  logic [31:0] mtime_low_d, mtime_low_q, mtime_high_d, mtime_high_q;
+  assign {mtime_high_d, mtime_low_d} = {mtime_high_q, mtime_low_q} + 64'b1;
   logic [31:0] dout;
   always_ff @(posedge clock) begin
     if (reset) begin
-      mtime <= '0;
+      mtime_high_q <= 0;
+      mtime_low_q  <= 0;
     end else begin
-      mtime <= mtime + 64'b1;
+      mtime_high_q <= mtime_high_d;
+      mtime_low_q  <= mtime_low_d;
     end
   end
   always_ff @(posedge clock) begin
@@ -48,8 +51,8 @@ module ysyx_24080006_clint (
   always_comb begin
     dout = '0;
     unique case (axi_clint.araddr[15:0])
-      16'hBFF8: dout = mtime[31:0];
-      16'hBFFc: dout = mtime[63:32];
+      16'hBFF8: dout = mtime_low_q;
+      16'hBFFc: dout = mtime_high_q;
       default:  ;
     endcase
   end

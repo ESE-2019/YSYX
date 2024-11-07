@@ -12,20 +12,17 @@ module ysyx_24080006_ex_stage
     ysyx_24080006_axi.master axi_lsu
 );
 
+  logic [          2:0] funct3;
+  logic [         31:0] dnpc;
 
-  logic [31:0] immB, immI, immJ, immS, immU;
-  inst_op_e                 inst_op;
-  logic     [          2:0] funct3;
-  logic     [         31:0] dnpc;
-
-  logic                     reg_we;
-  logic     [REG_WIDTH-1:0] rs1_addr;
-  logic     [REG_WIDTH-1:0] rs2_addr;
-  logic     [REG_WIDTH-1:0] rd;
-  logic     [         31:0] wdata;
-  logic     [         31:0] rs1_val;
-  logic     [         31:0] rs2_val;
-  logic     [REG_WIDTH-1:0] rd_addr;
+  logic                 reg_we;
+  logic [REG_WIDTH-1:0] rs1_addr;
+  logic [REG_WIDTH-1:0] rs2_addr;
+  logic [REG_WIDTH-1:0] rd;
+  logic [         31:0] wdata;
+  logic [         31:0] rs1_val;
+  logic [         31:0] rs2_val;
+  logic [REG_WIDTH-1:0] rd_addr;
   ysyx_24080006_reg REG (.*);
   logic        csr_we;
   logic [31:0] mepc_val;
@@ -44,11 +41,11 @@ module ysyx_24080006_ex_stage
   logic [31:0] ldata;
 
   wire ecall = ifu2exu.inst == ECALL;
-  wire csr_we_flag = inst_op == System && (funct3 != 3'b0);
-  wire reg_we_flag = inst_op inside {Auipc, Lui, Jal, Jalr, I_type, R_type, Load};
-  assign wdata = csr_we_flag ? csr_rdata : inst_op == Load ? ldata : alu_res;
-  wire jump = (inst_op inside {Jal, Jalr}) || (inst_op == System && !csr_we_flag);
-  wire branch = (inst_op == Branch) && alu_res[0];
+  wire csr_we_flag = ifu2exu.inst_op == System && (funct3 != 3'b0);
+  wire reg_we_flag = ifu2exu.inst_op inside {Auipc, Lui, Jal, Jalr, I_type, R_type, Load};
+  assign wdata = csr_we_flag ? csr_rdata : ifu2exu.inst_op == Load ? ldata : alu_res;
+  wire jump = (ifu2exu.inst_op inside {Jal, Jalr}) || (ifu2exu.inst_op == System && !csr_we_flag);
+  wire branch = (ifu2exu.inst_op == Branch) && alu_res[0];
   assign csr_wdata = ecall ? 32'd11 : alu_res;
   assign csr_waddr = ecall ? 12'h342 : csr_addr;
 
@@ -67,7 +64,7 @@ module ysyx_24080006_ex_stage
     unique case (curr)
       IDLE: begin
         if (ifu2exu.valid) begin
-          if (inst_op inside {Load, Store}) begin
+          if (ifu2exu.inst_op inside {Load, Store}) begin
             next = EXEC;
           end else begin
             next = WAIT;
@@ -93,7 +90,7 @@ module ysyx_24080006_ex_stage
       unique case (curr)
         IDLE: begin
           if (ifu2exu.valid) begin
-            if (inst_op inside {Load, Store}) begin
+            if (ifu2exu.inst_op inside {Load, Store}) begin
               exu2ifu_ready <= 0;
               exu2ifu.valid <= 0;
             end else begin  // bypass
@@ -192,7 +189,7 @@ module ysyx_24080006_ex_stage
 `ifdef SIM_MODE
             lsu_cnt <= 1;
 `endif
-            if (inst_op == Load) begin  // load / read
+            if (ifu2exu.inst_op == Load) begin  // load / read
               axi_lsu.arvalid <= 1;
               axi_lsu.rready <= 0;
               axi_lsu.awvalid <= 0;
@@ -204,7 +201,7 @@ module ysyx_24080006_ex_stage
               Mr_param_funct3 <= funct3;
               reg_we <= '0;
               csr_we <= '0;
-            end else if (inst_op == Store) begin  // store / write
+            end else if (ifu2exu.inst_op == Store) begin  // store / write
               axi_lsu.arvalid <= 0;
               axi_lsu.rready <= 0;
               axi_lsu.awvalid <= 1;
@@ -285,18 +282,6 @@ module ysyx_24080006_ex_stage
     end
   end
 
-  assign immB = {
-    {20{ifu2exu.inst[31]}}, ifu2exu.inst[7], ifu2exu.inst[30:25], ifu2exu.inst[11:8], 1'b0
-  };
-  assign immI = {{20{ifu2exu.inst[31]}}, ifu2exu.inst[31:20]};
-  assign immJ = {
-    {12{ifu2exu.inst[31]}}, ifu2exu.inst[19:12], ifu2exu.inst[20], ifu2exu.inst[30:21], 1'b0
-  };
-  assign immS = {{20{ifu2exu.inst[31]}}, ifu2exu.inst[31:25], ifu2exu.inst[11:7]};
-  assign immU = {ifu2exu.inst[31:12], 12'b0};
-
-
-  assign inst_op = inst_op_e'(ifu2exu.inst[6:0]);
   assign funct3 = ifu2exu.inst[14:12];
   assign rs1_addr = ifu2exu.inst[15+:REG_WIDTH];
   assign rs2_addr = ifu2exu.inst[20+:REG_WIDTH];
@@ -311,17 +296,17 @@ module ysyx_24080006_ex_stage
 
 
   always_comb begin
-    unique case (inst_op)
-      Jal: dnpc = ifu2exu.pc + immJ;
-      Jalr: dnpc = (rs1_val + immI) & 32'hffff_fffe;
-      Branch: dnpc = ifu2exu.pc + immB;
+    unique case (ifu2exu.inst_op)
+      Jal: dnpc = ifu2exu.pc + ifu2exu.imm;
+      Jalr: dnpc = (rs1_val + ifu2exu.imm) & 32'hffff_fffe;
+      Branch: dnpc = ifu2exu.pc + ifu2exu.imm;
       System: dnpc = csr_rdata;
       default: dnpc = csr_rdata;
     endcase
   end
 
   always_comb begin
-    unique case (inst_op)
+    unique case (ifu2exu.inst_op)
       Jal, Jalr, Auipc: alu_src1 = ifu2exu.pc;
       Lui:              alu_src1 = '0;
       default:          alu_src1 = rs1_val;
@@ -329,10 +314,8 @@ module ysyx_24080006_ex_stage
   end
 
   always_comb begin
-    unique case (inst_op)
-      Auipc, Lui: alu_src2 = immU;
-      Store: alu_src2 = immS;
-      Load, I_type: alu_src2 = immI;
+    unique case (ifu2exu.inst_op)
+      Auipc, Lui, Store, Load, I_type: alu_src2 = ifu2exu.imm;
       Branch, R_type: alu_src2 = rs2_val;
       Jal, Jalr: alu_src2 = 32'h4;
       System:
@@ -344,7 +327,7 @@ module ysyx_24080006_ex_stage
 
   always_comb begin
     alu_op = ADD;
-    unique case (inst_op)
+    unique case (ifu2exu.inst_op)
       Branch:
       unique case (funct3)
         3'b000:  alu_op = BEQ;
@@ -420,7 +403,7 @@ module ysyx_24080006_ex_stage
   import "DPI-C" function void INST_CNT(input int type_code);
   always_ff @(posedge clock) begin
     if (curr == IDLE && ifu2exu.valid)
-      case (inst_op)
+      case (ifu2exu.inst_op)
 
         Auipc, Lui, R_type, I_type: INST_CNT(0);
 

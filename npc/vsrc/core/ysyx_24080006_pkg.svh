@@ -1,5 +1,18 @@
 package ysyx_24080006_pkg;
 
+  typedef enum logic [1:0] {
+    RS1,
+    PC,
+    CONST0
+  } alu_a_e;
+
+  typedef enum logic [1:0] {
+    IMM,
+    RS2,
+    CONST4,
+    CSR
+  } alu_b_e;
+
   typedef enum logic [3:0] {
     ADD,
     SUB,
@@ -20,17 +33,88 @@ package ysyx_24080006_pkg;
   } alu_op_e;
 
   typedef enum logic [6:0] {
-    Branch = 7'b1100011,
-    I_type = 7'b0010011,  //except Jalr and Load
-    R_type = 7'b0110011,
-    Store  = 7'b0100011,
-    Load   = 7'b0000011,
-    Jal    = 7'b1101111,
-    Jalr   = 7'b1100111,
-    Lui    = 7'b0110111,
-    Auipc  = 7'b0010111,
-    System = 7'b1110011   //ebreak, ecall, csr
+    LUI    = 7'b0110111,
+    AUIPC  = 7'b0010111,
+    OP     = 7'b0110011,
+    OP_IMM = 7'b0010011,
+    LOAD   = 7'b0000011,
+    STORE  = 7'b0100011,
+    JAL    = 7'b1101111,
+    JALR   = 7'b1100111,
+    BRANCH = 7'b1100011,
+    SYSTEM = 7'b1110011   //EBREAK, ECALL, CSR, MRET
+  } opcode_e;
+
+  typedef enum logic [3:0] {
+    System,  //ebreak, ecall, csr
+    Branch,
+    I_type,  //except Jalr and Load
+    R_type,
+    Store,
+    Load,
+    Jal,
+    Jalr,
+    Lui,
+    Auipc
   } inst_op_e;
+
+  typedef enum logic [11:0] {
+    ECALL     = 12'h000,
+    EBREAK    = 12'h001,
+    MSTATUS   = 12'h300,
+    MRET      = 12'h302,
+    MTVEC     = 12'h305,
+    MEPC      = 12'h341,
+    MCAUSE    = 12'h342,
+    MVENDORID = 12'hf11,
+    MARCHID   = 12'hf12
+  } csr_addr_e;
+
+  typedef enum logic [2:0] {
+    mstatus,
+    mtvec,
+    mepc,
+    mcause,
+    mvendorid,
+    marchid
+  } csr_e;
+
+  typedef enum logic [1:0] {
+    READ,
+    WRITE,
+    SET,
+    CLEAR
+  } csr_op_e;
+
+  typedef struct packed {
+    logic [REG_WIDTH-1:0] rs1_addr;
+    logic [REG_WIDTH-1:0] rs2_addr;
+    logic [REG_WIDTH-1:0] rd_addr;
+
+    logic [31:0] imm;
+
+    alu_a_e  alu_a;
+    alu_b_e  alu_b;
+    alu_op_e alu_op;
+
+    logic csr_en;
+    logic csr_uimm;
+    csr_e csr;
+    csr_op_e csr_op;
+
+    logic load;
+    logic store;
+    logic [1:0] strb;
+    logic sext;
+
+    logic reg_we;
+
+    logic jal;
+    logic jalr;
+    logic branch;
+    logic ecall;
+    logic mret;
+  } decoder_t;
 
   parameter int unsigned REG_WIDTH = 4;
 
@@ -38,6 +122,8 @@ package ysyx_24080006_pkg;
     logic valid;
     logic [31:0] pc, inst, dnpc;
     inst_op_e inst_op;
+
+    logic [31:0] imm;
 
     logic [31:0] immB, immI, immJ, immS, immU;
 
@@ -59,13 +145,6 @@ package ysyx_24080006_pkg;
 
   } stage_t;
 
-  typedef enum logic [1:0] {
-    IDLE,
-    EXEC,
-    WAIT
-  } fsm_e;
-
-
   parameter int unsigned IC_M = 2;
   parameter int unsigned IC_N = 4;
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
@@ -77,7 +156,11 @@ package ysyx_24080006_pkg;
   } icache_t;
 
 
-  parameter logic [31:0] ECALL = 32'b0000000_00000_00000_000_00000_11100_11;
+  //parameter logic [31:0] ECALL = 32'b0000000_00000_00000_000_00000_11100_11;
+  parameter logic [31:0] EBREAK_INST = 32'b0000000_00001_00000_000_00000_11100_11;
+  //parameter logic [31:0] MRET = 32'b0011000_00010_00000_000_00000_11100_11;
+
+
 `ifdef SOC_MODE
   parameter RST_ADDR = 32'h3000_0000 - 32'h4;
 `else
