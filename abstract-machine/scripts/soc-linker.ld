@@ -9,7 +9,7 @@ PHDRS {
     }
 MEMORY {
   FLASH (rx)  : ORIGIN = 0x30000000, LENGTH = 16M - 1
-  SDRAM (rwx) : ORIGIN = 0x80000000, LENGTH = 32M - 1
+  SDRAM (rwx) : ORIGIN = 0xa0000000, LENGTH = 64M - 1
   SRAM  (rwx) : ORIGIN = 0x0f000000, LENGTH =  8K - 1
 }
 

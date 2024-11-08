@@ -1,7 +1,7 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
 COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32e_zicsr -mabi=ilp32e
 CFLAGS        += $(COMMON_CFLAGS) -static -fdata-sections -ffunction-sections
-ASFLAGS       += $(COMMON_CFLAGS) -O2 -Os
+ASFLAGS       += $(COMMON_CFLAGS) -O3
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --no-gc-sections -e _start
@@ -33,7 +33,7 @@ insert-arg: image
 image: image-dep
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
-	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
+	$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
 	make -C $(NPC_HOME) sim SIM_IMG=$(IMAGE).bin SIM_FLAGS=$(SIM_FLAGS) SIM_MODE="-DSOC_MODE=1"

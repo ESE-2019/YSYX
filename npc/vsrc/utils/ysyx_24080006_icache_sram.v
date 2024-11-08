@@ -10,6 +10,7 @@ module ysyx_24080006_icache_sram
 );
   icache_t Memory[IC_2];
   always @(posedge clock) begin
+    //ic_rdata <= Memory[ic_index];
     if (reset) begin
       foreach (Memory[i]) Memory[i] <= '0;
     end else begin

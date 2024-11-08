@@ -41,7 +41,11 @@ void init_isa()
 {
 /* Load built-in image. */
 #ifndef CONFIG_TARGET_SHARE
+#ifdef CONFIG_CACHESIM
+  memcpy(flash_guest_to_host(RESET_VECTOR), img, sizeof(img));
+#else
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+#endif
 #endif
   /* Initialize this virtual computer system. */
   restart();

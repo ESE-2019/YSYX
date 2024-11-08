@@ -47,5 +47,8 @@ clear:
 	rm -rf $(AM_HOME)/klib/build/
 	rm -rf $(NEMU_HOME)/build/
 	rm -rf $(NPC_HOME)/build/
+	make -C $(YSYX_TEST_HOME) clean
+	rm -rf $(AM_HOME)/../rt-thread-am/bsp/abstract-machine/build/
+
 
 .PHONY: .git_commit .clean_index _default clear

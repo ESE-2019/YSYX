@@ -230,7 +230,8 @@ module ysyx_24080006_if_stage
   function automatic logic INSIDE_MEM(input logic [31:0] addr);
     INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
-        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff);  // SDRAM
+        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
+        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff);  // SDRAM
   endfunction
   int hit_num = 0;
   int skip_num = 0;

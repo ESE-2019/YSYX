@@ -46,13 +46,11 @@ typedef uint16_t ioaddr_t;
 
 #include <debug.h>
 
-#ifdef CONFIG_TARGET_SHARE
 #define SOC_SRAM_MBASE 0x0f000000
 #define SOC_SRAM_MSIZE 0x2000
 #define SOC_FLASH_MBASE 0x30000000
 #define SOC_FLASH_MSIZE 0x01000000
 #define SOC_SDRAM_MBASE 0xa0000000
 #define SOC_SDRAM_MSIZE 0x02000000
-#endif
 
 #endif

@@ -49,19 +49,6 @@ package ysyx_24080006_pkg;
     JALR   = 7'b1100111,
     BRANCH = 7'b1100011,
     SYSTEM = 7'b1110011   //EBREAK, ECALL, CSR, MRET
-  } opcode_e;
-
-  typedef enum logic [3:0] {
-    System,  //ebreak, ecall, csr
-    Branch,
-    I_type,  //except Jalr and Load
-    R_type,
-    Store,
-    Load,
-    Jal,
-    Jalr,
-    Lui,
-    Auipc
   } inst_op_e;
 
   typedef enum logic [11:0] {
@@ -106,7 +93,11 @@ package ysyx_24080006_pkg;
     logic [1:0] lsu_size;
   } lsu_set_t;
 
+`ifdef SIM_MODE
+  parameter int unsigned REG_WIDTH = 5;
+`else
   parameter int unsigned REG_WIDTH = 4;
+`endif  
 
   typedef struct packed {
     logic [REG_WIDTH-1:0] rs1_addr;
@@ -128,12 +119,9 @@ package ysyx_24080006_pkg;
     logic mret;
   } decoder_t;
 
-
-
   typedef struct packed {
     logic valid;
     logic [31:0] pc, inst, dnpc;
-    inst_op_e inst_op;
 
     logic [31:0] imm;
 
@@ -158,7 +146,7 @@ package ysyx_24080006_pkg;
   } stage_t;
 
   parameter int unsigned IC_M = 2;  // addr[1:0]
-  parameter int unsigned IC_N = 4;
+  parameter int unsigned IC_N = 6;
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
 
   typedef struct packed {
@@ -167,10 +155,7 @@ package ysyx_24080006_pkg;
     logic [31:0] inst;
   } icache_t;
 
-
-  //parameter logic [31:0] ECALL = 32'b0000000_00000_00000_000_00000_11100_11;
   parameter logic [31:0] EBREAK_INST = 32'b0000000_00001_00000_000_00000_11100_11;
-  //parameter logic [31:0] MRET = 32'b0011000_00010_00000_000_00000_11100_11;
 
 
 `ifdef SOC_MODE

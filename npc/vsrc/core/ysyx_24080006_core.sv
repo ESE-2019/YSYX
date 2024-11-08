@@ -26,33 +26,5 @@ module ysyx_24080006_core
   ysyx_24080006_arb ARB (.*);
   ysyx_24080006_if_stage IF (.*);
   ysyx_24080006_ex_stage EX (.*);
-  // logic                 reg_we;
-  // logic [REG_WIDTH-1:0] rs1_addr;
-  // logic [REG_WIDTH-1:0] rs2_addr;
-  // logic [REG_WIDTH-1:0] rd;
-  // logic [         31:0] wdata;
-  // logic [         31:0] rs1_val;
-  // logic [         31:0] rs2_val;
-
-  // logic                 csr_we;
-  // logic [         31:0] mepc_val;
-  // logic                 mepc_en;
-  // logic [         11:0] csr_addr;
-  // logic [         11:0] csr_waddr;
-  // logic [         31:0] csr_wdata;
-  // logic [         31:0] csr_rdata;
-
-  // ysyx_24080006_reg REG (.*);
-
-  // ysyx_24080006_csr CSR (.*);
-
-  // ysyx_24080006_idu IDU (.*);
-
-  // ysyx_24080006_exu EXU (.*);
-
-  // ysyx_24080006_lsu LSU (.*);
-
-  // ysyx_24080006_wbu WBU (.*);
-
 
 endmodule

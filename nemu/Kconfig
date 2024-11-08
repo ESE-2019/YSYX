@@ -184,6 +184,11 @@ config WATCHPOINT
   depends on TARGET_NATIVE_ELF
   bool "Enable watchpoint"
   default y
+  
+config CACHESIM
+  depends on TARGET_NATIVE_ELF
+  bool "Enable cachesim"
+  default y
 
 choice
   prompt "Reference design"

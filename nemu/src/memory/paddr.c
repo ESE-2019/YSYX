@@ -22,11 +22,9 @@
 static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
-#ifdef CONFIG_TARGET_SHARE
 static uint8_t soc_sram[SOC_SRAM_MSIZE] PG_ALIGN = {};
 static uint8_t soc_flash[SOC_FLASH_MSIZE] PG_ALIGN = {};
 static uint8_t soc_sdram[SOC_SDRAM_MSIZE] PG_ALIGN = {};
-#endif
 #endif
 
 uint8_t *guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
@@ -44,7 +42,6 @@ static void pmem_write(paddr_t addr, int len, word_t data)
   host_write(guest_to_host(addr), len, data);
 }
 
-#ifdef CONFIG_TARGET_SHARE
 // flash
 uint8_t *flash_guest_to_host(paddr_t paddr) { return soc_flash + paddr - SOC_FLASH_MBASE; }
 static word_t soc_flash_read(paddr_t addr, int len)
@@ -84,7 +81,6 @@ static void soc_sdram_write(paddr_t addr, int len, word_t data)
 {
   host_write(sdram_guest_to_host(addr), len, data);
 }
-#endif
 
 static void out_of_bound(paddr_t addr)
 {
@@ -114,7 +110,6 @@ word_t paddr_read(paddr_t addr, int len)
 #endif
     return ret;
   }
-  #ifdef CONFIG_TARGET_SHARE
   else if (in_soc_flash(addr))
   {
     word_t ret = soc_flash_read(addr, len);
@@ -127,12 +122,11 @@ word_t paddr_read(paddr_t addr, int len)
   }
   else if (in_soc_sdram(addr))
   {
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
     word_t ret = soc_sdram_read(addr, len);
     return ret;
   }
-  #endif
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  out_of_bound(addr);
+  MUXDEF(CONFIG_CACHESIM, return 1 << 5;, out_of_bound(addr);)
   return 0;
 }
 
@@ -146,7 +140,6 @@ void paddr_write(paddr_t addr, int len, word_t data)
     pmem_write(addr, len, data);
     return;
   }
-  #ifdef CONFIG_TARGET_SHARE
   else if (in_soc_flash(addr))
   {
     soc_flash_write(addr, len, data);
@@ -159,10 +152,13 @@ void paddr_write(paddr_t addr, int len, word_t data)
   }
   else if (in_soc_sdram(addr))
   {
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data);)
     soc_sdram_write(addr, len, data);
     return;
   }
-  #endif
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+  MUXDEF(CONFIG_CACHESIM, , out_of_bound(addr));
+  if (addr == 0x10000000)
+    putchar(data);
+  return;
   out_of_bound(addr);
 }

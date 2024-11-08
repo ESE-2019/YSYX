@@ -144,7 +144,12 @@ static long load_img() {
   Log("The image is %s, size = %ld", img_file, size);
 
   fseek(fp, 0, SEEK_SET);
+  #ifdef CONFIG_CACHESIM
+  int ret = fread(flash_guest_to_host(RESET_VECTOR), size, 1, fp);
+#else
   int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
+#endif
+  
   Assert(ret == 1, "ret = %d", ret);
 
   fclose(fp);
