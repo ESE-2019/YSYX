@@ -14,9 +14,12 @@ module ysyx_24080006_ex_stage
     ysyx_24080006_axi.master axi_lsu
 );
 
+  logic mdu_valid_o, mdu_valid_i;
+
   typedef enum logic [1:0] {
     IDLE,
     EXEC,
+    MD_EXEC,
     WAIT
   } ex_fsm_e;
   ex_fsm_e curr, next;
@@ -35,6 +38,8 @@ module ysyx_24080006_ex_stage
         if (ifu2exu.valid) begin
           if (decoder.lsu_set.lsu_enable) begin
             next = EXEC;
+          end else if (decoder.mdu_set.mdu_enable) begin
+            next = MD_EXEC;
           end else begin
             next = WAIT;
           end
@@ -43,6 +48,10 @@ module ysyx_24080006_ex_stage
       EXEC: begin
         if (axi_lsu.rvalid || axi_lsu.bvalid) next = WAIT;
         else next = EXEC;
+      end
+      MD_EXEC: begin
+        if (mdu_valid_i) next = WAIT;
+        else next = MD_EXEC;
       end
       WAIT: begin
         if (ifu2exu_ready) next = IDLE;
@@ -62,6 +71,9 @@ module ysyx_24080006_ex_stage
             if (decoder.lsu_set.lsu_enable) begin
               exu2ifu_ready <= 0;
               exu2ifu.valid <= 0;
+            end else if (decoder.mdu_set.mdu_enable) begin
+              exu2ifu_ready <= 0;
+              exu2ifu.valid <= 0;
             end else begin  // bypass
               exu2ifu_ready <= 0;
               exu2ifu.valid <= 1;
@@ -73,6 +85,15 @@ module ysyx_24080006_ex_stage
         end
         EXEC: begin
           if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+            exu2ifu_ready <= 0;
+            exu2ifu.valid <= 1;
+          end else begin
+            exu2ifu_ready <= 0;
+            exu2ifu.valid <= 0;
+          end
+        end
+        MD_EXEC: begin
+          if (mdu_valid_i) begin
             exu2ifu_ready <= 0;
             exu2ifu.valid <= 1;
           end else begin
@@ -97,8 +118,7 @@ module ysyx_24080006_ex_stage
   logic [31:0] rs1_data, rs2_data, rd_data;
   logic [31:0] csr_rdata;
   logic reg_we;
-  logic [31:0] alu_a, alu_b, alu_c;
-  logic [31:0] ldata;
+  logic [31:0] alu_a, alu_b, alu_c, mdu_c;
   logic [ 4:0] Mr_param;
 
   function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [4:0] param);
@@ -127,12 +147,13 @@ module ysyx_24080006_ex_stage
       //axi_lsu.wstrb <= '0;
       axi_lsu.arsize <= '0;
       axi_lsu.awsize <= '0;
-      ldata <= '0;
       Mr_param <= '0;
       reg_we <= '0;
+      rd_data <= '0;
       exu2ifu.dnpc <= '0;
       exu2ifu.jump <= '0;
       exu2ifu.branch <= '0;
+      mdu_valid_o <= 0;
     end else begin
       unique case (curr)
         IDLE: begin
@@ -164,7 +185,14 @@ module ysyx_24080006_ex_stage
                 Mr_param <= {decoder.lsu_set.lsu_sext, decoder.lsu_set.lsu_size, alu_c[1:0]};
                 reg_we <= '0;
               end
-
+            end else if (decoder.mdu_set.mdu_enable) begin
+              axi_lsu.arvalid <= 0;
+              axi_lsu.rready <= 0;
+              axi_lsu.awvalid <= 0;
+              axi_lsu.wvalid <= 0;
+              axi_lsu.bready <= 0;
+              reg_we <= '0;
+              mdu_valid_o <= 1;
             end else begin  // bypass
               axi_lsu.arvalid <= 0;
               axi_lsu.rready <= 0;
@@ -172,6 +200,7 @@ module ysyx_24080006_ex_stage
               axi_lsu.wvalid <= 0;
               axi_lsu.bready <= 0;
               reg_we <= decoder.reg_we;
+              rd_data <= alu_c;
             end
           end else begin
             axi_lsu.arvalid <= 0;
@@ -192,8 +221,28 @@ module ysyx_24080006_ex_stage
           end
           if (axi_lsu.rvalid) begin
             axi_lsu.rready <= 1;
-            ldata <= Mr(axi_lsu.rdata, Mr_param);
+            rd_data <= Mr(axi_lsu.rdata, Mr_param);
             reg_we <= decoder.reg_we;
+          end
+        end
+        MD_EXEC: begin
+          if (mdu_valid_i) begin
+            axi_lsu.arvalid <= 0;
+            axi_lsu.rready <= 0;
+            axi_lsu.awvalid <= 0;
+            axi_lsu.wvalid <= 0;
+            axi_lsu.bready <= 0;
+            reg_we <= decoder.reg_we;
+            rd_data <= mdu_c;
+            mdu_valid_o <= 0;
+          end else begin
+            axi_lsu.arvalid <= 0;
+            axi_lsu.rready <= 0;
+            axi_lsu.awvalid <= 0;
+            axi_lsu.wvalid <= 0;
+            axi_lsu.bready <= 0;
+            reg_we <= '0;
+            mdu_valid_o <= 1;
           end
         end
         WAIT: begin
@@ -217,17 +266,26 @@ module ysyx_24080006_ex_stage
     end
   end
 
-
-  assign rd_data = decoder.lsu_set.lsu_enable ? ldata : alu_c;
   ysyx_24080006_reg REG (
       .*,
       .rs1_addr(decoder.rs1_addr),
       .rs2_addr(decoder.rs2_addr),
       .rd_addr (decoder.rd_addr)
   );
+  mdu2alu_t mdu2alu;
+  alu2mdu_t alu2mdu;
   ysyx_24080006_alu ALU (
       .*,
+      .mdu_enable(decoder.mdu_set.mdu_enable),
       .alu_op(decoder.alu_set.alu_op)
+  );
+  ysyx_24080006_mdu MDU (
+      .*,
+      .mdu_a  (alu_a),
+      .mdu_b  (alu_b),
+      .mdu_set(decoder.mdu_set),
+      .valid_i(mdu_valid_o),
+      .valid_o(mdu_valid_i)
   );
   ysyx_24080006_csr CSRU (
       .*,

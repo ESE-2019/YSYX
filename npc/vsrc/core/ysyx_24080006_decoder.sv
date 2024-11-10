@@ -22,6 +22,7 @@ module ysyx_24080006_decoder
     idu.alu_set = '0;
     idu.csr_set = '0;
     idu.lsu_set = '0;
+    idu.mdu_set = '0;
     idu.reg_we  = 0;
     idu.jal     = 0;
     idu.jalr    = 0;
@@ -64,6 +65,78 @@ module ysyx_24080006_decoder
           {7'b0100000, 3'b101} : idu.alu_set.alu_op = SRA;
           {7'b0000000, 3'b110} : idu.alu_set.alu_op = OR;
           {7'b0000000, 3'b111} : idu.alu_set.alu_op = AND;
+          {
+            7'b0000001, 3'b000
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 0;
+            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_op = MULL;
+          end
+          {
+            7'b0000001, 3'b001
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 1;
+            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_op = MULH;
+          end
+          {
+            7'b0000001, 3'b010
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 1;
+            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_op = MULH;
+          end
+          {
+            7'b0000001, 3'b011
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 0;
+            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_op = MULH;
+          end
+          {
+            7'b0000001, 3'b100
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 1;
+            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_op = DIV;
+          end
+          {
+            7'b0000001, 3'b101
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 0;
+            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_op = DIV;
+          end
+          {
+            7'b0000001, 3'b110
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 1;
+            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_op = REM;
+          end
+          {
+            7'b0000001, 3'b111
+          } : begin
+            idu.alu_set.alu_op = ADD;
+            idu.mdu_set.mdu_enable = 1;
+            idu.mdu_set.signed_a = 0;
+            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_op = REM;
+          end
           default:               inst_err = 1;
         endcase
       end

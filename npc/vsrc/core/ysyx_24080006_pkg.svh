@@ -97,7 +97,21 @@ package ysyx_24080006_pkg;
   parameter int unsigned REG_WIDTH = 5;
 `else
   parameter int unsigned REG_WIDTH = 4;
-`endif  
+`endif
+
+  typedef enum logic [1:0] {
+    MULL,
+    MULH,
+    DIV,
+    REM
+  } mdu_op_e;
+
+  typedef struct packed {
+    logic mdu_enable;
+    logic signed_a;
+    logic signed_b;
+    mdu_op_e mdu_op;
+  } mdu_set_t;
 
   typedef struct packed {
     logic [REG_WIDTH-1:0] rs1_addr;
@@ -109,6 +123,7 @@ package ysyx_24080006_pkg;
     alu_set_t alu_set;
     csr_set_t csr_set;
     lsu_set_t lsu_set;
+    mdu_set_t mdu_set;
 
     logic reg_we;
 
@@ -121,29 +136,20 @@ package ysyx_24080006_pkg;
 
   typedef struct packed {
     logic valid;
-    logic [31:0] pc, inst, dnpc;
-
-    logic [31:0] imm;
-
-    logic [31:0] immB, immI, immJ, immS, immU;
-
-    logic [31:0] sdata;  // store data, i.e., rs2_val
-
-    logic [31:0] alu_src1;
-    logic [31:0] alu_src2;
-    alu_op_e     alu_op;
-    logic [31:0] alu_res;
-
-    logic [REG_WIDTH-1:0] rs1_addr, rs2_addr, rd_addr;
-
-    logic [11:0] csr_addr;
-    logic csr_we, ecall;
-    logic [31:0] csr_wdata;
-
-    logic [2:0] funct3;  // merged into load / store ?
-    logic load, store, wb, jump, branch;
-
+    logic [31:0] pc, dnpc;
+    logic jump, branch;
   } stage_t;
+
+  typedef struct packed {
+    logic [32:0] a;
+    logic [32:0] b;
+  } mdu2alu_t;
+
+  typedef struct packed {
+    logic [33:0] res_34;
+    logic [31:0] res_32;
+    logic not_zero;
+  } alu2mdu_t;
 
   parameter int unsigned IC_M = 2;  // addr[1:0]
   parameter int unsigned IC_N = 6;
@@ -163,6 +169,7 @@ package ysyx_24080006_pkg;
 `else
   parameter RST_ADDR = 32'h8000_0000 - 32'h4;
 `endif
+
   parameter logic [3:0] WSTRB_LUT[4] = '{
       4'b0001,  // funct3 == 3'b000
       4'b0011,  // funct3 == 3'b001

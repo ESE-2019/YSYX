@@ -5,7 +5,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-static char __attribute__((section(".klib"))) *ltoa(long value, char *string, int radix) {
+static inline char __attribute__((section(".klib"))) *ltoa(long value, char *string, int radix) {
     char tmp[33];
     char *tp = tmp;
     long i;
@@ -48,7 +48,7 @@ static char __attribute__((section(".klib"))) *ltoa(long value, char *string, in
     return string;
 }
 
-static char __attribute__((section(".klib"))) *itoa(int value, char *string, int radix) {
+static inline char __attribute__((section(".klib"))) *itoa(int value, char *string, int radix) {
     return ltoa((long)value, string, radix);
 }
 
