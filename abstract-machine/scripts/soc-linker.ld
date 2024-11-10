@@ -16,7 +16,7 @@ MEMORY {
 SECTIONS {
   . = ORIGIN(FLASH);
   .entry : {  
-    *(entry)
+    *(.entry)
     . = ALIGN(4);
   } > FLASH : entry
 

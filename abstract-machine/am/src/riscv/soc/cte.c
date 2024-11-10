@@ -4,7 +4,7 @@
 
 static Context *(*user_handler)(Event, Context *) = NULL;
 
-Context *__am_irq_handle(Context *c)
+__attribute__((section(".klib"))) Context *__am_irq_handle(Context *c)
 {
   if (user_handler)
   {
@@ -28,14 +28,14 @@ Context *__am_irq_handle(Context *c)
 
 extern void __am_asm_trap(void);
 
-bool cte_init(Context *(*handler)(Event, Context *))
+__attribute__((section(".klib"))) bool cte_init(Context *(*handler)(Event, Context *))
 {
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
   user_handler = handler;
   return true;
 }
 // this is npc
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
+__attribute__((section(".klib"))) Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
 {
   Context *ret = (Context *)((uintptr_t)kstack.end - sizeof(Context));
   ret->mepc = (uintptr_t)entry;
@@ -44,15 +44,15 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
   return ret;
 }
 
-void yield()
+__attribute__((section(".klib"))) void yield()
 {
 #ifdef __riscv_e
-  asm volatile("li a5, 11; ecall");
+  asm volatile("ecall");
 #else
-  asm volatile("li a7, 11; ecall");
+  asm volatile("ecall");
 #endif
 }
 
-bool ienabled() { return false; }
+__attribute__((section(".klib"))) bool ienabled() { return false; }
 
-void iset(bool enable) {}
+__attribute__((section(".klib"))) void iset(bool enable) {}

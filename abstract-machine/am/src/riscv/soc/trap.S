@@ -37,7 +37,8 @@ f(30) f(31)
 #define OFFSET_STATUS ((NR_REGS + 1) * XLEN)
 #define OFFSET_EPC    ((NR_REGS + 2) * XLEN)
 
-.align 3
+.section .klib, "ax"
+.align 2
 .globl __am_asm_trap
 __am_asm_trap:
   addi sp, sp, -CONTEXT_SIZE
@@ -53,7 +54,7 @@ __am_asm_trap:
   STORE t2, OFFSET_EPC(sp)
 
   mv a0, sp
-  jal __am_irq_handle
+  call __am_irq_handle
   mv sp, a0
 
   LOAD t1, OFFSET_STATUS(sp)

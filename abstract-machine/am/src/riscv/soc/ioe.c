@@ -10,17 +10,17 @@ void __am_timer_uptime(AM_TIMER_UPTIME_T *);
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *);
 void __am_uart_rx(AM_UART_RX_T *);
 
-static void __am_timer_config(AM_TIMER_CONFIG_T *cfg)
+static void __attribute__((section(".klib"))) __am_timer_config(AM_TIMER_CONFIG_T *cfg)
 {
   cfg->present = true;
   cfg->has_rtc = true;
 }
-static void __am_input_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true; }
-static void __am_uart_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true; }
+static void __attribute__((section(".klib"))) __am_input_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true; }
+static void __attribute__((section(".klib"))) __am_uart_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true; }
 
-void __am_gpu_init() {}
+void __attribute__((section(".klib"))) __am_gpu_init() {}
 
-void __am_gpu_config(AM_GPU_CONFIG_T *cfg)
+void __attribute__((section(".klib"))) __am_gpu_config(AM_GPU_CONFIG_T *cfg)
 {
   *cfg = (AM_GPU_CONFIG_T){.present = true,
                            .has_accel = false,
@@ -29,7 +29,7 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg)
                            .vmemsz = 0};
 }
 
-static uint32_t cast_color(uint32_t input)
+static uint32_t __attribute__((section(".klib"))) cast_color(uint32_t input)
 {
   uint32_t part1 = (input >> 20) & 0xF;
   uint32_t part2 = (input >> 12) & 0xF;
@@ -38,7 +38,7 @@ static uint32_t cast_color(uint32_t input)
   return result;
 }
 
-void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
+void __attribute__((section(".klib"))) __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
 {
   int x = ctl->x, y = ctl->y, w = ctl->w, h = ctl->h;
   if (w == 0 || h == 0 || x + w > 640 || y + h > 480) //! ctl->sync ||
@@ -58,7 +58,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
   }
 }
 
-void __am_gpu_status(AM_GPU_STATUS_T *status) { status->ready = true; }
+void __attribute__((section(".klib"))) __am_gpu_status(AM_GPU_STATUS_T *status) { status->ready = true; }
 
 typedef void (*handler_t)(void *buf);
 static void *lut[128] = {
@@ -73,9 +73,9 @@ static void *lut[128] = {
     [AM_GPU_FBDRAW] = __am_gpu_fbdraw,
     [AM_GPU_STATUS] = __am_gpu_status};
 
-static void fail(void *buf) { panic("access nonexist register"); }
+static void __attribute__((section(".klib"))) fail(void *buf) { panic("access nonexist register"); }
 
-bool ioe_init()
+bool __attribute__((section(".klib"))) ioe_init()
 {
   for (int i = 0; i < LENGTH(lut); i++)
     if (!lut[i])
@@ -84,5 +84,5 @@ bool ioe_init()
   return true;
 }
 
-void ioe_read(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
-void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
+void __attribute__((section(".klib"))) ioe_read(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
+void __attribute__((section(".klib"))) ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }

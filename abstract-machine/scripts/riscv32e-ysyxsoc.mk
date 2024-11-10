@@ -1,5 +1,5 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
-COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32im_zicsr -mabi=ilp32
+COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32em_zicsr -mabi=ilp32e
 CFLAGS        += $(COMMON_CFLAGS) -static -fdata-sections -ffunction-sections
 ASFLAGS       += $(COMMON_CFLAGS) -O3
 ARCH_H        := arch/riscv.h

@@ -349,7 +349,7 @@ module ysyx_24080006_ex_stage
     INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
         INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
-        INSIDE(addr, 32'ha000_0000, 32'ha1ff_ffff);  // SDRAM
+        INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff);  // SDRAM
   endfunction
   import "DPI-C" function void SKIP_DIFFTEST();
   import "DPI-C" function void LSU_CNT(
