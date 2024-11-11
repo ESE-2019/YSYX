@@ -15,7 +15,7 @@ module ysyx_24080006_mdu
     input  logic valid_i,
     output logic valid_o
 );
-wire multdiv_ready_id_i = 1;
+
   typedef enum logic [2:0] {
     MD_IDLE,
     MD_ABS_A,
@@ -28,10 +28,7 @@ wire multdiv_ready_id_i = 1;
   mdu_fsm_e curr, next;
 
   logic [32:0] accum_window_q, accum_window_d;
-
-  logic [32:0] res_adder_l;
-  logic [32:0] res_adder_h;
-
+  logic [32:0] res_adder_l, res_adder_h;
   logic [4:0] multdiv_count_q, multdiv_count_d;
   logic [32:0] op_b_shift_q, op_b_shift_d;
   logic [32:0] op_a_shift_q, op_a_shift_d;
@@ -46,8 +43,6 @@ wire multdiv_ready_id_i = 1;
   logic is_greater_equal;
   logic div_change_sign, rem_change_sign;
   logic div_by_zero_d, div_by_zero_q;
-  logic multdiv_hold;
-  logic multdiv_en;
 
   // (accum_window_q + op_a_shift_q)
   assign res_adder_l = alu2mdu.res_34[32:0];
@@ -140,7 +135,7 @@ wire multdiv_ready_id_i = 1;
     op_a_shift_d    = op_a_shift_q;
     op_numerator_d  = op_numerator_q;
     next            = curr;
-    multdiv_hold    = 1'b0;
+    //multdiv_hold    = 1'b0;
     div_by_zero_d   = div_by_zero_q;
     if (valid_i) begin
       unique case (curr)
@@ -233,18 +228,11 @@ wire multdiv_ready_id_i = 1;
           unique case (mdu_set.mdu_op)
             MULL: begin
               accum_window_d = res_adder_l;
-
-              // Note no state transition will occur if multdiv_hold is set
               next = MD_IDLE;
-              multdiv_hold = ~multdiv_ready_id_i;
             end
             MULH: begin
               accum_window_d = res_adder_l;
               next           = MD_IDLE;
-
-              // Note no state transition will occur if multdiv_hold is set
-              next           = MD_IDLE;
-              multdiv_hold   = ~multdiv_ready_id_i;
             end
             DIV: begin
               // this time we save the quotient in accum_window_q since we do not need anymore the
@@ -271,9 +259,7 @@ wire multdiv_ready_id_i = 1;
         end
 
         MD_FINISH: begin
-          // Note no state transition will occur if multdiv_hold is set
           next = MD_IDLE;
-          multdiv_hold = ~multdiv_ready_id_i;
         end
 
         default: begin
@@ -283,12 +269,6 @@ wire multdiv_ready_id_i = 1;
     end
   end
 
-  //////////////////////////////////////////
-  // Mutliplier / Divider state registers //
-  //////////////////////////////////////////
-
-  assign multdiv_en = mdu_set.mdu_enable & ~multdiv_hold;
-
   always_ff @(posedge clock) begin
     if (reset) begin
       multdiv_count_q <= 5'h0;
@@ -297,36 +277,20 @@ wire multdiv_ready_id_i = 1;
       curr            <= MD_IDLE;
       div_by_zero_q   <= 1'b0;
       op_numerator_q  <= 32'h0;
-    end else if (multdiv_en) begin
+      accum_window_q  <= 33'h0;
+    end else begin
       multdiv_count_q <= multdiv_count_d;
       op_b_shift_q    <= op_b_shift_d;
       op_a_shift_q    <= op_a_shift_d;
       curr            <= next;
       div_by_zero_q   <= div_by_zero_d;
       op_numerator_q  <= op_numerator_d;
+      accum_window_q  <= accum_window_d;
     end
   end
 
-  always_ff @(posedge clock) begin
-    if (reset) begin
-      accum_window_q <= 33'h0;
-    end else if (~multdiv_hold) begin
-      accum_window_q <= accum_window_d;
-    end
-  end
-
-  /////////////
-  // Outputs //
-  /////////////
-
-  assign valid_o = (curr == MD_FINISH) |
-                   (curr == MD_LAST &
-                   (mdu_set.mdu_op == MULL |
-                    mdu_set.mdu_op == MULH));
-
-  assign mdu_c = mdu_set.mdu_op inside {DIV, REM} ? accum_window_q[31:0] : res_adder_l[31:0];
-
-
-
+  wire is_mul = mdu_set.mdu_op inside {MULL, MULH};
+  assign valid_o = (curr == MD_FINISH) | ((curr == MD_LAST) & is_mul);
+  assign mdu_c   = is_mul ? res_adder_l[31:0] : accum_window_q[31:0];
 
 endmodule

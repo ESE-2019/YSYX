@@ -20,3 +20,6 @@ clean:
 	make -C riscv-tests-am clean
 	make -C cpu-tests clean
 	make -C microbench clean
+	rm -rf ./hello/build/
+	rm -rf ./snake/build/
+	rm -rf ./typing-game/build/

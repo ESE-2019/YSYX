@@ -1,7 +1,7 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
 COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32em_zicsr -mabi=ilp32e
 CFLAGS        += $(COMMON_CFLAGS) -static -fdata-sections -ffunction-sections
-ASFLAGS       += $(COMMON_CFLAGS) -O3
+ASFLAGS       += $(COMMON_CFLAGS) -Os
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
