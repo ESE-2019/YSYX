@@ -151,14 +151,14 @@ package ysyx_24080006_pkg;
     logic not_zero;
   } alu2mdu_t;
 
-  parameter int unsigned IC_M = 2;  // addr[1:0]
-  parameter int unsigned IC_N = 6;
+  parameter int unsigned IC_M = 4;
+  parameter int unsigned IC_N = 1;
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
 
   typedef struct packed {
     logic valid;
     logic [31-IC_M-IC_N:0] tag;
-    logic [31:0] inst;
+    logic [(1<<(IC_M+3))-1:0] data;
   } icache_t;
 
   parameter logic [31:0] EBREAK_INST = 32'b0000000_00001_00000_000_00000_11100_11;

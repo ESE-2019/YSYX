@@ -65,7 +65,7 @@ module ysyx_24080006_arb (
         else next = LSUR;
       end
       IFUR: begin
-        if (axi_ifu.rready && axi_ifu.rvalid)  // && axi_ifu.rlast
+        if (axi_ifu.rready && axi_ifu.rvalid && (axi_ifu.arlen == '0 || axi_ifu.rlast))  // && axi_ifu.rlast
           next = IDLE;
         else next = IFUR;
       end

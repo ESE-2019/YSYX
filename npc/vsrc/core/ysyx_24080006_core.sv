@@ -20,11 +20,12 @@ module ysyx_24080006_core
   stage_t exu2ifu;
   stage_t ifu2exu;
 
-  ysyx_24080006_axi axi_ifu (), axi_icache (), axi_lsu ();
+  ysyx_24080006_axi axi_ifu (), axi_lsu ();
   decoder_t decoder;
 
   ysyx_24080006_arb ARB (.*);
-  ysyx_24080006_if_stage IF (.*);
+  ysyx_24080006_ifu IFU (.*);
+  //ysyx_24080006_if_stage IF (.*);
   ysyx_24080006_ex_stage EX (.*);
 
 endmodule

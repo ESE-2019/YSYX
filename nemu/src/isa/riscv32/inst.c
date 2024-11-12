@@ -509,9 +509,9 @@ static int decode_exec(Decode *s)
       "0000001 ????? ????? 011 ????? 01100 11", mulhu, R,
       R(rd) = mulhu(src1, src2));
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div, R,
-          R(rd) = (int32_t)src1 / (int32_t)src2 /*; Log("div") */);
+          if (src2) R(rd) = (int32_t)src1 / (int32_t)src2; else  R(rd) = (int32_t)-1/*; Log("div") */);
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R,
-          R(rd) = (int32_t)src1 / src2 /*; Log("divu") */);
+          if (src2) R(rd) = (int32_t)src1 / src2; else  R(rd) = (int32_t)-1 /*; Log("divu") */);
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem, R,
           R(rd) = (int32_t)src1 % (int32_t)src2 /*; Log("rem") */);
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R,

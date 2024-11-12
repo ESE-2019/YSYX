@@ -45,7 +45,7 @@ VERILATOR_CFLAGS += -CFLAGS -Ofast -CFLAGS -fno-exceptions -CFLAGS -flto \
 	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/libdisasm.so \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
-	-LDFLAGS -lLLVM-14 -LDFLAGS -flto
+	-LDFLAGS -lLLVM-18 -LDFLAGS -flto
 ifneq ($(words $(CURDIR)),1)
  $(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')
 endif

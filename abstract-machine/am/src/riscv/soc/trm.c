@@ -84,7 +84,7 @@ static inline void _trm_init()
     halt(ret);
 }
 
-static inline void memcpy_bootloader(void *vma_start, void *vma_end, void *lma_start)
+static void memcpy_bootloader(void *vma_start, void *vma_end, void *lma_start)
 {
     while (vma_start < vma_end)
     {

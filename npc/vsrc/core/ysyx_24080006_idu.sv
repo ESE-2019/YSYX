@@ -1,4 +1,4 @@
-module ysyx_24080006_decoder
+module ysyx_24080006_idu
   import ysyx_24080006_pkg::*;
 (
     input logic [31:0] inst,

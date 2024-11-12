@@ -52,5 +52,6 @@ module ysyx_24080006_clint_xbar (
   assign axi_clint.rready = axi.araddr < 32'h0200_ffff ? axi.rready : 0;
   assign axi.rvalid = axi.araddr >= 32'h0200_ffff ? axi_soc.rvalid : axi_clint.rvalid;
   assign axi.rdata = axi.araddr >= 32'h0200_ffff ? axi_soc.rdata : axi_clint.rdata;
+  assign axi.rlast = axi.araddr >= 32'h0200_ffff ? axi_soc.rlast : axi_clint.rlast;
 
 endmodule
