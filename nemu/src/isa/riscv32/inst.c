@@ -298,7 +298,7 @@ static void ftrace_print(const uint32_t addr)
 }
 #endif
 
-#define CACHE_SIZE 4 // index
+#define CACHE_SIZE 1 // index
 #define CACHE_WAY 2
 #define CACHE_LINE 2 // 0-4b 1-8b 2-16b 3-32b
 
@@ -329,7 +329,7 @@ static void cache_sim(uint32_t pc)
     if (dummy_cache[index].vld[i] && dummy_cache[index].pc[i] == pc)
     {
       hit_num++;
-      dummy_cache[index].del = 1 ^ i;
+      //dummy_cache[index].del = 1 ^ i;
       return;
     }
   }

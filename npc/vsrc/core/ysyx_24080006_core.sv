@@ -4,11 +4,6 @@ module ysyx_24080006_core
     input logic clock,
     input logic reset,
 
-    output logic    [IC_N-1:0] ic_index,
-    input  icache_t            ic_rdata,
-    output logic               ic_we,
-    output icache_t            ic_wdata,
-
     ysyx_24080006_axi.master axi
 );
 
@@ -25,7 +20,6 @@ module ysyx_24080006_core
 
   ysyx_24080006_arb ARB (.*);
   ysyx_24080006_ifu IFU (.*);
-  //ysyx_24080006_if_stage IF (.*);
   ysyx_24080006_ex_stage EX (.*);
 
 endmodule

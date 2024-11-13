@@ -31,7 +31,7 @@ module ysyx_24080006_icu
   logic [31:0] ic_rdata_1_tmp[4];
   logic [31:0] ic_rdata_0_tmp[4];
   logic ic_we_1, ic_we_0;
-  logic choose_way;
+  logic replace_way[IC_2];
   wire [1:0] pc_offset = pc[3:2];
   logic [IC_N-1:0] ic_index, ic_waddr;
   wire [31-IC_M-IC_N:0] tag = pc[31:IC_M+IC_N];
@@ -56,7 +56,7 @@ module ysyx_24080006_icu
     unique case (curr)
       IDLE: begin
         if (ifu2icu_valid & icu2ifu_ready) begin
-          unique if (skip_icache) begin
+          if (skip_icache) begin
             next = SKIP;
           end else if (hit_1 | hit_0) begin
             next = IDLE;
@@ -106,10 +106,10 @@ module ysyx_24080006_icu
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
       axi_ifu.arvalid <= 1'b0;
-      axi_ifu.rready <= 1'b0;
-      axi_ifu.araddr <= '0;
-      axi_ifu.arlen <= 8'h0;
-      choose_way <= '0;
+      axi_ifu.rready  <= 1'b0;
+      axi_ifu.araddr  <= '0;
+      axi_ifu.arlen   <= 8'h0;
+      foreach (replace_way[i]) replace_way[i] <= 1'b0;
       ic_pc <= 32'b0;
       ic_we_1 <= 1'b0;
       ic_we_0 <= 1'b0;
@@ -147,10 +147,10 @@ module ysyx_24080006_icu
               icu2ifu_ready <= 1'b1;
               if (hit_1) begin
                 inst <= ic_rdata_1_tmp[pc_offset];
-                choose_way <= 0;
+                replace_way[ic_index] <= 0;
               end else if (hit_0) begin
                 inst <= ic_rdata_0_tmp[pc_offset];
-                choose_way <= 1;
+                replace_way[ic_index] <= 1;
               end
             end else begin
               if (burst_icache) begin  // BURST
@@ -213,9 +213,9 @@ module ysyx_24080006_icu
             end
 
             if (axi_ifu.rlast) begin
-              if (choose_way) ic_we_1 <= 1'b1;
+              if (replace_way[ic_waddr]) ic_we_1 <= 1'b1;
               else ic_we_0 <= 1'b1;
-              choose_way <= ~choose_way;
+              replace_way[ic_waddr] <= ~replace_way[ic_waddr];
               icu2ifu_ready <= 1'b1;
             end
           end else begin
@@ -250,9 +250,9 @@ module ysyx_24080006_icu
           axi_ifu.araddr <= {ic_pc[31:4], addr_offset, 2'b0};
           if (burst_offset == 2'b00) begin
             axi_ifu.arvalid <= 1'b0;
-            if (choose_way) ic_we_1 <= 1'b1;
+            if (replace_way[ic_waddr]) ic_we_1 <= 1'b1;
             else ic_we_0 <= 1'b1;
-            choose_way <= ~choose_way;
+            replace_way[ic_waddr] <= ~replace_way[ic_waddr];
             icu2ifu_ready <= 1'b1;
           end else begin
             axi_ifu.arvalid <= 1'b1;
@@ -298,7 +298,7 @@ module ysyx_24080006_icu
 
   always_ff @(posedge clock) begin
     if (ifu2icu_valid & icu2ifu_ready && curr == IDLE) begin
-      unique if (skip_icache) begin
+      if (skip_icache) begin
         skip_num++;
       end else if (hit_1 | hit_0) begin
         hit_num++;

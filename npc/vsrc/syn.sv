@@ -38,12 +38,7 @@ module top
     input  logic [ 1:0] io_master_rresp,
     input  logic [31:0] io_master_rdata,
     input  logic        io_master_rlast,
-    input  logic [ 3:0] io_master_rid,
-
-    output logic    [IC_N-1:0] ic_index,
-    input  icache_t            ic_rdata,
-    output logic               ic_we,
-    output icache_t            ic_wdata
+    input  logic [ 3:0] io_master_rid
 );
 
   //axi
