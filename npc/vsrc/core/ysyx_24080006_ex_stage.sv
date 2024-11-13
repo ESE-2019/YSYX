@@ -119,7 +119,7 @@ module ysyx_24080006_ex_stage
   logic [31:0] csr_rdata;
   logic reg_we;
   logic [31:0] alu_a, alu_b, alu_c, mdu_c;
-  logic [ 4:0] Mr_param;
+  logic [4:0] Mr_param;
 
   function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [4:0] param);
     logic [31:0] tmp;
@@ -217,7 +217,8 @@ module ysyx_24080006_ex_stage
           if (axi_lsu.wready) axi_lsu.wvalid <= 0;
           if (axi_lsu.bvalid) begin
             axi_lsu.bready <= 1;
-            reg_we <= '0;
+          end else begin
+            axi_lsu.bready <= 0;
           end
           if (axi_lsu.rvalid) begin
             axi_lsu.rready <= 1;

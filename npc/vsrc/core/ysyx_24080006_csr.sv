@@ -15,7 +15,7 @@ module ysyx_24080006_csr
 );
 
   wire [31:0] csr_cause = 32'd11;
-  logic [31:0] csr_reg[csr_name_e];
+  logic [31:0] csr_reg[8];
 
 
 

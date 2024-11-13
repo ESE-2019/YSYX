@@ -6,7 +6,7 @@ ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
 #LDFLAGS   += --print-map
-#SIM_FLAGS     := -fast
+SIM_FLAGS     := -fast
 
 AM_SRCS += riscv/soc/start.S \
            riscv/soc/trm.c \

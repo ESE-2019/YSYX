@@ -11,11 +11,10 @@ static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
 
-int aaaaa=1;
 #define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__REG__DOT__regfile
-#define HIT_NUM aaaaa //top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__hit_num
-#define SKIP_NUM aaaaa //top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__skip_num
-#define MISS_NUM aaaaa //top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IF__DOT__miss_num
+#define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
+#define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num
+#define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__miss_num
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"

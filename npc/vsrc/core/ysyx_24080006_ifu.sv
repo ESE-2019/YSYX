@@ -21,8 +21,7 @@ module ysyx_24080006_ifu
   } if_fsm_e;
   if_fsm_e curr, next;
 
-  logic [31:0] pc, inst, ic_pc;
-  assign ic_pc = pc;
+  logic [31:0] pc, inst;
   decoder_t idu;
   logic inst_err;
 
@@ -161,9 +160,6 @@ module ysyx_24080006_ifu
         INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
         INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff);  // SDRAM
   endfunction
-  int hit_num = 0;
-  int skip_num = 0;
-  int miss_num = 0;
   logic [31:0] ftrace, type_cnt, ifu_cnt;
   always_ff @(posedge clock) begin
     if (reset) begin

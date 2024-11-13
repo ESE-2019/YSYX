@@ -4,7 +4,7 @@ module ysyx_24080006_icu
     input logic clock,
     input logic reset,
 
-    input  logic [31:0] ic_pc,
+    input  logic [31:0] pc,
     output logic [31:0] inst,
 
     input  logic ifu2icu_valid,
@@ -15,13 +15,16 @@ module ysyx_24080006_icu
     ysyx_24080006_axi.master axi_ifu
 );
 
-  typedef enum logic [1:0] {
+  typedef enum logic [2:0] {
     IDLE,
     SKIP,
     BURST,
-    COMMON
+    FLASH_BEGIN,
+    FLASH_END
   } ic_fsm_e;
   ic_fsm_e curr, next;
+
+  logic [31:0] ic_pc;
 
   icache_t ic_rdata_1, ic_rdata_0, ic_wdata;
   logic [31:0] ic_wdata_tmp  [4];
@@ -29,14 +32,16 @@ module ysyx_24080006_icu
   logic [31:0] ic_rdata_0_tmp[4];
   logic ic_we_1, ic_we_0;
   logic choose_way;
-  wire [1:0] pc_offset = ic_pc[3:2];
-  wire [IC_N-1:0] ic_index = ic_pc[IC_M+IC_N-1:IC_M];
-  wire [31-IC_M-IC_N:0] tag = ic_pc[31:IC_M+IC_N];
-  wire skip_icache = ic_pc < 32'ha000_0000;
-  wire burst_icache = ic_pc >= 32'ha000_0000;
+  wire [1:0] pc_offset = pc[3:2];
+  logic [IC_N-1:0] ic_index, ic_waddr;
+  wire [31-IC_M-IC_N:0] tag = pc[31:IC_M+IC_N];
+  wire skip_icache = pc < 32'h3000_0000;
+  wire burst_icache = pc >= 32'ha000_0000;
   wire hit_1 = ic_rdata_1.valid && (tag == ic_rdata_1.tag);
   wire hit_0 = ic_rdata_0.valid && (tag == ic_rdata_0.tag);
-  logic [1:0] burst_cnt;
+  logic [1:0] burst_offset;
+  assign ic_index = pc[IC_M+IC_N-1:IC_M];
+  wire [1:0] addr_offset = ic_pc[3:2] + burst_offset;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -59,7 +64,7 @@ module ysyx_24080006_icu
             if (burst_icache) begin
               next = BURST;
             end else begin
-              next = COMMON;
+              next = FLASH_BEGIN;
             end
           end
         end else begin
@@ -80,11 +85,18 @@ module ysyx_24080006_icu
           next = curr;
         end
       end
-      COMMON: begin
-        if (&burst_cnt) begin
-          next = IDLE;
+      FLASH_BEGIN: begin
+        if (axi_ifu.rvalid) begin
+          next = FLASH_END;
         end else begin
           next = curr;
+        end
+      end
+      FLASH_END: begin
+        if (burst_offset == 2'b00) begin
+          next = IDLE;
+        end else begin
+          next = FLASH_BEGIN;
         end
       end
       default: next = IDLE;
@@ -98,6 +110,7 @@ module ysyx_24080006_icu
       axi_ifu.araddr <= '0;
       axi_ifu.arlen <= 8'h0;
       choose_way <= '0;
+      ic_pc <= 32'b0;
       ic_we_1 <= 1'b0;
       ic_we_0 <= 1'b0;
       ic_wdata_tmp[3] <= '0;
@@ -105,21 +118,23 @@ module ysyx_24080006_icu
       ic_wdata_tmp[1] <= '0;
       ic_wdata_tmp[0] <= '0;
       inst <= '0;
-      burst_cnt <= 2'b0;
+      burst_offset <= 2'b0;
       icu2ifu_valid <= 1'b0;
       icu2ifu_ready <= 1'b1;
     end else begin
       unique case (curr)
         IDLE: begin
+          ic_pc <= pc;
+          ic_waddr <= ic_index;
           if (ifu2icu_valid & icu2ifu_ready) begin
             unique if (skip_icache) begin  // SKIP
               axi_ifu.arvalid <= 1'b1;
               axi_ifu.rready <= 1'b0;
-              axi_ifu.araddr <= ic_pc;
+              axi_ifu.araddr <= pc;
               axi_ifu.arlen <= 8'h0;
               ic_we_1 <= 1'b0;
               ic_we_0 <= 1'b0;
-              burst_cnt <= 2'b0;
+              burst_offset <= 2'b0;
               icu2ifu_valid <= 1'b0;
               icu2ifu_ready <= 1'b0;
             end else if (hit_1 | hit_0) begin
@@ -127,36 +142,35 @@ module ysyx_24080006_icu
               axi_ifu.rready <= 1'b0;
               ic_we_1 <= 1'b0;
               ic_we_0 <= 1'b0;
-              burst_cnt <= 2'b0;
+              burst_offset <= 2'b0;
               icu2ifu_valid <= 1'b1;
+              icu2ifu_ready <= 1'b1;
               if (hit_1) begin
                 inst <= ic_rdata_1_tmp[pc_offset];
-                choose_way <= 1;
-              end else begin
-                inst <= ic_rdata_0_tmp[pc_offset];
                 choose_way <= 0;
+              end else if (hit_0) begin
+                inst <= ic_rdata_0_tmp[pc_offset];
+                choose_way <= 1;
               end
-              icu2ifu_ready <= 1'b1;
             end else begin
               if (burst_icache) begin  // BURST
                 axi_ifu.arvalid <= 1'b1;
                 axi_ifu.rready <= 1'b0;
-                axi_ifu.araddr <= ic_pc;
+                axi_ifu.araddr <= pc;
                 axi_ifu.arlen <= 8'h3;
                 ic_we_1 <= 1'b0;
                 ic_we_0 <= 1'b0;
-                burst_cnt <= 2'b0;
+                burst_offset <= 2'b0;
                 icu2ifu_valid <= 1'b0;
                 icu2ifu_ready <= 1'b0;
-              end else begin  // COMMON
+              end else begin  // FLASH
                 axi_ifu.arvalid <= 1'b1;
-                axi_ifu.rready  <= 1'b0;
-                axi_ifu.araddr  <= ic_pc;
-                axi_ifu.arlen   <= 8'h0;
-                $finish;
+                axi_ifu.rready <= 1'b0;
+                axi_ifu.araddr <= pc;
+                axi_ifu.arlen <= 8'h0;
                 ic_we_1 <= 1'b0;
                 ic_we_0 <= 1'b0;
-                burst_cnt <= 2'b0;
+                burst_offset <= 2'b0;
                 icu2ifu_valid <= 1'b0;
                 icu2ifu_ready <= 1'b0;
               end
@@ -166,7 +180,7 @@ module ysyx_24080006_icu
             axi_ifu.rready <= 1'b0;
             ic_we_1 <= 1'b0;
             ic_we_0 <= 1'b0;
-            burst_cnt <= 2'b0;
+            burst_offset <= 2'b0;
             icu2ifu_valid <= 1'b0;
             icu2ifu_ready <= 1'b1;
           end
@@ -188,14 +202,14 @@ module ysyx_24080006_icu
           end
           if (axi_ifu.rvalid && !axi_ifu.rready) begin
             axi_ifu.rready <= 1'b1;
-            burst_cnt <= burst_cnt + 2'b1;
-            ic_wdata_tmp[pc_offset+burst_cnt] <= axi_ifu.rdata;
+            burst_offset <= burst_offset + 2'b1;
+            ic_wdata_tmp[addr_offset] <= axi_ifu.rdata;
 
-            if (burst_cnt == 2'b00) begin
+            if (burst_offset == 2'b00) begin
               inst <= axi_ifu.rdata;
-              //icu2ifu_valid <= 1'b1;
+              icu2ifu_valid <= 1'b1;
             end else begin
-              //icu2ifu_valid <= 1'b0;
+              icu2ifu_valid <= 1'b0;
             end
 
             if (axi_ifu.rlast) begin
@@ -203,7 +217,6 @@ module ysyx_24080006_icu
               else ic_we_0 <= 1'b1;
               choose_way <= ~choose_way;
               icu2ifu_ready <= 1'b1;
-              icu2ifu_valid <= 1'b1;
             end
           end else begin
             axi_ifu.rready <= 1'b0;
@@ -212,7 +225,40 @@ module ysyx_24080006_icu
             icu2ifu_valid <= 1'b0;
           end
         end
-        COMMON:  ;
+        FLASH_BEGIN: begin
+          icu2ifu_ready <= 1'b0;
+          if (axi_ifu.arready) begin
+            axi_ifu.arvalid <= 1'b0;
+          end
+          if (axi_ifu.rvalid) begin
+            axi_ifu.rready <= 1'b1;
+            inst <= axi_ifu.rdata;
+            burst_offset <= burst_offset + 2'b1;
+            ic_wdata_tmp[addr_offset] <= axi_ifu.rdata;
+            if (burst_offset == 2'b00) begin
+              icu2ifu_valid <= 1'b1;
+            end else begin
+              icu2ifu_valid <= 1'b0;
+            end
+          end else begin
+            axi_ifu.rready <= 1'b0;
+          end
+        end
+        FLASH_END: begin
+          icu2ifu_valid  <= 1'b0;
+          axi_ifu.rready <= 1'b0;
+          axi_ifu.araddr <= {ic_pc[31:4], addr_offset, 2'b0};
+          if (burst_offset == 2'b00) begin
+            axi_ifu.arvalid <= 1'b0;
+            if (choose_way) ic_we_1 <= 1'b1;
+            else ic_we_0 <= 1'b1;
+            choose_way <= ~choose_way;
+            icu2ifu_ready <= 1'b1;
+          end else begin
+            axi_ifu.arvalid <= 1'b1;
+            icu2ifu_ready   <= 1'b0;
+          end
+        end
         default: ;
       endcase
     end
@@ -222,7 +268,9 @@ module ysyx_24080006_icu
   assign axi_ifu.arsize = 3'h2;
   assign axi_ifu.arburst = 2'b10;
 
-  assign ic_wdata = {1'b1, tag, ic_wdata_tmp[3], ic_wdata_tmp[2], ic_wdata_tmp[1], ic_wdata_tmp[0]};
+  assign ic_wdata = {
+    1'b1, ic_pc[31:IC_M+IC_N], ic_wdata_tmp[3], ic_wdata_tmp[2], ic_wdata_tmp[1], ic_wdata_tmp[0]
+  };
   assign ic_rdata_1_tmp[3] = ic_rdata_1.data[96+:32];
   assign ic_rdata_1_tmp[2] = ic_rdata_1.data[64+:32];
   assign ic_rdata_1_tmp[1] = ic_rdata_1.data[32+:32];
@@ -243,4 +291,21 @@ module ysyx_24080006_icu
       .ic_we(ic_we_0)
   );
 
+`ifdef SIM_MODE
+  int hit_num = 0;
+  int skip_num = 0;
+  int miss_num = 0;
+
+  always_ff @(posedge clock) begin
+    if (ifu2icu_valid & icu2ifu_ready && curr == IDLE) begin
+      unique if (skip_icache) begin
+        skip_num++;
+      end else if (hit_1 | hit_0) begin
+        hit_num++;
+      end else begin
+        miss_num++;
+      end
+    end
+  end
+`endif
 endmodule

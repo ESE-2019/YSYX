@@ -6,6 +6,7 @@ module ysyx_24080006_icache_reg
     input  logic    [IC_N-1:0] ic_index,
     output icache_t            ic_rdata,
     input  logic               ic_we,
+    input  logic    [IC_N-1:0] ic_waddr,
     input  icache_t            ic_wdata
 );
   icache_t Memory[IC_2];
@@ -13,7 +14,7 @@ module ysyx_24080006_icache_reg
     if (reset) begin
       foreach (Memory[i]) Memory[i] <= '0;
     end else begin
-      if (ic_we) Memory[ic_index] <= ic_wdata;
+      if (ic_we) Memory[ic_waddr] <= ic_wdata;
     end
   end
   assign ic_rdata = Memory[ic_index];
