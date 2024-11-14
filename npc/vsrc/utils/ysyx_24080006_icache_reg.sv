@@ -3,6 +3,7 @@ module ysyx_24080006_icache_reg
 (
     input  logic               clock,
     input  logic               reset,
+    input  logic               fencei,
     input  logic    [IC_N-1:0] ic_index,
     output icache_t            ic_rdata,
     input  logic               ic_we,
@@ -13,6 +14,8 @@ module ysyx_24080006_icache_reg
   always @(posedge clock) begin
     if (reset) begin
       foreach (Memory[i]) Memory[i] <= '0;
+    end else if (fencei) begin
+      foreach (Memory[i]) Memory[i].valid <= 1'b0;
     end else begin
       if (ic_we) Memory[ic_waddr] <= ic_wdata;
     end

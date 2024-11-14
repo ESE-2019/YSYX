@@ -5,10 +5,11 @@ module ysyx_24080006_ex_stage
     input logic reset,
 
     input decoder_t decoder,
+    input logic is_zc,
 
     input  logic   ifu2exu_ready,
-    output logic   exu2ifu_ready,
-    input  stage_t ifu2exu,
+    output logic   exu2idu_ready,
+    input  stage_t idu2exu,
     output stage_t exu2ifu,
 
     ysyx_24080006_axi.master axi_lsu
@@ -35,7 +36,7 @@ module ysyx_24080006_ex_stage
   always_comb begin  //fsm 2
     unique case (curr)
       IDLE: begin
-        if (ifu2exu.valid) begin
+        if (idu2exu.valid) begin
           if (decoder.lsu_set.lsu_enable) begin
             next = EXEC;
           end else if (decoder.mdu_set.mdu_enable) begin
@@ -62,51 +63,51 @@ module ysyx_24080006_ex_stage
 
   always_ff @(posedge clock) begin  //fsm 3 for control
     unique if (reset) begin
-      exu2ifu_ready <= 1;
-      exu2ifu.valid <= 1;
+      exu2idu_ready <= 0;
+      exu2ifu.valid <= 0;
     end else begin
       unique case (curr)
         IDLE: begin
-          if (ifu2exu.valid) begin
+          if (idu2exu.valid) begin
             if (decoder.lsu_set.lsu_enable) begin
-              exu2ifu_ready <= 0;
+              exu2idu_ready <= 0;
               exu2ifu.valid <= 0;
             end else if (decoder.mdu_set.mdu_enable) begin
-              exu2ifu_ready <= 0;
+              exu2idu_ready <= 0;
               exu2ifu.valid <= 0;
             end else begin  // bypass
-              exu2ifu_ready <= 0;
+              exu2idu_ready <= 0;
               exu2ifu.valid <= 1;
             end
           end else begin
-            exu2ifu_ready <= 1;
+            exu2idu_ready <= 1;
             exu2ifu.valid <= 0;
           end
         end
         EXEC: begin
           if (axi_lsu.rvalid || axi_lsu.bvalid) begin
-            exu2ifu_ready <= 0;
+            exu2idu_ready <= 0;
             exu2ifu.valid <= 1;
           end else begin
-            exu2ifu_ready <= 0;
+            exu2idu_ready <= 0;
             exu2ifu.valid <= 0;
           end
         end
         MD_EXEC: begin
           if (mdu_valid_i) begin
-            exu2ifu_ready <= 0;
+            exu2idu_ready <= 0;
             exu2ifu.valid <= 1;
           end else begin
-            exu2ifu_ready <= 0;
+            exu2idu_ready <= 0;
             exu2ifu.valid <= 0;
           end
         end
         WAIT: begin
           if (ifu2exu_ready) begin
-            exu2ifu_ready <= 1;
+            exu2idu_ready <= 1;
             exu2ifu.valid <= 0;
           end else begin
-            exu2ifu_ready <= 0;
+            exu2idu_ready <= 0;
             exu2ifu.valid <= 1;
           end
         end
@@ -157,7 +158,7 @@ module ysyx_24080006_ex_stage
     end else begin
       unique case (curr)
         IDLE: begin
-          if (ifu2exu.valid) begin
+          if (idu2exu.valid) begin
             exu2ifu.dnpc   <= dnpc;
             exu2ifu.jump   <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
             exu2ifu.branch <= alu_c[0] & decoder.branch;
@@ -292,16 +293,16 @@ module ysyx_24080006_ex_stage
       .*,
       .ecall(decoder.ecall),
       .mret(decoder.mret),
-      .pc(ifu2exu.pc),
+      .pc(idu2exu.pc),
       .csr_set(decoder.csr_set),
       .csr_wdata(rs1_data)
   );
 
   always_comb begin
     unique case (1'b1)
-      decoder.jal: dnpc = ifu2exu.pc + decoder.imm;
+      decoder.jal: dnpc = idu2exu.pc + decoder.imm;
       decoder.jalr: dnpc = (rs1_data + decoder.imm) & 32'hffff_fffe;
-      decoder.branch: dnpc = ifu2exu.pc + decoder.imm;
+      decoder.branch: dnpc = idu2exu.pc + decoder.imm;
       decoder.ecall: dnpc = csr_rdata;
       decoder.mret: dnpc = csr_rdata;
       default: dnpc = csr_rdata;
@@ -311,7 +312,7 @@ module ysyx_24080006_ex_stage
   always_comb begin
     unique case (decoder.alu_set.alu_a)
       RS1:     alu_a = rs1_data;
-      PC:      alu_a = ifu2exu.pc;
+      PC:      alu_a = idu2exu.pc;
       CONST0:  alu_a = 32'b0;
       default: alu_a = 32'b0;
     endcase
@@ -321,7 +322,7 @@ module ysyx_24080006_ex_stage
     unique case (decoder.alu_set.alu_b)
       IMM:     alu_b = decoder.imm;
       RS2:     alu_b = rs2_data;
-      CONST4:  alu_b = 32'h4;
+      PC_INCR: alu_b = is_zc ? 32'h2 : 32'h4;
       CSR:     alu_b = csr_rdata;
       default: alu_b = 32'h4;
     endcase
@@ -366,7 +367,7 @@ module ysyx_24080006_ex_stage
       LSU_CNT(0, lsu_cnt);
       if (INSIDE_PERIP(axi_lsu.awaddr)) SKIP_DIFFTEST();
       else if (!INSIDE_MEM(axi_lsu.awaddr)) begin
-        $display("[LSU] store addr error 0x%08x at pc 0x%08x", axi_lsu.awaddr, ifu2exu.pc);
+        $display("[LSU] store addr error 0x%08x at pc 0x%08x", axi_lsu.awaddr, idu2exu.pc);
         $finish;
       end
     end
@@ -375,7 +376,7 @@ module ysyx_24080006_ex_stage
       LSU_CNT(1, lsu_cnt);
       if (INSIDE_PERIP(axi_lsu.araddr)) SKIP_DIFFTEST();
       else if (!INSIDE_MEM(axi_lsu.araddr)) begin
-        $display("[LSU] load addr error 0x%08x at pc 0x%08x", axi_lsu.araddr, ifu2exu.pc);
+        $display("[LSU] load addr error 0x%08x at pc 0x%08x", axi_lsu.araddr, idu2exu.pc);
         $finish;
       end
     end

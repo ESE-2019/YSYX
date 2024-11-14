@@ -9,7 +9,7 @@ package ysyx_24080006_pkg;
   typedef enum logic [1:0] {
     IMM,
     RS2,
-    CONST4,
+    PC_INCR,
     CSR
   } alu_b_e;
 
@@ -39,16 +39,17 @@ package ysyx_24080006_pkg;
   } alu_set_t;
 
   typedef enum logic [6:0] {
-    LUI    = 7'b0110111,
-    AUIPC  = 7'b0010111,
-    OP     = 7'b0110011,
-    OP_IMM = 7'b0010011,
-    LOAD   = 7'b0000011,
-    STORE  = 7'b0100011,
-    JAL    = 7'b1101111,
-    JALR   = 7'b1100111,
-    BRANCH = 7'b1100011,
-    SYSTEM = 7'b1110011   //EBREAK, ECALL, CSR, MRET
+    LUI      = 7'b0110111,
+    AUIPC    = 7'b0010111,
+    OP       = 7'b0110011,
+    OP_IMM   = 7'b0010011,
+    LOAD     = 7'b0000011,
+    STORE    = 7'b0100011,
+    JAL      = 7'b1101111,
+    JALR     = 7'b1100111,
+    BRANCH   = 7'b1100011,
+    SYSTEM   = 7'b1110011,  //EBREAK, ECALL, CSR, MRET
+    MISC_MEM = 7'b0001111
   } inst_op_e;
 
   typedef enum logic [11:0] {
@@ -165,9 +166,9 @@ package ysyx_24080006_pkg;
 
 
 `ifdef SOC_MODE
-  parameter RST_ADDR = 32'h3000_0000 - 32'h4;
+  parameter RST_ADDR = 32'h3000_0000;
 `else
-  parameter RST_ADDR = 32'h8000_0000 - 32'h4;
+  parameter RST_ADDR = 32'h8000_0000;
 `endif
 
   parameter logic [3:0] WSTRB_LUT[4] = '{

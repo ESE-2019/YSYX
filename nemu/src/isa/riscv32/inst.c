@@ -298,9 +298,9 @@ static void ftrace_print(const uint32_t addr)
 }
 #endif
 
-#define CACHE_SIZE 1 // index
+#define CACHE_SIZE 8 // index
 #define CACHE_WAY 2
-#define CACHE_LINE 2 // 0-4b 1-8b 2-16b 3-32b
+#define CACHE_LINE 1 // 0-4b 1-8b 2-16b 3-32b
 
 typedef struct
 {
@@ -345,10 +345,59 @@ static void cache_sim(uint32_t pc)
     dummy_cache[index].del = 0;
 }
 
+#define DCACHE_SIZE 1 // index
+#define DCACHE_WAY 1
+#define DCACHE_LINE 0 // 0-4b 1-8b 2-16b 3-32b
+
+typedef struct
+{
+  bool vld[DCACHE_WAY];
+  uint32_t addr[DCACHE_WAY];
+  uint8_t del;
+} Dcachesim_t;
+
+static Dcachesim_t Ddummy_cache[DCACHE_SIZE];
+static int Dhit_num = 0, Dmiss_num = 0;
+static void Dcache_sim(uint32_t addr)
+{
+  if (addr < 0xa0000000)
+    return;
+
+  addr = addr >> 2;
+  addr = addr >> DCACHE_LINE;
+  int index = addr & (DCACHE_SIZE - 1);
+
+  assert(index < DCACHE_SIZE);
+  assert(Ddummy_cache[index].del < DCACHE_WAY);
+
+  for (int i = 0; i < DCACHE_WAY; i++)
+
+  {
+    if (Ddummy_cache[index].vld[i] && Ddummy_cache[index].addr[i] == addr)
+    {
+      Dhit_num++;
+      //dummy_cache[index].del = 1 ^ i;
+      return;
+    }
+  }
+
+  Dmiss_num++;
+  Ddummy_cache[index].vld[Ddummy_cache[index].del] = 1;
+  Ddummy_cache[index].addr[Ddummy_cache[index].del] = addr;
+
+  //dummy_cache[index].del ^= 1;
+   Ddummy_cache[index].del++;
+
+  if (Ddummy_cache[index].del >= DCACHE_WAY)
+    Ddummy_cache[index].del = 0;
+}
+
 static void print_cachesim()
 {
   double num = 100 * (double)hit_num / (double)(hit_num + miss_num);
-  printf("H/(H+M) = %.3f%% \n", num);
+  printf("I$ H/(H+M) = %.3f%% \n", num);
+  num = 100 * (double)Dhit_num / (double)(Dhit_num + Dmiss_num);
+  printf("D$ H/(H+M) = %.3f%% \n", num);
 }
 
 extern void print_iringbuf();
@@ -390,7 +439,7 @@ static int decode_exec(Decode *s)
           R(rd) = tmp; CSR_w(imm, (~uimm) | tmp););
   INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc, U,
           R(rd) = s->pc + imm /*; Log("auipc") */);
-  INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I,
+  INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = Mr(src1 + sign_extend(imm, 12), 1) /*; Log("lbu") */);
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S,
           Mw(src1 + sign_extend(imm, 12), 1, src2) /*; Log("sb") */);
@@ -428,23 +477,23 @@ static int decode_exec(Decode *s)
           if (src1 >= src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("bgeu") */);
 
-  INSTPAT("??????? ????? ????? 000 ????? 00000 11", lb, I,
+  INSTPAT("??????? ????? ????? 000 ????? 00000 11", lb, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = sign_extend(Mr(src1 + sign_extend(imm, 12), 1),
                               8) /*; Log("lb") */);
-  INSTPAT("??????? ????? ????? 001 ????? 00000 11", lh, I,
+  INSTPAT("??????? ????? ????? 001 ????? 00000 11", lh, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = sign_extend(Mr(src1 + sign_extend(imm, 12), 2),
                               16) /*; Log("lh") */);
-  INSTPAT("??????? ????? ????? 010 ????? 00000 11", lw, I,
+  INSTPAT("??????? ????? ????? 010 ????? 00000 11", lw, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = Mr(src1 + sign_extend(imm, 12), 4) /*; Log("lw") */);
   // lbu
-  INSTPAT("??????? ????? ????? 101 ????? 00000 11", lhu, I,
+  INSTPAT("??????? ????? ????? 101 ????? 00000 11", lhu, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = Mr(src1 + sign_extend(imm, 12), 2) /*; Log("lhu") */);
   // sb
-  INSTPAT("??????? ????? ????? 001 ????? 01000 11", sh, S,
+  INSTPAT("??????? ????? ????? 001 ????? 01000 11", sh, S, Dcache_sim(src1 + sign_extend(imm, 12));
           Mw(src1 + sign_extend(imm, 12), 2, src2) /*; Log("sh") */);
-  INSTPAT("??????? ????? ????? 010 ????? 01000 11", sw, S,
+  INSTPAT("??????? ????? ????? 010 ????? 01000 11", sw, S, Dcache_sim(src1 + sign_extend(imm, 12));
           Mw(src1 + sign_extend(imm, 12), 4, src2) /*; Log("sw") */);
-  INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi, I,
+  INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi, I, Dcache_sim(src1 + sign_extend(imm, 12));
           R(rd) = src1 + sign_extend(imm, 12) /*; Log("addi") */);
   INSTPAT("??????? ????? ????? 010 ????? 00100 11", slti, I,
           R(rd) = ((int32_t)src1 < (int32_t)sign_extend(imm, 12)) ? 1 : 0 /*; Log("slti") */);

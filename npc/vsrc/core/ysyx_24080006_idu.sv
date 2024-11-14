@@ -2,6 +2,7 @@ module ysyx_24080006_idu
   import ysyx_24080006_pkg::*;
 (
     input logic [31:0] inst,
+    output logic fencei,
     output decoder_t idu,
     output logic inst_err
 );
@@ -23,13 +24,14 @@ module ysyx_24080006_idu
     idu.csr_set = '0;
     idu.lsu_set = '0;
     idu.mdu_set = '0;
-    idu.reg_we  = 0;
-    idu.jal     = 0;
-    idu.jalr    = 0;
-    idu.branch  = 0;
-    idu.ecall   = 0;
-    idu.mret    = 0;
-    inst_err    = 0;
+    idu.reg_we  = 1'b0;
+    idu.jal     = 1'b0;
+    idu.jalr    = 1'b0;
+    idu.branch  = 1'b0;
+    idu.ecall   = 1'b0;
+    idu.mret    = 1'b0;
+    inst_err    = 1'b0;
+    fencei      = 1'b0;
     unique case (inst[6:0])
 
       LUI: begin
@@ -37,7 +39,7 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = CONST0;
         idu.alu_set.alu_b  = IMM;
         idu.alu_set.alu_op = ADD;
-        idu.reg_we = 1;
+        idu.reg_we = 1'b1;
       end
 
       AUIPC: begin
@@ -45,13 +47,13 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = PC;
         idu.alu_set.alu_b  = IMM;
         idu.alu_set.alu_op = ADD;
-        idu.reg_we = 1;
+        idu.reg_we = 1'b1;
       end
 
       OP: begin
         idu.alu_set.alu_a = RS1;
         idu.alu_set.alu_b = RS2;
-        idu.reg_we = 1;
+        idu.reg_we = 1'b1;
         unique case ({
           inst[31:25], inst[14:12]
         })
@@ -69,75 +71,75 @@ module ysyx_24080006_idu
             7'b0000001, 3'b000
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 0;
-            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b0;
+            idu.mdu_set.signed_b = 1'b0;
             idu.mdu_set.mdu_op = MULL;
           end
           {
             7'b0000001, 3'b001
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 1;
-            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b1;
+            idu.mdu_set.signed_b = 1'b1;
             idu.mdu_set.mdu_op = MULH;
           end
           {
             7'b0000001, 3'b010
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 1;
-            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b1;
+            idu.mdu_set.signed_b = 1'b0;
             idu.mdu_set.mdu_op = MULH;
           end
           {
             7'b0000001, 3'b011
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 0;
-            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b0;
+            idu.mdu_set.signed_b = 1'b0;
             idu.mdu_set.mdu_op = MULH;
           end
           {
             7'b0000001, 3'b100
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 1;
-            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b1;
+            idu.mdu_set.signed_b = 1'b1;
             idu.mdu_set.mdu_op = DIV;
           end
           {
             7'b0000001, 3'b101
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 0;
-            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b0;
+            idu.mdu_set.signed_b = 1'b0;
             idu.mdu_set.mdu_op = DIV;
           end
           {
             7'b0000001, 3'b110
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 1;
-            idu.mdu_set.signed_b = 1;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b1;
+            idu.mdu_set.signed_b = 1'b1;
             idu.mdu_set.mdu_op = REM;
           end
           {
             7'b0000001, 3'b111
           } : begin
             idu.alu_set.alu_op = ADD;
-            idu.mdu_set.mdu_enable = 1;
-            idu.mdu_set.signed_a = 0;
-            idu.mdu_set.signed_b = 0;
+            idu.mdu_set.mdu_enable = 1'b1;
+            idu.mdu_set.signed_a = 1'b0;
+            idu.mdu_set.signed_b = 1'b0;
             idu.mdu_set.mdu_op = REM;
           end
-          default:               inst_err = 1;
+          default: inst_err = 1'b1;
         endcase
       end
 
@@ -145,14 +147,14 @@ module ysyx_24080006_idu
         idu.imm    = immI;
         idu.alu_set.alu_a  = RS1;
         idu.alu_set.alu_b  = IMM;
-        idu.reg_we = 1;
+        idu.reg_we = 1'b1;
         unique case (inst[14:12])
           3'b000:  idu.alu_set.alu_op = ADD;
           3'b001:
           if (inst[31:25] == 7'b0000000) begin
             idu.alu_set.alu_op = SLL;
           end else begin
-            inst_err = 1;
+            inst_err = 1'b1;
           end
           3'b010:  idu.alu_set.alu_op = SLT;
           3'b011:  idu.alu_set.alu_op = SLTU;
@@ -163,11 +165,11 @@ module ysyx_24080006_idu
           end else if (inst[31:25] == 7'b0100000) begin
             idu.alu_set.alu_op = SRA;
           end else begin
-            inst_err = 1;
+            inst_err = 1'b1;
           end
           3'b110:  idu.alu_set.alu_op = OR;
           3'b111:  idu.alu_set.alu_op = AND;
-          default: inst_err = 1;
+          default: inst_err = 1'b1;
         endcase
       end
 
@@ -176,16 +178,16 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = RS1;
         idu.alu_set.alu_b  = IMM;
         idu.alu_set.alu_op = ADD;
-        idu.lsu_set.lsu_enable = 1;
-        idu.lsu_set.lsu_write  = 0;
-        idu.reg_we = 1;
+        idu.lsu_set.lsu_enable = 1'b1;
+        idu.lsu_set.lsu_write  = 1'b0;
+        idu.reg_we = 1'b1;
         unique case (inst[14:12])
           3'b000:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b001:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b010:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b100:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b101:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
-          default: inst_err = 1;
+          default: inst_err = 1'b1;
         endcase
       end
 
@@ -194,40 +196,40 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = RS1;
         idu.alu_set.alu_b  = IMM;
         idu.alu_set.alu_op = ADD;
-        idu.lsu_set.lsu_enable = 1;
-        idu.lsu_set.lsu_write  = 1;
+        idu.lsu_set.lsu_enable = 1'b1;
+        idu.lsu_set.lsu_write  = 1'b1;
         unique case (inst[14:12])
           3'b000:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b001:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
           3'b010:  {idu.lsu_set.lsu_sext, idu.lsu_set.lsu_size} = inst[14:12];
-          default: inst_err = 1;
+          default: inst_err = 1'b1;
         endcase
       end
 
       JAL: begin
         idu.imm    = immJ;
         idu.alu_set.alu_a  = PC;
-        idu.alu_set.alu_b  = CONST4;
+        idu.alu_set.alu_b  = PC_INCR;
         idu.alu_set.alu_op = ADD;
-        idu.reg_we = 1;
-        idu.jal    = 1;
+        idu.reg_we = 1'b1;
+        idu.jal    = 1'b1;
       end
 
       JALR: begin
         idu.imm    = immI;
         idu.alu_set.alu_a  = PC;
-        idu.alu_set.alu_b  = CONST4;
+        idu.alu_set.alu_b  = PC_INCR;
         idu.alu_set.alu_op = ADD;
-        idu.reg_we = 1;
-        idu.jalr   = 1;
-        if (inst[14:12] != 3'b000) inst_err = 1;
+        idu.reg_we = 1'b1;
+        idu.jalr   = 1'b1;
+        if (inst[14:12] != 3'b000) inst_err = 1'b1;
       end
 
       BRANCH: begin
         idu.imm    = immB;
         idu.alu_set.alu_a  = RS1;
         idu.alu_set.alu_b  = RS2;
-        idu.branch = 1;
+        idu.branch = 1'b1;
         unique case (inst[14:12])
           3'b000:  idu.alu_set.alu_op = BEQ;
           3'b001:  idu.alu_set.alu_op = BNE;
@@ -235,7 +237,7 @@ module ysyx_24080006_idu
           3'b101:  idu.alu_set.alu_op = BGE;
           3'b110:  idu.alu_set.alu_op = BLTU;
           3'b111:  idu.alu_set.alu_op = BGEU;
-          default: inst_err = 1;
+          default: inst_err = 1'b1;
         endcase
       end
 
@@ -244,32 +246,32 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = CONST0;
         idu.alu_set.alu_b  = CSR;
         idu.alu_set.alu_op = ADD;
-        idu.reg_we = 1;
+        idu.reg_we = 1'b1;
         if (inst[14:12] == 3'b000) begin
           if ({inst[19:15], inst[11:7]} == '0) begin
             unique case (inst[31:20])
               ECALL: begin
-                idu.ecall = 1;
+                idu.ecall = 1'b1;
                 idu.csr_set.csr_name = mtvec;
               end
-              EBREAK:  inst_err = 1;  // use DPI-C to end sim
+              EBREAK:  inst_err = 1'b1;  // use DPI-C to end sim
               MRET: begin
-                idu.mret = 1;
+                idu.mret = 1'b1;
                 idu.csr_set.csr_name = mepc;
               end
-              default: inst_err = 1;
+              default: inst_err = 1'b1;
             endcase
           end else begin
-            inst_err = 1;
+            inst_err = 1'b1;
           end
         end else begin
-          idu.csr_set.csr_enable = 1;
-          if (inst[14]) idu.csr_set.csr_uimm = 1;
+          idu.csr_set.csr_enable = 1'b1;
+          if (inst[14]) idu.csr_set.csr_uimm = 1'b1;
           unique case (inst[13:12])
             2'b01:   idu.csr_set.csr_op = WRITE;
             2'b10:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : SET;
             2'b11:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : CLEAR;
-            default: inst_err = 1;
+            default: inst_err = 1'b1;
           endcase
           unique case (inst[31:20])
             MSTATUS: idu.csr_set.csr_name = mstatus;
@@ -278,12 +280,26 @@ module ysyx_24080006_idu
             MCAUSE: idu.csr_set.csr_name = mcause;
             MVENDORID: idu.csr_set.csr_name = mvendorid;
             MARCHID: idu.csr_set.csr_name = marchid;
-            default: inst_err = 1;
+            default: inst_err = 1'b1;
           endcase
         end
       end
 
-      default: inst_err = 1;
+      MISC_MEM: begin
+        unique case (inst[14:12])
+          3'b000: begin
+            // NOP
+          end
+          3'b001: begin
+            fencei = 1'b1;
+          end
+          default: begin
+            inst_err = 1'b1;
+          end
+        endcase
+      end
+
+      default: inst_err = 1'b1;
     endcase
   end
 

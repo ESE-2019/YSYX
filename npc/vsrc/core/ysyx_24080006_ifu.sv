@@ -4,34 +4,37 @@ module ysyx_24080006_ifu
     input logic clock,
     input logic reset,
 
-    output decoder_t decoder,
+    input logic fencei,
+    output logic is_zc,
+    output logic [31:0] inst,
 
-    input  logic   exu2ifu_ready,
+    input  logic   idu2ifu_ready,
     output logic   ifu2exu_ready,
     input  stage_t exu2ifu,
-    output stage_t ifu2exu,
+    output stage_t ifu2idu,
 
     ysyx_24080006_axi.master axi_ifu
 );
 
   typedef enum logic [1:0] {
+    RESET,
     IDLE,
     EXEC,
     WAIT
   } if_fsm_e;
   if_fsm_e curr, next;
 
-  logic [31:0] pc, inst;
+  logic [31:0] pc, fetch_addr, ic_val, zc_val;
   decoder_t idu;
-  logic inst_err;
+  logic is_zc_d, zc_err, inst_err;
 
   logic icu2ifu_valid, ifu2icu_valid;
   logic icu2ifu_ready, ifu2icu_ready;
-  assign ifu2icu_ready = 1;
+  assign ifu2icu_ready = 1'b1;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr <= RESET;
     end else begin
       curr <= next;
     end
@@ -40,6 +43,7 @@ module ysyx_24080006_ifu
   always_comb begin  //fsm 2
     next = IDLE;
     unique case (curr)
+      RESET: next = EXEC;
       IDLE: begin
         if (exu2ifu.valid) begin
           next = EXEC;
@@ -55,7 +59,7 @@ module ysyx_24080006_ifu
         end
       end
       WAIT: begin
-        if (exu2ifu_ready) begin
+        if (idu2ifu_ready) begin
           next = IDLE;
         end else begin
           next = WAIT;
@@ -66,55 +70,115 @@ module ysyx_24080006_ifu
 
   always_ff @(posedge clock) begin  // fsm 3 for handshake
     if (reset) begin
-      ifu2exu_ready <= 1;
-      ifu2exu.valid <= 0;
+      ifu2exu_ready <= 1'b0;
+      ifu2idu.valid <= 1'b0;
     end else begin
       unique case (curr)
+        RESET: begin
+          ifu2exu_ready <= 1'b0;
+          ifu2idu.valid <= 1'b0;
+        end
         IDLE: begin
           if (exu2ifu.valid) begin
-            ifu2exu_ready <= 0;
-            ifu2exu.valid <= 0;
+            ifu2exu_ready <= 1'b0;
+            ifu2idu.valid <= 1'b0;
           end else begin
-            ifu2exu_ready <= 1;
-            ifu2exu.valid <= 0;
+            ifu2exu_ready <= 1'b1;
+            ifu2idu.valid <= 1'b0;
           end
         end
         EXEC: begin
           if (icu2ifu_valid) begin
-            ifu2exu_ready <= 0;
-            ifu2exu.valid <= 1;
+            ifu2exu_ready <= 1'b0;
+            ifu2idu.valid <= 1'b1;
           end else begin
-            ifu2exu_ready <= 0;
-            ifu2exu.valid <= 0;
+            ifu2exu_ready <= 1'b0;
+            ifu2idu.valid <= 1'b0;
           end
         end
         WAIT: begin
-          if (exu2ifu_ready) begin
-            ifu2exu_ready <= 1;
-            ifu2exu.valid <= 0;
+          if (idu2ifu_ready) begin
+            ifu2exu_ready <= 1'b1;
+            ifu2idu.valid <= 1'b0;
           end else begin
-            ifu2exu_ready <= 0;
-            ifu2exu.valid <= 1;
+            ifu2exu_ready <= 1'b0;
+            ifu2idu.valid <= 1'b1;
           end
         end
       endcase
     end
   end  // fsm 3 for handshake
 
+  logic [31:0] pc_d, pc_q;
+  logic [31:0] fetch_addr_d, fetch_addr_q;
+  logic [15:0] inst_buf_d, inst_buf_q;
+  // always_comb begin
+  //   unique case ({
+  //     pc[1], is_zc
+  //   })
+  //     2'b00: begin
+  //       zc_val = ic_val;
+  //       inst_buf_d = 16'h0;
+  //       pc_incr_d = 32'h4;
+  //       fetch_incr_d = 32'h4;
+  //     end
+  //     2'b10: begin
+  //       zc_val = {ic_val[15:0], inst_buf_q};
+  //       inst_buf_d = ic_val[31:16];
+  //       pc_incr_d = 32'h4;
+  //       fetch_incr_d = 32'h4;
+  //     end
+  //     2'b01: begin
+  //       zc_val = ic_val;
+  //       inst_buf_d = ic_val[31:16];
+  //       pc_incr_d = 32'h2;
+  //       fetch_incr_d = 32'h4;
+  //     end
+  //     2'b11: begin
+  //       zc_val = {ic_val[15:0], inst_buf_q};
+  //       inst_buf_d = 16'h0;
+  //       pc_incr_d = 32'h2;
+  //       fetch_incr_d = 32'h0;
+  //     end
+  //   endcase
+  // end
+
+
+  logic branch_or_jump;
+  logic bj_unalign;
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin
       ifu2icu_valid <= 1'b0;
       pc <= RST_ADDR;
-      ifu2exu.pc <= RST_ADDR;
-      decoder <= idu;
+      fetch_addr <= RST_ADDR;
+      ifu2idu.pc <= RST_ADDR;
+      inst <= 32'h0;
+      is_zc <= 0;
+      pc_incr_q <= 32'h4;
+      fetch_incr_q <= 32'h4;
+      inst_buf_q <= 16'h0;
+      branch_or_jump <= 1'b0;
+      bj_unalign <= 1'b0;
     end else begin
       unique case (curr)
+        RESET: begin
+          pc <= RST_ADDR;
+          fetch_addr <= RST_ADDR;
+          ifu2icu_valid <= 1'b1;
+        end
         IDLE: begin
+          inst_buf_q <= inst_buf_d;
           if (exu2ifu.valid) begin
+            pc_incr_q <= pc_incr_d;
+            fetch_incr_q <= fetch_incr_d;
             if (exu2ifu.jump || exu2ifu.branch) begin
               pc <= exu2ifu.dnpc;
+              fetch_addr <= {exu2ifu.dnpc[31:2], 2'b00};
+              bj_unalign <= exu2ifu.dnpc[1];
+              branch_or_jump <= 1'b1;
             end else begin
-              pc <= pc + 32'h4;
+              pc <= pc + pc_incr_d;
+              fetch_addr <= fetch_addr + fetch_incr_d;
             end
             ifu2icu_valid <= 1'b1;
           end else begin
@@ -126,8 +190,9 @@ module ysyx_24080006_ifu
             ifu2icu_valid <= 1'b0;
           end
           if (icu2ifu_valid) begin
-            ifu2exu.pc <= pc;
-            decoder <= idu;
+            is_zc <= is_zc_d;
+            ifu2idu.pc <= pc;
+            inst <= idu;
           end
         end
         WAIT: begin
@@ -137,13 +202,15 @@ module ysyx_24080006_ifu
     end
   end  // fsm 3 for axi
 
+
   ysyx_24080006_icu ICU (.*);
-  ysyx_24080006_idu IDU (.*);
+  ysyx_24080006_zcu ZCU (
+      .*,
+      .is_zc(is_zc_d)
+  );
 
 
 `ifdef SIM_MODE
-  import "DPI-C" function void ebreak();
-  import "DPI-C" function void INST_CNT(input int type_code);
   import "DPI-C" function void dbg(
     input int inst,
     input int pc,
@@ -186,24 +253,11 @@ module ysyx_24080006_ifu
     end
   end
   always_ff @(posedge clock) begin
-    if (ifu2exu.valid) begin
+    if (ifu2idu.valid) begin
       if (!INSIDE_MEM(pc)) begin
         $display("[IFU]pc error 0x%08x", pc);
         $finish;
-      end else if (inst == EBREAK_INST) begin
-        ebreak();
-      end else if (inst_err) begin
-        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, pc);
-        $finish;
       end
-      case (inst[6:0])
-        AUIPC, LUI, OP, OP_IMM: INST_CNT(0);
-        LOAD, STORE: INST_CNT(1);
-        SYSTEM: INST_CNT(2);
-        BRANCH: INST_CNT(3);
-        JAL, JALR: INST_CNT(4);
-        default: ;
-      endcase
     end
   end
 `endif

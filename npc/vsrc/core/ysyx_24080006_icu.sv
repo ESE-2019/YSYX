@@ -4,13 +4,14 @@ module ysyx_24080006_icu
     input logic clock,
     input logic reset,
 
-    input  logic [31:0] pc,
-    output logic [31:0] inst,
+    input  logic [31:0] fetch_addr,
+    output logic [31:0] ic_val,
 
     input  logic ifu2icu_valid,
     input  logic ifu2icu_ready,
     output logic icu2ifu_valid,
     output logic icu2ifu_ready,
+    input  logic fencei,
 
     ysyx_24080006_axi.master axi_ifu
 );
@@ -24,7 +25,7 @@ module ysyx_24080006_icu
   } ic_fsm_e;
   ic_fsm_e curr, next;
 
-  logic [31:0] ic_pc;
+  logic [31:0] ic_addr;
 
   icache_t ic_rdata_1, ic_rdata_0, ic_wdata;
   logic [31:0] ic_wdata_tmp  [4];
@@ -32,16 +33,16 @@ module ysyx_24080006_icu
   logic [31:0] ic_rdata_0_tmp[4];
   logic ic_we_1, ic_we_0;
   logic replace_way[IC_2];
-  wire [1:0] pc_offset = pc[3:2];
+  wire [1:0] pc_offset = fetch_addr[3:2];
   logic [IC_N-1:0] ic_index, ic_waddr;
-  wire [31-IC_M-IC_N:0] tag = pc[31:IC_M+IC_N];
-  wire skip_icache = pc < 32'h3000_0000;
-  wire burst_icache = pc >= 32'ha000_0000;
+  wire [31-IC_M-IC_N:0] tag = fetch_addr[31:IC_M+IC_N];
+  wire skip_icache = fetch_addr < 32'h3000_0000;
+  wire burst_icache = fetch_addr >= 32'ha000_0000;
   wire hit_1 = ic_rdata_1.valid && (tag == ic_rdata_1.tag);
   wire hit_0 = ic_rdata_0.valid && (tag == ic_rdata_0.tag);
   logic [1:0] burst_offset;
-  assign ic_index = pc[IC_M+IC_N-1:IC_M];
-  wire [1:0] addr_offset = ic_pc[3:2] + burst_offset;
+  assign ic_index = fetch_addr[IC_M+IC_N-1:IC_M];
+  wire [1:0] addr_offset = ic_addr[3:2] + burst_offset;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -110,27 +111,27 @@ module ysyx_24080006_icu
       axi_ifu.araddr  <= '0;
       axi_ifu.arlen   <= 8'h0;
       foreach (replace_way[i]) replace_way[i] <= 1'b0;
-      ic_pc <= 32'b0;
+      ic_addr <= 32'b0;
       ic_we_1 <= 1'b0;
       ic_we_0 <= 1'b0;
       ic_wdata_tmp[3] <= '0;
       ic_wdata_tmp[2] <= '0;
       ic_wdata_tmp[1] <= '0;
       ic_wdata_tmp[0] <= '0;
-      inst <= '0;
+      ic_val <= '0;
       burst_offset <= 2'b0;
       icu2ifu_valid <= 1'b0;
       icu2ifu_ready <= 1'b1;
     end else begin
       unique case (curr)
         IDLE: begin
-          ic_pc <= pc;
+          ic_addr <= fetch_addr;
           ic_waddr <= ic_index;
           if (ifu2icu_valid & icu2ifu_ready) begin
             unique if (skip_icache) begin  // SKIP
               axi_ifu.arvalid <= 1'b1;
               axi_ifu.rready <= 1'b0;
-              axi_ifu.araddr <= pc;
+              axi_ifu.araddr <= fetch_addr;
               axi_ifu.arlen <= 8'h0;
               ic_we_1 <= 1'b0;
               ic_we_0 <= 1'b0;
@@ -146,17 +147,17 @@ module ysyx_24080006_icu
               icu2ifu_valid <= 1'b1;
               icu2ifu_ready <= 1'b1;
               if (hit_1) begin
-                inst <= ic_rdata_1_tmp[pc_offset];
-                replace_way[ic_index] <= 0;
+                ic_val <= ic_rdata_1_tmp[pc_offset];
+                replace_way[ic_index] <= 1'b0;
               end else if (hit_0) begin
-                inst <= ic_rdata_0_tmp[pc_offset];
-                replace_way[ic_index] <= 1;
+                ic_val <= ic_rdata_0_tmp[pc_offset];
+                replace_way[ic_index] <= 1'b1;
               end
             end else begin
               if (burst_icache) begin  // BURST
                 axi_ifu.arvalid <= 1'b1;
                 axi_ifu.rready <= 1'b0;
-                axi_ifu.araddr <= pc;
+                axi_ifu.araddr <= fetch_addr;
                 axi_ifu.arlen <= 8'h3;
                 ic_we_1 <= 1'b0;
                 ic_we_0 <= 1'b0;
@@ -166,7 +167,7 @@ module ysyx_24080006_icu
               end else begin  // FLASH
                 axi_ifu.arvalid <= 1'b1;
                 axi_ifu.rready <= 1'b0;
-                axi_ifu.araddr <= pc;
+                axi_ifu.araddr <= fetch_addr;
                 axi_ifu.arlen <= 8'h0;
                 ic_we_1 <= 1'b0;
                 ic_we_0 <= 1'b0;
@@ -191,7 +192,7 @@ module ysyx_24080006_icu
           end
           if (axi_ifu.rvalid) begin
             axi_ifu.rready <= 1'b1;
-            inst <= axi_ifu.rdata;
+            ic_val <= axi_ifu.rdata;
             icu2ifu_valid <= 1'b1;
             icu2ifu_ready <= 1'b1;
           end
@@ -206,7 +207,7 @@ module ysyx_24080006_icu
             ic_wdata_tmp[addr_offset] <= axi_ifu.rdata;
 
             if (burst_offset == 2'b00) begin
-              inst <= axi_ifu.rdata;
+              ic_val <= axi_ifu.rdata;
               icu2ifu_valid <= 1'b1;
             end else begin
               icu2ifu_valid <= 1'b0;
@@ -232,7 +233,7 @@ module ysyx_24080006_icu
           end
           if (axi_ifu.rvalid) begin
             axi_ifu.rready <= 1'b1;
-            inst <= axi_ifu.rdata;
+            ic_val <= axi_ifu.rdata;
             burst_offset <= burst_offset + 2'b1;
             ic_wdata_tmp[addr_offset] <= axi_ifu.rdata;
             if (burst_offset == 2'b00) begin
@@ -247,7 +248,7 @@ module ysyx_24080006_icu
         FLASH_END: begin
           icu2ifu_valid  <= 1'b0;
           axi_ifu.rready <= 1'b0;
-          axi_ifu.araddr <= {ic_pc[31:4], addr_offset, 2'b0};
+          axi_ifu.araddr <= {ic_addr[31:4], addr_offset, 2'b0};
           if (burst_offset == 2'b00) begin
             axi_ifu.arvalid <= 1'b0;
             if (replace_way[ic_waddr]) ic_we_1 <= 1'b1;
@@ -269,7 +270,7 @@ module ysyx_24080006_icu
   assign axi_ifu.arburst = 2'b10;
 
   assign ic_wdata = {
-    1'b1, ic_pc[31:IC_M+IC_N], ic_wdata_tmp[3], ic_wdata_tmp[2], ic_wdata_tmp[1], ic_wdata_tmp[0]
+    1'b1, ic_addr[31:IC_M+IC_N], ic_wdata_tmp[3], ic_wdata_tmp[2], ic_wdata_tmp[1], ic_wdata_tmp[0]
   };
   assign ic_rdata_1_tmp[3] = ic_rdata_1.data[96+:32];
   assign ic_rdata_1_tmp[2] = ic_rdata_1.data[64+:32];
