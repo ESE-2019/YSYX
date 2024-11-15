@@ -3,9 +3,15 @@
 !*/
 !/nemu/*
 !/nexus-am/*
+!/am-kernels/*
+!/abstract-machine/*
+!/fceux-am/*
 !/nanos-lite/*
 !/navy-apps/*
 !/npc/*
+!/nvboard/*
+!/rt-thread-am/*
+!/ysyxSoC/*
 !Makefile
 !README.md
 !.gitignore
