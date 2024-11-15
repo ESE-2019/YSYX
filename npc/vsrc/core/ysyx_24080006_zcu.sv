@@ -8,17 +8,14 @@ module ysyx_24080006_zcu
 );
 
   always_comb begin
-    // By default, forward incoming instruction, mark it as legal.
     inst   = zc_val;
     zc_err = 1'b0;
 
-    // Check if incoming instruction is compressed.
     unique case (zc_val[1:0])
       // C0
       2'b00: begin
         unique case (zc_val[15:13])
-          3'b000: begin
-            // c.addi4spn -> addi rd', x2, imm
+          3'b000: begin  // c.addi4spn -> addi rd', x2, imm
             inst = {
               2'b0,
               zc_val[10:7],
@@ -35,8 +32,7 @@ module ysyx_24080006_zcu
             if (zc_val[12:5] == 8'b0) zc_err = 1'b1;
           end
 
-          3'b010: begin
-            // c.lw -> lw rd', imm(rs1')
+          3'b010: begin  // c.lw -> lw rd', imm(rs1')
             inst = {
               5'b0,
               zc_val[5],
@@ -52,8 +48,76 @@ module ysyx_24080006_zcu
             };
           end
 
-          3'b110: begin
-            // c.sw -> sw rs2', imm(rs1')
+          3'b100: begin  // zcb
+            case (zc_val[12:10])
+              3'b000: begin  // c.lbu -> lbu rd', imm(rs1')
+                inst = {
+                  10'b0,
+                  zc_val[5],
+                  zc_val[6],
+                  2'b01,
+                  zc_val[9:7],
+                  3'b100,
+                  2'b01,
+                  zc_val[4:2],
+                  {LOAD}
+                };
+              end
+
+              3'b001: begin
+                unique if (zc_val[6] == 1'b0) begin  // c.lhu -> lhu rd', imm(rs1')
+                  inst = {
+                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b101, 2'b01, zc_val[4:2], {LOAD}
+                  };
+
+                end else if (zc_val[6] == 1'b1) begin  // c.lh -> lh rd', imm(rs1')
+                  inst = {
+                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[4:2], {LOAD}
+                  };
+                end
+              end
+
+              3'b010: begin  // c.sb -> sb rs2', imm(rs1')
+                inst = {
+                  7'b0,
+                  2'b01,
+                  zc_val[4:2],
+                  2'b01,
+                  zc_val[9:7],
+                  3'b000,
+                  3'b0,
+                  zc_val[5],
+                  zc_val[6],
+                  {STORE}
+                };
+              end
+
+              3'b011: begin  // c.sh -> sh rs2', imm(rs1')
+                if (zc_val[6] == 1'b0) begin
+                  inst = {
+                    7'b0,
+                    2'b01,
+                    zc_val[4:2],
+                    2'b01,
+                    zc_val[9:7],
+                    3'b001,
+                    3'b0,
+                    zc_val[5],
+                    1'b0,
+                    {STORE}
+                  };
+                end else begin
+                  zc_err = 1'b1;
+                end
+              end
+
+              default: begin
+                zc_err = 1'b1;
+              end
+            endcase
+          end
+
+          3'b110: begin  // c.sw -> sw rs2', imm(rs1')
             inst = {
               5'b0,
               zc_val[5],
@@ -70,7 +134,7 @@ module ysyx_24080006_zcu
             };
           end
 
-          3'b001, 3'b011, 3'b100, 3'b101, 3'b111: begin
+          3'b001, 3'b011, 3'b101, 3'b111: begin
             zc_err = 1'b1;
           end
 
@@ -221,10 +285,30 @@ module ysyx_24080006_zcu
                     };
                   end
 
-                  3'b100, 3'b101, 3'b110, 3'b111: begin
-                    // 100: c.subw
-                    // 101: c.addw
-                    zc_err = 1'b1;
+                  3'b110: begin
+                    // c.mul -> mul rd', rd', rs2'
+                    inst = {
+                      7'b1, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b000, 2'b01, zc_val[9:7], {OP}
+                    };
+                    if (zc_val[11:10] != 2'b11) zc_err = 1'b1;
+                  end
+
+                  3'b111: begin
+                    unique case ({
+                      zc_val[11:10], zc_val[4:2]
+                    })
+                      5'b11000: begin  // c.zext.b -> andi rd'/rs1', rd'/rs1', 0xff
+                        inst = {12'hff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], {OP_IMM}};
+                      end
+                      //todo zbb
+                      5'b11101: begin  // c.not -> xori rd'/rs1', rd'/rs1', -1
+                        inst = {12'hfff, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP_IMM}};
+                      end
+
+                      default: begin
+                        zc_err = 1'b1;
+                      end
+                    endcase
                   end
 
                   default: begin
@@ -317,7 +401,15 @@ module ysyx_24080006_zcu
           3'b110: begin
             // c.swsp -> sw rs2, imm(x2)
             inst = {
-              4'b0, zc_val[8:7], zc_val[12], zc_val[6:2], 5'h02, 3'b010, zc_val[11:9], 2'b00, {STORE}
+              4'b0,
+              zc_val[8:7],
+              zc_val[12],
+              zc_val[6:2],
+              5'h02,
+              3'b010,
+              zc_val[11:9],
+              2'b00,
+              {STORE}
             };
           end
 

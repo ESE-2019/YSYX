@@ -10,7 +10,8 @@ module ysyx_24080006_core
   stage_t ifu2idu, idu2exu, exu2lsu, lsu2wbu, wbu2ifu;
   logic ifu2wbu_ready, idu2ifu_ready, exu2idu_ready, lsu2exu_ready, wbu2lsu_ready;
 
-  logic   is_zc;  //todo
+  logic   is_zc, fencei;  //todo
+  logic [31:0] inst;
   logic   exu2ifu_ready;
   logic   ifu2exu_ready;
   stage_t exu2ifu;

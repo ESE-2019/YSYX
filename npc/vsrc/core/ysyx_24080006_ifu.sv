@@ -24,10 +24,6 @@ module ysyx_24080006_ifu
   } if_fsm_e;
   if_fsm_e curr, next;
 
-  logic [31:0] pc, fetch_addr, ic_val, zc_val;
-  decoder_t idu;
-  logic is_zc_d, zc_err, inst_err;
-
   logic icu2ifu_valid, ifu2icu_valid;
   logic icu2ifu_ready, ifu2icu_ready;
   assign ifu2icu_ready = 1'b1;
@@ -52,7 +48,7 @@ module ysyx_24080006_ifu
         end
       end
       EXEC: begin
-        if (icu2ifu_valid) begin
+        if (icu2ifu_valid && !fetch_twice_q) begin
           next = WAIT;
         end else begin
           next = EXEC;
@@ -88,7 +84,7 @@ module ysyx_24080006_ifu
           end
         end
         EXEC: begin
-          if (icu2ifu_valid) begin
+          if (icu2ifu_valid && !fetch_twice_q) begin
             ifu2exu_ready <= 1'b0;
             ifu2idu.valid <= 1'b1;
           end else begin
@@ -109,78 +105,75 @@ module ysyx_24080006_ifu
     end
   end  // fsm 3 for handshake
 
+  logic [31:0] ic_val;
+  logic is_zc_d, is_zc_q;
+  logic zc_err, inst_err;
+  assign is_zc = is_zc_q;
   logic [31:0] pc_d, pc_q;
   logic [31:0] fetch_addr_d, fetch_addr_q;
-  logic [15:0] inst_buf_d, inst_buf_q;
-  // always_comb begin
-  //   unique case ({
-  //     pc[1], is_zc
-  //   })
-  //     2'b00: begin
-  //       zc_val = ic_val;
-  //       inst_buf_d = 16'h0;
-  //       pc_incr_d = 32'h4;
-  //       fetch_incr_d = 32'h4;
-  //     end
-  //     2'b10: begin
-  //       zc_val = {ic_val[15:0], inst_buf_q};
-  //       inst_buf_d = ic_val[31:16];
-  //       pc_incr_d = 32'h4;
-  //       fetch_incr_d = 32'h4;
-  //     end
-  //     2'b01: begin
-  //       zc_val = ic_val;
-  //       inst_buf_d = ic_val[31:16];
-  //       pc_incr_d = 32'h2;
-  //       fetch_incr_d = 32'h4;
-  //     end
-  //     2'b11: begin
-  //       zc_val = {ic_val[15:0], inst_buf_q};
-  //       inst_buf_d = 16'h0;
-  //       pc_incr_d = 32'h2;
-  //       fetch_incr_d = 32'h0;
-  //     end
-  //   endcase
-  // end
+  logic [15:0] inst_buf;
+  logic [31:0] inst_d, inst_q;
+  assign inst = inst_q;
+  logic fetch_twice_d, fetch_twice_q;
+
+  always_comb begin
+    if (fetch_twice_q) begin
+      pc_d = pc_q;
+      fetch_addr_d = fetch_addr_q + 32'h4;
+      fetch_twice_d = 0;
+    end else if (exu2ifu.jump || exu2ifu.branch) begin
+      pc_d = exu2ifu.dnpc;
+      fetch_addr_d = {exu2ifu.dnpc[31:2], 2'b00};
+      fetch_twice_d = exu2ifu.dnpc[1];
+    end else begin
+      fetch_twice_d = 0;
+      unique case ({
+        pc_q[1], is_zc_q
+      })
+        2'b00: begin
+          pc_d = pc_q + 32'h4;
+          fetch_addr_d = fetch_addr_q + 32'h4;
+        end
+        2'b01: begin
+          pc_d = pc_q + 32'h2;
+          fetch_addr_d = fetch_addr_q + 32'h4;
+        end
+        2'b10: begin
+          pc_d = pc_q + 32'h4;
+          fetch_addr_d = fetch_addr_q + 32'h4;
+        end
+        2'b11: begin
+          pc_d = pc_q + 32'h2;
+          fetch_addr_d = fetch_addr_q;
+        end
+      endcase
+    end
+  end
 
 
-  logic branch_or_jump;
-  logic bj_unalign;
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin
       ifu2icu_valid <= 1'b0;
-      pc <= RST_ADDR;
-      fetch_addr <= RST_ADDR;
+      pc_q <= RST_ADDR;
+      fetch_addr_q <= RST_ADDR;
       ifu2idu.pc <= RST_ADDR;
-      inst <= 32'h0;
-      is_zc <= 0;
-      pc_incr_q <= 32'h4;
-      fetch_incr_q <= 32'h4;
-      inst_buf_q <= 16'h0;
-      branch_or_jump <= 1'b0;
-      bj_unalign <= 1'b0;
+      inst_q <= 32'b0;
+      is_zc_q <= 1'b0;
+      fetch_twice_q <= 1'b0;
+      inst_buf <= 16'b0;
     end else begin
       unique case (curr)
         RESET: begin
-          pc <= RST_ADDR;
-          fetch_addr <= RST_ADDR;
+          //pc_q <= RST_ADDR;
+          //fetch_addr_q <= RST_ADDR;
           ifu2icu_valid <= 1'b1;
         end
         IDLE: begin
-          inst_buf_q <= inst_buf_d;
           if (exu2ifu.valid) begin
-            pc_incr_q <= pc_incr_d;
-            fetch_incr_q <= fetch_incr_d;
-            if (exu2ifu.jump || exu2ifu.branch) begin
-              pc <= exu2ifu.dnpc;
-              fetch_addr <= {exu2ifu.dnpc[31:2], 2'b00};
-              bj_unalign <= exu2ifu.dnpc[1];
-              branch_or_jump <= 1'b1;
-            end else begin
-              pc <= pc + pc_incr_d;
-              fetch_addr <= fetch_addr + fetch_incr_d;
-            end
+            pc_q <= pc_d;
+            fetch_addr_q <= fetch_addr_d;
             ifu2icu_valid <= 1'b1;
+            fetch_twice_q <= fetch_twice_d;
           end else begin
             ifu2icu_valid <= 1'b0;
           end
@@ -190,9 +183,16 @@ module ysyx_24080006_ifu
             ifu2icu_valid <= 1'b0;
           end
           if (icu2ifu_valid) begin
-            is_zc <= is_zc_d;
-            ifu2idu.pc <= pc;
-            inst <= idu;
+            inst_buf <= ic_val[31:16];
+            if (fetch_twice_q) begin
+              ifu2icu_valid <= 1'b1;
+              fetch_addr_q  <= fetch_addr_d;
+              fetch_twice_q <= fetch_twice_d;
+            end else begin
+              is_zc_q <= is_zc_d;
+              ifu2idu.pc <= pc_q;
+              inst_q <= inst_d;
+            end
           end
         end
         WAIT: begin
@@ -203,10 +203,15 @@ module ysyx_24080006_ifu
   end  // fsm 3 for axi
 
 
-  ysyx_24080006_icu ICU (.*);
+  wire [31:0] zc_val = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
+  ysyx_24080006_icu ICU (
+      .*,
+      .fetch_addr(fetch_addr_q)
+  );
   ysyx_24080006_zcu ZCU (
       .*,
-      .is_zc(is_zc_d)
+      .is_zc(is_zc_d),
+      .inst (inst_d)
   );
 
 
@@ -234,28 +239,29 @@ module ysyx_24080006_ifu
       type_cnt <= 1;
       ifu_cnt  <= 1;
     end else begin
-      unique case (curr)
+      case (curr)
         IDLE: begin
           type_cnt <= type_cnt + 1;
           ifu_cnt  <= 1;
         end
-        EXEC: begin
+        RESET, EXEC: begin
           ifu_cnt <= ifu_cnt + 1;
-          if (icu2ifu_valid) begin
-            dbg(inst, pc, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
+          if (icu2ifu_valid & ~fetch_twice_q) begin
+            dbg(zc_val, pc_q, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
             type_cnt <= 1;
             if (exu2ifu.jump || exu2ifu.branch) ftrace <= exu2ifu.dnpc;
             else ftrace <= ftrace + 32'h4;
           end else type_cnt <= type_cnt + 1;
         end
         WAIT: type_cnt <= type_cnt + 1;
+        default: ;
       endcase
     end
   end
   always_ff @(posedge clock) begin
     if (ifu2idu.valid) begin
-      if (!INSIDE_MEM(pc)) begin
-        $display("[IFU]pc error 0x%08x", pc);
+      if (!INSIDE_MEM(pc_q)) begin
+        $display("[IFU]pc error 0x%08x", pc_q);
         $finish;
       end
     end

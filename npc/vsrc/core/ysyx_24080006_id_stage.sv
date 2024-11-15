@@ -63,7 +63,7 @@ module ysyx_24080006_id_stage
             idu2exu.valid <= 1'b0;
           end
         end
-        EXEC, WAIT: begin
+        EXEC: begin
           if (exu2idu_ready) begin
             idu2ifu_ready <= 1'b1;
             idu2exu.valid <= 1'b0;
@@ -75,6 +75,8 @@ module ysyx_24080006_id_stage
       endcase
     end
   end  // fsm 3 for handshake
+
+  decoder_t idu;
 
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin
@@ -107,7 +109,7 @@ module ysyx_24080006_id_stage
       if (inst == EBREAK_INST) begin
         ebreak();
       end else if (inst_err) begin
-        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, pc);
+        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, 0);
         $finish;
       end
       case (inst[6:0])
