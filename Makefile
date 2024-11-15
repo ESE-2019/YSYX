@@ -41,6 +41,13 @@ endef
 _default:
 	@echo "Please run 'make' under subprojects."
 
+clean_c:
+	make -C $(AM_HOME)/../fceux-am clean	
+	rm -rf $(AM_HOME)/am/build/
+	rm -rf $(AM_HOME)/klib/build/
+	make -C $(YSYX_TEST_HOME) clean
+	rm -rf $(AM_HOME)/../rt-thread-am/bsp/abstract-machine/build/
+	
 clear:
 	make -C $(AM_HOME)/../fceux-am clean	
 	rm -rf $(AM_HOME)/am/build/
@@ -51,4 +58,4 @@ clear:
 	rm -rf $(AM_HOME)/../rt-thread-am/bsp/abstract-machine/build/
 
 
-.PHONY: .git_commit .clean_index _default clear
+.PHONY: .git_commit .clean_index _default clear clean_c

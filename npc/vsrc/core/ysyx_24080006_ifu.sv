@@ -26,6 +26,7 @@ module ysyx_24080006_ifu
 
   logic icu2ifu_valid, ifu2icu_valid;
   logic icu2ifu_ready, ifu2icu_ready;
+  logic fetch_twice_d, fetch_twice_q;
   assign ifu2icu_ready = 1'b1;
 
   always_ff @(posedge clock) begin  //fsm 1
@@ -114,7 +115,6 @@ module ysyx_24080006_ifu
   logic [15:0] inst_buf;
   logic [31:0] inst_d, inst_q;
   assign inst = inst_q;
-  logic fetch_twice_d, fetch_twice_q;
 
   always_comb begin
     if (fetch_twice_q) begin

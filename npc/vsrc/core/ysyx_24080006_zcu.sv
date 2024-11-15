@@ -294,14 +294,20 @@ module ysyx_24080006_zcu
                   end
 
                   3'b111: begin
-                    unique case ({
-                      zc_val[11:10], zc_val[4:2]
-                    })
-                      5'b11000: begin  // c.zext.b -> andi rd'/rs1', rd'/rs1', 0xff
+                    unique case (zc_val[4:2])
+                      3'b000: begin  // c.zext.b -> andi rd'/rs1', rd'/rs1', 0xff
                         inst = {12'hff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], {OP_IMM}};
                       end
-                      //todo zbb
-                      5'b11101: begin  // c.not -> xori rd'/rs1', rd'/rs1', -1
+                      3'b001:begin  // c.sext.b -> sext.b rd'/rs1', rd'/rs1'
+                        inst = {7'b0110000,5'b00100, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[9:7], {OP_IMM}};
+                      end
+                      3'b010:begin  // c.zext.h -> zext.h rd'/rs1', rd'/rs1'
+                        inst = {7'b0000100,5'b00000, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP}};
+                      end
+                      3'b011:begin  // c.sext.h -> sext.h rd'/rs1', rd'/rs1'
+                        inst = {7'b0110000,5'b00101, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[9:7], {OP_IMM}};
+                      end
+                      3'b101: begin  // c.not -> xori rd'/rs1', rd'/rs1', -1
                         inst = {12'hfff, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP_IMM}};
                       end
 

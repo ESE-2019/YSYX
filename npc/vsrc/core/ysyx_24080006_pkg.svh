@@ -13,7 +13,7 @@ package ysyx_24080006_pkg;
     CSR
   } alu_b_e;
 
-  typedef enum logic [3:0] {
+  typedef enum logic [5:0] {
     ADD,
     SUB,
     SLL,
@@ -29,7 +29,27 @@ package ysyx_24080006_pkg;
     BLT,
     BGE,
     BLTU,
-    BGEU
+    BGEU,
+    SH1ADD,  //Zba
+    SH2ADD,
+    SH3ADD,
+    ANDN,  //Logical with negate
+    ORN,
+    XNOR,
+    CLZ,  //Count leading/trailing zero bits
+    CTZ,
+    CPOP,  //Count population
+    MAX,  //Integer minimum/maximum
+    MAXU,
+    MIN,
+    MINU,
+    SEXTB,  //Sign- and zero-extension
+    SEXTH,
+    ZEXTH,
+    ROL,  //Bitwise rotation
+    ROR,
+    ORCB,  //OR Combine
+    REV8  //Byte-reverse
   } alu_op_e;
 
   typedef struct packed {
