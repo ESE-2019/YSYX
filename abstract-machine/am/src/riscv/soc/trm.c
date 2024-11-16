@@ -76,7 +76,7 @@ static inline void print_ysyx()
     outl(0x10002008, decimalTo32Bit(marchid));
 }
 
-static inline void _trm_init()
+static void __attribute__((section(".klib"), noinline)) _trm_init()
 {
     uart_init();
     print_ysyx();

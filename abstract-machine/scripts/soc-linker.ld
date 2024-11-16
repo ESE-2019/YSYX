@@ -36,7 +36,7 @@ SECTIONS {
     PROVIDE(_bootloader_vma_end = .);
   } > SRAM AT > FLASH : bootloader
 
-  /* bootloader */
+  /* klib */
   .klalign :
   {
     . = ALIGN(4);

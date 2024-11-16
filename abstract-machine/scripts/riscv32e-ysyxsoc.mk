@@ -1,7 +1,10 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
-COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32emc_zicsr_zifencei_zca_zcb -mabi=ilp32e -falign-functions=4 -falign-jumps=4
-CFLAGS        += $(COMMON_CFLAGS) -static -fdata-sections -ffunction-sections
-ASFLAGS       += $(COMMON_CFLAGS) -O3
+COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32em_zca_zcb_zicsr_zifencei -mabi=ilp32e
+COMMON_CFLAGS += -fipa-stack-alignment -fomit-frame-pointer -freorder-blocks -fpeephole2
+COMMON_CFLAGS += -fdata-sections -ffunction-sections -O2
+COMMON_CFLAGS += -falign-functions=4 -falign-jumps=4 -falign-labels=4 -falign-loops=4
+CFLAGS        += $(COMMON_CFLAGS) -static 
+ASFLAGS       += $(COMMON_CFLAGS)
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
