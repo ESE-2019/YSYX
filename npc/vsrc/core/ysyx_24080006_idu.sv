@@ -60,8 +60,8 @@ module ysyx_24080006_idu
           {7'b0000000, 3'b000} : idu.alu_set.alu_op = ADD;
           {7'b0100000, 3'b000} : idu.alu_set.alu_op = SUB;
           {7'b0000000, 3'b001} : idu.alu_set.alu_op = SLL;
-          {7'b0000000, 3'b010} : idu.alu_set.alu_op = SLT;
-          {7'b0000000, 3'b011} : idu.alu_set.alu_op = SLTU;
+          {7'b0000000, 3'b010} : idu.alu_set.alu_op = LT;
+          {7'b0000000, 3'b011} : idu.alu_set.alu_op = LTU;
           {7'b0000000, 3'b100} : idu.alu_set.alu_op = XOR;
           {7'b0000000, 3'b101} : idu.alu_set.alu_op = SRL;
           {7'b0100000, 3'b101} : idu.alu_set.alu_op = SRA;
@@ -144,19 +144,6 @@ module ysyx_24080006_idu
           {7'b0010000, 3'b100} : idu.alu_set.alu_op = SH2ADD;
           {7'b0010000, 3'b110} : idu.alu_set.alu_op = SH3ADD;
 
-          {7'b0100000, 3'b100} : idu.alu_set.alu_op = XNOR;
-          {7'b0100000, 3'b110} : idu.alu_set.alu_op = ORN;
-          {7'b0100000, 3'b111} : idu.alu_set.alu_op = ANDN;
-
-          {7'b0000101, 3'b100} : idu.alu_set.alu_op = MIN;
-          {7'b0000101, 3'b110} : idu.alu_set.alu_op = MAX;
-          {7'b0000101, 3'b101} : idu.alu_set.alu_op = MINU;
-          {7'b0000101, 3'b111} : idu.alu_set.alu_op = MAXU;
-
-          {7'b0000100, 3'b100} : idu.alu_set.alu_op = ZEXTH;  //same as pack
-
-          {7'b0110000, 3'b001} : idu.alu_set.alu_op = ROL;
-          {7'b0110000, 3'b101} : idu.alu_set.alu_op = ROR;
           default: inst_err = 1'b1;
         endcase
       end
@@ -168,42 +155,26 @@ module ysyx_24080006_idu
         idu.reg_we = 1'b1;
         unique case (inst[14:12])
           3'b000: idu.alu_set.alu_op = ADD;
+
           3'b001:
           unique case (inst[31:25])
             7'b0000000: idu.alu_set.alu_op = SLL;
-            7'b0110000:
-            unique case (inst[24:20])
-              5'b00000: idu.alu_set.alu_op = CLZ;
-              5'b00001: idu.alu_set.alu_op = CTZ;
-              5'b00010: idu.alu_set.alu_op = CPOP;
-              5'b00100: idu.alu_set.alu_op = SEXTB;
-              5'b00101: idu.alu_set.alu_op = SEXTH;
-              default:  inst_err = 1'b1;
-            endcase
             default: inst_err = 1'b1;
           endcase
-          3'b010: idu.alu_set.alu_op = SLT;
-          3'b011: idu.alu_set.alu_op = SLTU;
+
+          3'b010: idu.alu_set.alu_op = LT;
+          3'b011: idu.alu_set.alu_op = LTU;
           3'b100: idu.alu_set.alu_op = XOR;
+
           3'b101:
           unique case (inst[31:25])
             7'b0000000: idu.alu_set.alu_op = SRL;
             7'b0100000: idu.alu_set.alu_op = SRA;
-            7'b0110000: idu.alu_set.alu_op = ROR;
-            7'b0010100:
-            unique case (inst[24:20])
-              5'b00111: idu.alu_set.alu_op = ORCB;
-              default:  inst_err = 1'b1;
-            endcase
-            7'b0110100:
-            unique case (inst[24:20])
-              5'b11000: idu.alu_set.alu_op = REV8;
-              default:  inst_err = 1'b1;
-            endcase
             default: inst_err = 1'b1;
           endcase
-          3'b110: idu.alu_set.alu_op = OR;
-          3'b111: idu.alu_set.alu_op = AND;
+
+          3'b110:  idu.alu_set.alu_op = OR;
+          3'b111:  idu.alu_set.alu_op = AND;
           default: inst_err = 1'b1;
         endcase
       end
@@ -266,12 +237,12 @@ module ysyx_24080006_idu
         idu.alu_set.alu_b  = RS2;
         idu.branch = 1'b1;
         unique case (inst[14:12])
-          3'b000:  idu.alu_set.alu_op = BEQ;
-          3'b001:  idu.alu_set.alu_op = BNE;
-          3'b100:  idu.alu_set.alu_op = BLT;
-          3'b101:  idu.alu_set.alu_op = BGE;
-          3'b110:  idu.alu_set.alu_op = BLTU;
-          3'b111:  idu.alu_set.alu_op = BGEU;
+          3'b000:  idu.alu_set.alu_op = EQ;
+          3'b001:  idu.alu_set.alu_op = NE;
+          3'b100:  idu.alu_set.alu_op = LT;
+          3'b101:  idu.alu_set.alu_op = GE;
+          3'b110:  idu.alu_set.alu_op = LTU;
+          3'b111:  idu.alu_set.alu_op = GEU;
           default: inst_err = 1'b1;
         endcase
       end

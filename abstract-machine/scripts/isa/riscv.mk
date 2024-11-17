@@ -1,5 +1,5 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
-COMMON_CFLAGS := -fno-pic -march=rv64g -mcmodel=medany -mstrict-align -O
+COMMON_CFLAGS := -fno-pic -march=rv64g -mcmodel=medany -mstrict-align -O2 -falign-functions=16
 CFLAGS        += $(COMMON_CFLAGS) -static 
 ASFLAGS       += $(COMMON_CFLAGS)
 LDFLAGS       += -melf64lriscv

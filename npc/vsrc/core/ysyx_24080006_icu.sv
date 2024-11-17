@@ -154,7 +154,7 @@ module ysyx_24080006_icu
                 replace_way[ic_index] <= 1'b1;
               end
             end else begin
-              if (burst_icache) begin  // BURST
+              if (burst_icache) begin  // SDRAM
                 axi_ifu.arvalid <= 1'b1;
                 axi_ifu.rready <= 1'b0;
                 axi_ifu.araddr <= fetch_addr;
@@ -303,8 +303,10 @@ module ysyx_24080006_icu
         skip_num++;
       end else if (hit_1 | hit_0) begin
         hit_num++;
+        //$display("\thit:");
       end else begin
         miss_num++;
+        //$display("\tmiss:");
       end
     end
   end

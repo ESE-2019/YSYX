@@ -1,14 +1,13 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
 COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -march=rv32em_zca_zcb_zicsr_zifencei -mabi=ilp32e
-COMMON_CFLAGS += -fipa-stack-alignment -fomit-frame-pointer -freorder-blocks -fpeephole2
 COMMON_CFLAGS += -fdata-sections -ffunction-sections -O2
-COMMON_CFLAGS += -falign-functions=4 -falign-jumps=4 -falign-labels=4 -falign-loops=4
-CFLAGS        += $(COMMON_CFLAGS) -static 
+COMMON_CFLAGS +=  -falign-jumps=4 -falign-labels=4 -falign-loops=4
+CFLAGS        += $(COMMON_CFLAGS) -static
 ASFLAGS       += $(COMMON_CFLAGS)
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
-#LDFLAGS   += --print-map
+#LDFLAGS   += --print-map   -falign-functions=4
 SIM_FLAGS     := -fast
 
 AM_SRCS += riscv/soc/start.S \
@@ -29,7 +28,7 @@ insert-arg: image
 	@python3 $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) "$(MAINARGS_PLACEHOLDER)" "$(mainargs)"
 
 image: image-dep
-	@$(OBJDUMP) -d -M no-aliases $(IMAGE).elf > $(IMAGE).txt
+	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 

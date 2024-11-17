@@ -7,6 +7,10 @@ module ysyx_24080006_ex_stage
     input decoder_t decoder,
     input logic is_zc,
 
+    output logic                 reg_we,
+    output logic [REG_WIDTH-1:0] rd_addr,
+    output logic [         31:0] rd_data,
+
     input  logic   ifu2exu_ready,
     output logic   exu2idu_ready,
     input  stage_t idu2exu,
@@ -16,7 +20,8 @@ module ysyx_24080006_ex_stage
 );
 
   logic mdu_valid_o, mdu_valid_i;
-
+  mdu2alu_t mdu2alu;
+  alu2mdu_t alu2mdu;
   typedef enum logic [1:0] {
     IDLE,
     EXEC,
@@ -116,15 +121,13 @@ module ysyx_24080006_ex_stage
   end
 
   logic [31:0] dnpc;
-  logic [31:0] rs1_data, rs2_data, rd_data;
   logic [31:0] csr_rdata;
-  logic reg_we;
   logic [31:0] alu_a, alu_b, alu_c, mdu_c;
   logic [4:0] Mr_param;
 
   function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [4:0] param);
     logic [31:0] tmp;
-    tmp = rdata >> ({3'b0, param[1:0]} << 3);
+    tmp = rdata >> {param[1:0], 3'b0};
     unique case (param[4:2])
       3'b000:  Mr = {{24{tmp[7]}}, tmp[7:0]};
       3'b001:  Mr = {{16{tmp[15]}}, tmp[15:0]};
@@ -170,8 +173,8 @@ module ysyx_24080006_ex_stage
                 axi_lsu.awvalid <= 1;
                 axi_lsu.wvalid <= 1;
                 axi_lsu.bready <= 0;
-                axi_lsu.awaddr <= alu_c;
-                axi_lsu.wdata <= rs2_data;  // << ({3'b0, alu_c[1:0]} << 3);
+                axi_lsu.awaddr <= alu2mdu.res_32;  // alu_c
+                axi_lsu.wdata <= idu2exu.rs2_data;  // << ({3'b0, alu_c[1:0]} << 3);
                 axi_lsu.awsize <= {1'b0, decoder.lsu_set.lsu_size};
                 //axi_lsu.wstrb <= WSTRB_LUT[decoder.lsu_set.lsu_size] << alu_c[1:0];
                 reg_we <= '0;
@@ -182,11 +185,13 @@ module ysyx_24080006_ex_stage
                 axi_lsu.wvalid <= 0;
                 axi_lsu.bready <= 0;
                 axi_lsu.arsize <= {1'b0, decoder.lsu_set.lsu_size};
-                axi_lsu.araddr <= alu_c;
-                Mr_param <= {decoder.lsu_set.lsu_sext, decoder.lsu_set.lsu_size, alu_c[1:0]};
+                axi_lsu.araddr <= alu2mdu.res_32;
+                Mr_param <= {
+                  decoder.lsu_set.lsu_sext, decoder.lsu_set.lsu_size, alu2mdu.res_32[1:0]
+                };
                 reg_we <= '0;
               end
-            end else if (decoder.mdu_set.mdu_enable) begin
+            end else if (decoder.mdu_set.mdu_enable) begin  // mul/div
               axi_lsu.arvalid <= 0;
               axi_lsu.rready <= 0;
               axi_lsu.awvalid <= 0;
@@ -268,14 +273,6 @@ module ysyx_24080006_ex_stage
     end
   end
 
-  ysyx_24080006_reg REG (
-      .*,
-      .rs1_addr(decoder.rs1_addr),
-      .rs2_addr(decoder.rs2_addr),
-      .rd_addr (decoder.rd_addr)
-  );
-  mdu2alu_t mdu2alu;
-  alu2mdu_t alu2mdu;
   ysyx_24080006_alu ALU (
       .*,
       .mdu_enable(decoder.mdu_set.mdu_enable),
@@ -295,13 +292,13 @@ module ysyx_24080006_ex_stage
       .mret(decoder.mret),
       .pc(idu2exu.pc),
       .csr_set(decoder.csr_set),
-      .csr_wdata(rs1_data)
+      .csr_wdata(idu2exu.rs1_data)
   );
 
   always_comb begin
     unique case (1'b1)
       decoder.jal: dnpc = idu2exu.pc + decoder.imm;
-      decoder.jalr: dnpc = (rs1_data + decoder.imm) & 32'hffff_fffe;
+      decoder.jalr: dnpc = (idu2exu.rs1_data + decoder.imm) & 32'hffff_fffe;
       decoder.branch: dnpc = idu2exu.pc + decoder.imm;
       decoder.ecall: dnpc = csr_rdata;
       decoder.mret: dnpc = csr_rdata;
@@ -311,7 +308,7 @@ module ysyx_24080006_ex_stage
 
   always_comb begin
     unique case (decoder.alu_set.alu_a)
-      RS1:     alu_a = rs1_data;
+      RS1:     alu_a = idu2exu.rs1_data;
       PC:      alu_a = idu2exu.pc;
       CONST0:  alu_a = 32'b0;
       default: alu_a = 32'b0;
@@ -321,12 +318,14 @@ module ysyx_24080006_ex_stage
   always_comb begin
     unique case (decoder.alu_set.alu_b)
       IMM:     alu_b = decoder.imm;
-      RS2:     alu_b = rs2_data;
+      RS2:     alu_b = idu2exu.rs2_data;
       PC_INCR: alu_b = is_zc ? 32'h2 : 32'h4;
       CSR:     alu_b = csr_rdata;
       default: alu_b = 32'h4;
     endcase
   end
+
+  assign rd_addr = decoder.rd_addr;
 
   assign axi_lsu.arid    = 4'h1;
   assign axi_lsu.arlen   = 8'h0;

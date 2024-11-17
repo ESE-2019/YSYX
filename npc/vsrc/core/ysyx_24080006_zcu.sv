@@ -27,7 +27,7 @@ module ysyx_24080006_zcu
               3'b000,
               2'b01,
               zc_val[4:2],
-              {OP_IMM}
+              OP_IMM
             };
             if (zc_val[12:5] == 8'b0) zc_err = 1'b1;
           end
@@ -44,7 +44,7 @@ module ysyx_24080006_zcu
               3'b010,
               2'b01,
               zc_val[4:2],
-              {LOAD}
+              LOAD
             };
           end
 
@@ -52,27 +52,19 @@ module ysyx_24080006_zcu
             case (zc_val[12:10])
               3'b000: begin  // c.lbu -> lbu rd', imm(rs1')
                 inst = {
-                  10'b0,
-                  zc_val[5],
-                  zc_val[6],
-                  2'b01,
-                  zc_val[9:7],
-                  3'b100,
-                  2'b01,
-                  zc_val[4:2],
-                  {LOAD}
+                  10'b0, zc_val[5], zc_val[6], 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[4:2], LOAD
                 };
               end
 
               3'b001: begin
                 unique if (zc_val[6] == 1'b0) begin  // c.lhu -> lhu rd', imm(rs1')
                   inst = {
-                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b101, 2'b01, zc_val[4:2], {LOAD}
+                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b101, 2'b01, zc_val[4:2], LOAD
                   };
 
                 end else if (zc_val[6] == 1'b1) begin  // c.lh -> lh rd', imm(rs1')
                   inst = {
-                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[4:2], {LOAD}
+                    10'b0, zc_val[5], 1'b0, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[4:2], LOAD
                   };
                 end
               end
@@ -88,7 +80,7 @@ module ysyx_24080006_zcu
                   3'b0,
                   zc_val[5],
                   zc_val[6],
-                  {STORE}
+                  STORE
                 };
               end
 
@@ -104,7 +96,7 @@ module ysyx_24080006_zcu
                     3'b0,
                     zc_val[5],
                     1'b0,
-                    {STORE}
+                    STORE
                   };
                 end else begin
                   zc_err = 1'b1;
@@ -130,7 +122,7 @@ module ysyx_24080006_zcu
               zc_val[11:10],
               zc_val[6],
               2'b00,
-              {STORE}
+              STORE
             };
           end
 
@@ -155,7 +147,7 @@ module ysyx_24080006_zcu
             // c.addi -> addi rd, rd, nzimm
             // c.nop
             inst = {
-              {6{zc_val[12]}}, zc_val[12], zc_val[6:2], zc_val[11:7], 3'b0, zc_val[11:7], {OP_IMM}
+              {6{zc_val[12]}}, zc_val[12], zc_val[6:2], zc_val[11:7], 3'b0, zc_val[11:7], OP_IMM
             };
           end
 
@@ -174,20 +166,20 @@ module ysyx_24080006_zcu
               {9{zc_val[12]}},
               4'b0,
               ~zc_val[15],
-              {JAL}
+              JAL
             };
           end
 
           3'b010: begin
             // c.li -> addi rd, x0, nzimm
             // (c.li hints are translated into an addi hint)
-            inst = {{6{zc_val[12]}}, zc_val[12], zc_val[6:2], 5'b0, 3'b0, zc_val[11:7], {OP_IMM}};
+            inst = {{6{zc_val[12]}}, zc_val[12], zc_val[6:2], 5'b0, 3'b0, zc_val[11:7], OP_IMM};
           end
 
           3'b011: begin
             // c.lui -> lui rd, imm
             // (c.lui hints are translated into a lui hint)
-            inst = {{15{zc_val[12]}}, zc_val[6:2], zc_val[11:7], {LUI}};
+            inst = {{15{zc_val[12]}}, zc_val[6:2], zc_val[11:7], LUI};
 
             if (zc_val[11:7] == 5'h02) begin
               // c.addi16sp -> addi x2, x2, nzimm
@@ -201,7 +193,7 @@ module ysyx_24080006_zcu
                 5'h02,
                 3'b000,
                 5'h02,
-                {OP_IMM}
+                OP_IMM
               };
             end
 
@@ -224,7 +216,7 @@ module ysyx_24080006_zcu
                   3'b101,
                   2'b01,
                   zc_val[9:7],
-                  {OP_IMM}
+                  OP_IMM
                 };
                 if (zc_val[12] == 1'b1) zc_err = 1'b1;
               end
@@ -240,7 +232,7 @@ module ysyx_24080006_zcu
                   3'b111,
                   2'b01,
                   zc_val[9:7],
-                  {OP_IMM}
+                  OP_IMM
                 };
               end
 
@@ -260,35 +252,35 @@ module ysyx_24080006_zcu
                       3'b000,
                       2'b01,
                       zc_val[9:7],
-                      {OP}
+                      OP
                     };
                   end
 
                   3'b001: begin
                     // c.xor -> xor rd', rd', rs2'
                     inst = {
-                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP}
+                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], OP
                     };
                   end
 
                   3'b010: begin
                     // c.or  -> or  rd', rd', rs2'
                     inst = {
-                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b110, 2'b01, zc_val[9:7], {OP}
+                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b110, 2'b01, zc_val[9:7], OP
                     };
                   end
 
                   3'b011: begin
                     // c.and -> and rd', rd', rs2'
                     inst = {
-                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], {OP}
+                      7'b0, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], OP
                     };
                   end
 
                   3'b110: begin
                     // c.mul -> mul rd', rd', rs2'
                     inst = {
-                      7'b1, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b000, 2'b01, zc_val[9:7], {OP}
+                      7'b1, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b000, 2'b01, zc_val[9:7], OP
                     };
                     if (zc_val[11:10] != 2'b11) zc_err = 1'b1;
                   end
@@ -296,19 +288,11 @@ module ysyx_24080006_zcu
                   3'b111: begin
                     unique case (zc_val[4:2])
                       3'b000: begin  // c.zext.b -> andi rd'/rs1', rd'/rs1', 0xff
-                        inst = {12'hff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], {OP_IMM}};
+                        inst = {12'hff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], OP_IMM};
                       end
-                      3'b001:begin  // c.sext.b -> sext.b rd'/rs1', rd'/rs1'
-                        inst = {7'b0110000,5'b00100, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[9:7], {OP_IMM}};
-                      end
-                      3'b010:begin  // c.zext.h -> zext.h rd'/rs1', rd'/rs1'
-                        inst = {7'b0000100,5'b00000, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP}};
-                      end
-                      3'b011:begin  // c.sext.h -> sext.h rd'/rs1', rd'/rs1'
-                        inst = {7'b0110000,5'b00101, 2'b01, zc_val[9:7], 3'b001, 2'b01, zc_val[9:7], {OP_IMM}};
-                      end
+                      // no zbb
                       3'b101: begin  // c.not -> xori rd'/rs1', rd'/rs1', -1
-                        inst = {12'hfff, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], {OP_IMM}};
+                        inst = {12'hfff, 2'b01, zc_val[9:7], 3'b100, 2'b01, zc_val[9:7], OP_IMM};
                       end
 
                       default: begin
@@ -344,7 +328,7 @@ module ysyx_24080006_zcu
               zc_val[11:10],
               zc_val[4:3],
               zc_val[12],
-              {BRANCH}
+              BRANCH
             };
           end
 
@@ -364,7 +348,7 @@ module ysyx_24080006_zcu
           3'b000: begin
             // c.slli -> slli rd, rd, shamt
             // (c.ssli hints are translated into a slli hint)
-            inst = {7'b0, zc_val[6:2], zc_val[11:7], 3'b001, zc_val[11:7], {OP_IMM}};
+            inst = {7'b0, zc_val[6:2], zc_val[11:7], 3'b001, zc_val[11:7], OP_IMM};
             if (zc_val[12] == 1'b1) zc_err = 1'b1;  // reserved for custom extensions
           end
 
@@ -381,24 +365,24 @@ module ysyx_24080006_zcu
               if (zc_val[6:2] != 5'b0) begin
                 // c.mv -> add rd/rs1, x0, rs2
                 // (c.mv hints are translated into an add hint)
-                inst = {7'b0, zc_val[6:2], 5'b0, 3'b0, zc_val[11:7], {OP}};
+                inst = {7'b0, zc_val[6:2], 5'b0, 3'b0, zc_val[11:7], OP};
               end else begin
                 // c.jr -> jalr x0, rd/rs1, 0
-                inst = {12'b0, zc_val[11:7], 3'b0, 5'b0, {JALR}};
+                inst = {12'b0, zc_val[11:7], 3'b0, 5'b0, JALR};
                 if (zc_val[11:7] == 5'b0) zc_err = 1'b1;
               end
             end else begin
               if (zc_val[6:2] != 5'b0) begin
                 // c.add -> add rd, rd, rs2
                 // (c.add hints are translated into an add hint)
-                inst = {7'b0, zc_val[6:2], zc_val[11:7], 3'b0, zc_val[11:7], {OP}};
+                inst = {7'b0, zc_val[6:2], zc_val[11:7], 3'b0, zc_val[11:7], OP};
               end else begin
                 if (zc_val[11:7] == 5'b0) begin
                   // c.ebreak -> ebreak
                   inst = {32'h00_10_00_73};
                 end else begin
                   // c.jalr -> jalr x1, rs1, 0
-                  inst = {12'b0, zc_val[11:7], 3'b000, 5'b00001, {JALR}};
+                  inst = {12'b0, zc_val[11:7], 3'b000, 5'b00001, JALR};
                 end
               end
             end
@@ -407,15 +391,7 @@ module ysyx_24080006_zcu
           3'b110: begin
             // c.swsp -> sw rs2, imm(x2)
             inst = {
-              4'b0,
-              zc_val[8:7],
-              zc_val[12],
-              zc_val[6:2],
-              5'h02,
-              3'b010,
-              zc_val[11:9],
-              2'b00,
-              {STORE}
+              4'b0, zc_val[8:7], zc_val[12], zc_val[6:2], 5'h02, 3'b010, zc_val[11:9], 2'b00, STORE
             };
           end
 
@@ -429,7 +405,7 @@ module ysyx_24080006_zcu
         endcase
       end
 
-      // Incoming instruction is not compressed.
+      // not compressed.
       2'b11: ;
 
       default: begin

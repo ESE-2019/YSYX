@@ -20,5 +20,5 @@ module ysyx_24080006_icache_reg
       if (ic_we) Memory[ic_waddr] <= ic_wdata;
     end
   end
-  assign ic_rdata = Memory[ic_index];
+  assign ic_rdata = ic_we && (ic_index == ic_waddr) ? ic_wdata : Memory[ic_index];
 endmodule

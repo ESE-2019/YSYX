@@ -1,0 +1,274 @@
+module ysyx_24080006_dcu
+  import ysyx_24080006_pkg::*;
+(
+    input logic clock,
+    input logic reset,
+
+    input logic [31:0] dcu_addr,
+    input logic [1:0] dcu_size,
+    input logic dcu_write,
+    input logic [31:0] dcu_wdata,
+    output logic [31:0] dcu_rdata,
+
+    input  logic lsu2dcu_valid,
+    input  logic lsu2dcu_ready,
+    output logic dcu2lsu_valid,
+    output logic dcu2lsu_ready,
+    input  logic fencei,
+
+    ysyx_24080006_axi.master axi_lsu
+);
+
+  typedef enum logic [2:0] {
+    IDLE,
+    SKIP,
+    WRITE,
+    READ
+  } dc_fsm_e;
+  dc_fsm_e curr, next;
+
+  logic [31:0] ic_addr;
+
+
+  typedef struct packed {
+    logic valid;
+    logic [3:0] strb;
+    logic [29:0] tag;
+    logic [31:0] data;
+  } dcache_t;
+  dcache_t dcache;
+
+  wire [3:0] dcu_strb = WSTRB_LUT[dcu_size] << dcu_addr[1:0];
+  wire [31:0] dcu_wdata_shifted = dcu_wdata << {dcu_addr[1:0], 3'b0};
+  wire [31:0] dcu_mask = {{8{dcu_strb[3]}}, {8{dcu_strb[2]}}, {8{dcu_strb[1]}}, {8{dcu_strb[0]}}};
+  wire hit = dcache.valid && dcache.tag == dcu_addr[31:2];
+  logic read_hit;
+  wire skip_dcache = dcu_addr < 32'ha000_0000;
+  logic [31:0] dcache_hit_wdata;
+
+  always_ff @(posedge clock) begin  //fsm 1
+    if (reset) begin
+      curr <= IDLE;
+    end else begin
+      curr <= next;
+    end
+  end
+
+  always_comb begin  //fsm 2
+    next = IDLE;
+    unique case (curr)
+      IDLE: begin
+        if (lsu2dcu_valid & dcu2lsu_ready) begin
+          if (skip_dcache) begin
+            next = SKIP;
+          end else if (hit) begin
+            next = IDLE;
+          end else begin
+            if (dcu_write) begin
+              next = WRITE;
+            end else begin
+              next = READ;
+            end
+          end
+        end else begin
+          next = IDLE;
+        end
+      end
+      SKIP: begin
+        if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+          next = IDLE;
+        end else begin
+          next = curr;
+        end
+      end
+      WRITE: begin
+        if (axi_lsu.rvalid && axi_lsu.rlast) begin
+          next = IDLE;
+        end else begin
+          next = curr;
+        end
+      end
+      READ: begin
+        if (axi_lsu.rvalid) begin
+          next = FLASH_END;
+        end else begin
+          next = curr;
+        end
+      end
+      default: next = IDLE;
+    endcase
+  end
+
+  always_ff @(posedge clock) begin  // fsm 3 for handshake
+    if (reset) begin
+      dcu2lsu_valid <= 1'b0;
+      dcu2lsu_ready <= 1'b1;
+    end else begin
+      unique case (curr)
+        IDLE: begin
+          if (lsu2dcu_valid & dcu2lsu_ready) begin
+            if (skip_dcache) begin  // SKIP
+              dcu2lsu_valid <= 1'b0;
+              dcu2lsu_ready <= 1'b0;
+            end else if (hit) begin  // HIT
+              dcu2lsu_valid <= 1'b1;
+              dcu2lsu_ready <= 1'b1;
+            end else begin  // MISS
+              dcu2lsu_valid <= 1'b0;
+              dcu2lsu_ready <= 1'b0;
+            end
+          end else begin  // NOP
+            dcu2lsu_valid <= 1'b0;
+            dcu2lsu_ready <= 1'b1;
+          end
+        end
+
+        SKIP: begin
+          if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+            dcu2lsu_valid <= 1'b1;
+            dcu2lsu_ready <= 1'b1;
+          end else begin
+            dcu2lsu_valid <= 1'b0;
+            dcu2lsu_ready <= 1'b0;
+          end
+        end
+
+
+        default: ;
+      endcase
+    end
+  end  // fsm 3 for axi
+
+  always_ff @(posedge clock) begin  // fsm 3 for axi
+    if (reset) begin
+      axi_lsu.arvalid <= '0;
+      axi_lsu.rready <= '0;
+      axi_lsu.awvalid <= '0;
+      axi_lsu.wvalid <= '0;
+      axi_lsu.bready <= '0;
+      axi_lsu.araddr <= '0;
+      axi_lsu.awaddr <= '0;
+      axi_lsu.wdata <= '0;
+      axi_lsu.arsize <= '0;
+      axi_lsu.awsize <= '0;
+      axi_lsu.wstrb <= '0;
+      dcu_rdata <= '0;
+    end else begin
+      unique case (curr)
+        IDLE: begin
+          if (lsu2dcu_valid & dcu2lsu_ready) begin
+            unique if (skip_dcache) begin  // SKIP
+
+              if (dcu_write) begin
+                axi_lsu.arvalid <= 0;
+                axi_lsu.rready  <= 0;
+                axi_lsu.awvalid <= 1;
+                axi_lsu.wvalid  <= 1;
+                axi_lsu.bready  <= 0;
+                axi_lsu.awaddr  <= dcu_addr;
+                axi_lsu.wdata   <= dcu_wdata_shifted;
+                axi_lsu.awsize  <= {1'b0, dcu_size};
+                axi_lsu.wstrb   <= dcu_strb;
+              end else begin
+                axi_lsu.arvalid <= 1;
+                axi_lsu.rready  <= 0;
+                axi_lsu.awvalid <= 0;
+                axi_lsu.wvalid  <= 0;
+                axi_lsu.bready  <= 0;
+                axi_lsu.arsize  <= {1'b0, dcu_size};
+                axi_lsu.araddr  <= dcu_addr;
+              end
+
+            end else if (hit) begin
+              axi_lsu.arvalid <= 0;
+              axi_lsu.rready  <= 0;
+              axi_lsu.awvalid <= 0;
+              axi_lsu.wvalid  <= 0;
+              axi_lsu.bready  <= 0;
+              if (dcu_write) begin
+                dcache.data <= dcache_hit_wdata;
+              end else begin
+                dcu_rdata <= dcache.data;
+              end
+            end else begin
+
+            end
+          end else begin  // NOP
+            axi_lsu.arvalid <= 0;
+            axi_lsu.rready  <= 0;
+            axi_lsu.awvalid <= 0;
+            axi_lsu.wvalid  <= 0;
+            axi_lsu.bready  <= 0;
+          end
+        end
+
+        SKIP: begin
+          if (axi_lsu.arready) axi_lsu.arvalid <= 0;
+          if (axi_lsu.awready) axi_lsu.awvalid <= 0;
+          if (axi_lsu.wready) axi_lsu.wvalid <= 0;
+          if (axi_lsu.bvalid) axi_lsu.bready <= 1;
+          if (axi_lsu.rvalid) begin
+            axi_lsu.rready <= 1;
+            dcu_rdata <= axi_lsu.rdata;
+          end
+        end
+
+        WRITE: begin
+          if (dcache.valid && dcache.strb != 4'b0) begin
+            axi_lsu.arvalid <= 0;
+            axi_lsu.rready  <= 0;
+            axi_lsu.awvalid <= 1;
+            axi_lsu.wvalid  <= 1;
+            axi_lsu.bready  <= 0;
+            axi_lsu.awaddr  <= {dcache.tag, 2'b00};
+            axi_lsu.wdata   <= dcache.data;
+            axi_lsu.awsize  <= 3'd2;
+            axi_lsu.wstrb   <= dcache.strb;
+          end
+        end
+
+
+        default: ;
+      endcase
+    end
+  end  // fsm 3 for axi
+
+  assign dcache_hit_wdata = (dcache.data & (~dcu_mask)) | (dcu_wdata_shifted & dcu_mask);
+
+  assign read_hit = (dcu_strb[3]<=dcache.strb[3])&
+  (dcu_strb[2]<=dcache.strb[2])&
+  (dcu_strb[1]<=dcache.strb[1])&
+  (dcu_strb[0]<=dcache.strb[0]);
+
+  assign axi_lsu.arid = 4'h0;
+  assign axi_lsu.arburst = 2'b10;
+  assign axi_lsu.arlen = 8'h0;
+  assign axi_lsu.awid = 4'h0;
+  assign axi_lsu.awlen = 8'h0;
+  assign axi_lsu.awburst = 2'h0;
+  assign axi_lsu.wlast = 1'b1;
+
+endmodule
+
+
+// always_comb begin  // dcache_hit_wdata
+//   dcache_hit_wdata = dcache.data;
+//   unique case (dcu_size)
+//     2'b00: begin
+//       unique case (dcu_addr)
+//         2'b00: dcache_hit_wdata = {dcache.data[31:8], dcu_wdata[7:0]};
+//         2'b01: dcache_hit_wdata = {dcache.data[31:16], dcu_wdata[7:0], dcache.data[7:0]};
+//         2'b10: dcache_hit_wdata = {dcache.data[31:24], dcu_wdata[7:0], dcache.data[16:0]};
+//         2'b11: dcache_hit_wdata = {dcu_wdata[7:0], dcache.data[23:0]};
+//       endcase
+//     end
+//     2'b01: begin
+//       unique case (dcu_addr)
+//         2'b00: dcache_hit_wdata = {dcache.data[31:16], dcu_wdata[15:0]};
+//         2'b10: dcache_hit_wdata = {dcu_wdata[15:0], dcache.data[15:0]};
+//       endcase
+//     end
+//     2'b10:   dcache_hit_wdata = dcu_wdata;
+//     default: ;
+//   endcase
+// end

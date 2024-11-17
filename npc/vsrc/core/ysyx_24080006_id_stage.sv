@@ -8,6 +8,11 @@ module ysyx_24080006_id_stage
     output decoder_t decoder,
     output logic fencei,
 
+    output logic [REG_WIDTH-1:0] rs1_addr,
+    output logic [REG_WIDTH-1:0] rs2_addr,
+    input  logic [         31:0] rs1_data,
+    input  logic [         31:0] rs2_data,
+
     input  logic   exu2idu_ready,
     output logic   idu2ifu_ready,
     input  stage_t ifu2idu,
@@ -88,6 +93,8 @@ module ysyx_24080006_id_stage
           if (ifu2idu.valid) begin
             decoder <= idu;
             idu2exu.pc <= ifu2idu.pc;
+            idu2exu.rs1_data <= rs1_data;
+            idu2exu.rs2_data <= rs2_data;
           end
         end
         EXEC: begin
@@ -98,7 +105,8 @@ module ysyx_24080006_id_stage
 
   logic inst_err;
   ysyx_24080006_idu IDU (.*);
-
+  assign rs1_addr = idu.rs1_addr;
+  assign rs2_addr = idu.rs2_addr;
 
 `ifdef SIM_MODE
   import "DPI-C" function void ebreak();
