@@ -155,7 +155,7 @@ package ysyx_24080006_pkg;
   } alu2mdu_t;
 
   parameter int unsigned IC_M = 4;
-  parameter int unsigned IC_N = 2;
+  parameter int unsigned IC_N = 1;
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
 
   typedef struct packed {

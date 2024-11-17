@@ -80,6 +80,7 @@ static void __attribute__((section(".klib"), noinline)) _trm_init()
 {
     uart_init();
     print_ysyx();
+    __asm__ volatile("fence.i");
     int ret = main(mainargs);
     halt(ret);
 }

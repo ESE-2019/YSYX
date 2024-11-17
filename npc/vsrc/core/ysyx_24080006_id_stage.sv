@@ -117,7 +117,7 @@ module ysyx_24080006_id_stage
       if (inst == EBREAK_INST) begin
         ebreak();
       end else if (inst_err) begin
-        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, 0);
+        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, ifu2idu.pc);
         $finish;
       end
       case (inst[6:0])

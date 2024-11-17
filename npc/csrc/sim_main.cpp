@@ -15,6 +15,8 @@ static bool FLASH_TRACE = 0;
 #define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
 #define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num
 #define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__miss_num
+//#define D_HIT top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__hit_num
+//#define D_MISS top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__miss_num
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"
@@ -560,9 +562,14 @@ static void print_ipc()
     int miss_num = MISS_NUM;
     int skip_num = SKIP_NUM;
     num = 100 * (double)hit_num / (double)(hit_num + miss_num);
-    printf("\033[1;93mH/(H+M) = %.3f%% ", num);
+    printf("\033[1;93mH/(H+M) = %.2f%% ", num);
     num = 100 * (double)(hit_num + skip_num) / (double)(hit_num + miss_num + skip_num);
-    printf("(H+S)/A = %.3f%%\n\033[0m", num);
+    printf("(H+S)/A = %.2f%% ", num);
+
+    //hit_num = D_HIT;
+    //miss_num = D_MISS;
+    num = 100 * (double)hit_num / (double)(hit_num + miss_num);
+    printf("D$ = %.2f%%\n\033[0m", num);
 
     printf("\033[1;33mHIT = %d MISS = %d SKIP = %d\n\033[0m", hit_num, miss_num, skip_num);
 
