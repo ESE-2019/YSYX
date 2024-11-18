@@ -76,52 +76,52 @@ module ysyx_24080006_ex_stage
 
   always_ff @(posedge clock) begin  //fsm 3 for control
     unique if (reset) begin
-      exu2idu_ready <= 0;
-      exu2ifu.valid <= 0;
+      exu2idu_ready <= 1'b0;
+      exu2ifu.valid <= 1'b0;
     end else begin
       unique case (curr)
         IDLE: begin
           if (idu2exu.valid) begin
             if (decoder.lsu_set.lsu_enable) begin
-              exu2idu_ready <= 0;
-              exu2ifu.valid <= 0;
+              exu2idu_ready <= 1'b0;
+              exu2ifu.valid <= 1'b0;
             end else if (decoder.mdu_set.mdu_enable) begin
-              exu2idu_ready <= 0;
-              exu2ifu.valid <= 0;
+              exu2idu_ready <= 1'b0;
+              exu2ifu.valid <= 1'b0;
             end else begin  // bypass
-              exu2idu_ready <= 0;
-              exu2ifu.valid <= 1;
+              exu2idu_ready <= 1'b0;
+              exu2ifu.valid <= 1'b1;
             end
           end else begin
-            exu2idu_ready <= 1;
-            exu2ifu.valid <= 0;
+            exu2idu_ready <= 1'b1;
+            exu2ifu.valid <= 1'b0;
           end
         end
         EXEC: begin
           if (dcu2lsu_valid) begin
-            exu2idu_ready <= 0;
-            exu2ifu.valid <= 1;
+            exu2idu_ready <= 1'b0;
+            exu2ifu.valid <= 1'b1;
           end else begin
-            exu2idu_ready <= 0;
-            exu2ifu.valid <= 0;
+            exu2idu_ready <= 1'b0;
+            exu2ifu.valid <= 1'b0;
           end
         end
         MD_EXEC: begin
           if (mdu_valid_i) begin
-            exu2idu_ready <= 0;
-            exu2ifu.valid <= 1;
+            exu2idu_ready <= 1'b0;
+            exu2ifu.valid <= 1'b1;
           end else begin
-            exu2idu_ready <= 0;
-            exu2ifu.valid <= 0;
+            exu2idu_ready <= 1'b0;
+            exu2ifu.valid <= 1'b0;
           end
         end
         WAIT: begin
           if (ifu2exu_ready) begin
-            exu2idu_ready <= 1;
-            exu2ifu.valid <= 0;
+            exu2idu_ready <= 1'b1;
+            exu2ifu.valid <= 1'b0;
           end else begin
-            exu2idu_ready <= 0;
-            exu2ifu.valid <= 1;
+            exu2idu_ready <= 1'b0;
+            exu2ifu.valid <= 1'b1;
           end
         end
       endcase
@@ -131,37 +131,26 @@ module ysyx_24080006_ex_stage
   logic [31:0] dnpc;
   logic [31:0] csr_rdata;
   logic [31:0] alu_a, alu_b, alu_c, mdu_c;
-  logic [4:0] Mr_param;
   logic [31:0] dcu_addr;
   logic [1:0] dcu_size;
+  logic dcu_sext;
   logic dcu_write;
   logic [31:0] dcu_wdata;
   logic [31:0] dcu_rdata;
 
-  function automatic logic [31:0] Mr(input logic [31:0] rdata, input logic [4:0] param);
-    logic [31:0] tmp;
-    tmp = rdata >> {param[1:0], 3'b0};
-    unique case (param[4:2])
-      3'b000:  Mr = {{24{tmp[7]}}, tmp[7:0]};
-      3'b001:  Mr = {{16{tmp[15]}}, tmp[15:0]};
-      3'b010:  Mr = tmp[31:0];
-      3'b100:  Mr = {24'b0, tmp[7:0]};
-      3'b101:  Mr = {16'b0, tmp[15:0]};
-      default: Mr = tmp[31:0];
-    endcase
-  endfunction
+
 
   always_ff @(posedge clock) begin  //fsm 3 for axi
     unique if (reset) begin
       lsu2dcu_valid <= 1'b0;
-      Mr_param <= '0;
       reg_we <= '0;
       rd_data <= '0;
       exu2ifu.dnpc <= '0;
       exu2ifu.jump <= '0;
       exu2ifu.branch <= '0;
-      mdu_valid_o <= 0;
+      mdu_valid_o <= 1'b0;
       dcu_addr <= 32'b0;
+      dcu_sext <= 1'b0;
       dcu_size <= 2'b0;
       dcu_write <= 1'b0;
       dcu_wdata <= 32'b0;
@@ -173,16 +162,16 @@ module ysyx_24080006_ex_stage
             exu2ifu.jump   <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
             exu2ifu.branch <= alu_c[0] & decoder.branch;
             if (decoder.lsu_set.lsu_enable) begin
-              Mr_param <= {decoder.lsu_set.lsu_sext, decoder.lsu_set.lsu_size, alu2mdu.res_32[1:0]};
               lsu2dcu_valid <= 1'b1;
               dcu_addr <= alu2mdu.res_32;
               dcu_size <= decoder.lsu_set.lsu_size;
               dcu_write <= decoder.lsu_set.lsu_write;
+              dcu_sext <= decoder.lsu_set.lsu_sext;
               dcu_wdata <= idu2exu.rs2_data;
             end else if (decoder.mdu_set.mdu_enable) begin  // mul/div
               lsu2dcu_valid <= 1'b0;
               reg_we <= '0;
-              mdu_valid_o <= 1;
+              mdu_valid_o <= 1'b1;
             end else begin  // bypass
               lsu2dcu_valid <= 1'b0;
               reg_we <= decoder.reg_we;
@@ -196,7 +185,7 @@ module ysyx_24080006_ex_stage
         EXEC: begin
           if (lsu2dcu_valid & dcu2lsu_ready) lsu2dcu_valid <= 1'b0;
           if (dcu2lsu_valid) begin
-            rd_data <= Mr(dcu_rdata, Mr_param);
+            rd_data <= dcu_rdata;
             reg_we  <= decoder.reg_we;
           end
         end
@@ -204,10 +193,10 @@ module ysyx_24080006_ex_stage
           if (mdu_valid_i) begin
             reg_we <= decoder.reg_we;
             rd_data <= mdu_c;
-            mdu_valid_o <= 0;
+            mdu_valid_o <= 1'b0;
           end else begin
             reg_we <= '0;
-            mdu_valid_o <= 1;
+            mdu_valid_o <= 1'b1;
           end
         end
         WAIT: begin

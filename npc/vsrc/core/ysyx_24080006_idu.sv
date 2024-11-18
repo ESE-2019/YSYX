@@ -140,10 +140,6 @@ module ysyx_24080006_idu
             idu.mdu_set.mdu_op = REM;
           end
 
-          {7'b0010000, 3'b010} : idu.alu_set.alu_op = SH1ADD;
-          {7'b0010000, 3'b100} : idu.alu_set.alu_op = SH2ADD;
-          {7'b0010000, 3'b110} : idu.alu_set.alu_op = SH3ADD;
-
           default: inst_err = 1'b1;
         endcase
       end

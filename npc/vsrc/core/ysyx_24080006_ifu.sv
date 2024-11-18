@@ -204,7 +204,7 @@ module ysyx_24080006_ifu
 
 
   wire [31:0] zc_val = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
-  ysyx_24080006_icu ICU (
+  ysyx_24080006_icu16 ICU (
       .*,
       .fetch_addr(fetch_addr_q)
   );

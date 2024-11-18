@@ -14,17 +14,10 @@ module ysyx_24080006_alu
   //add  
   logic [32:0] srcA;
   always_comb begin
-    srcA = {alu_a, 1'b1};
     if (mdu_enable) begin
       srcA = mdu2alu.a;
     end else begin
-      case (alu_op)
-        ADD, SUB, LT, LTU, EQ, NE, GE, GEU: srcA = {alu_a, 1'b1};
-        SH1ADD: srcA = {alu_a[30:0], 2'b01};
-        SH2ADD: srcA = {alu_a[29:0], 3'b001};
-        SH3ADD: srcA = {alu_a[28:0], 4'b0001};
-        default: ;
-      endcase
+      srcA = {alu_a, 1'b1};
     end
   end
 
@@ -37,7 +30,7 @@ module ysyx_24080006_alu
       srcB = mdu2alu.b;
     end else begin
       case (alu_op)
-        ADD, SH1ADD, SH2ADD, SH3ADD: srcB = srcB_tmp;
+        ADD: srcB = srcB_tmp;
         SUB, LT, LTU, EQ, NE, GE, GEU: srcB = srcB_inv;
         default: ;
       endcase
@@ -85,16 +78,16 @@ module ysyx_24080006_alu
     bit_res = alu_a & alu_b;
     case (alu_op)
       AND: bit_res = alu_a & alu_b;
-      OR:   bit_res = alu_a | alu_b;
+      OR: bit_res = alu_a | alu_b;
       XOR: bit_res = alu_a ^ alu_b;
-      default:   ;
+      default: ;
     endcase
   end
 
   always_comb begin
     alu_c = add_res_32;
     case (alu_op)
-      ADD, SUB, SH1ADD, SH2ADD, SH3ADD: alu_c = add_res_32;
+      ADD, SUB: alu_c = add_res_32;
       EQ: alu_c = {31'b0, ~not_zero};
       NE: alu_c = {31'b0, not_zero};
       LT, LTU: alu_c = {31'b0, comp_res};
