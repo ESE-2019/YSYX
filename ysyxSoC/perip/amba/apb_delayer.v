@@ -23,7 +23,9 @@ module apb_delayer(
   input  [31:0] out_prdata,
   input         out_pslverr
 );
-
+  import ysyx_24080006_pkg::*;
+  localparam apb_s = 32'h100; // ratio
+  
   assign out_paddr   = in_paddr;
   assign out_psel    = in_psel;
   assign out_penable = in_penable;
@@ -37,9 +39,6 @@ module apb_delayer(
   assign in_pready = out_pready;
   assign in_prdata = out_prdata;  
   `else
-  localparam r = 32'd6; // freq(npc) / 100 MHz
-  localparam s = 32'h100; // ratio
-
   logic entity_pready, latch_pready;
   assign in_pready = entity_pready;
   logic [31:0] latch_prdata;
@@ -77,18 +76,18 @@ module apb_delayer(
 
   always_ff @( posedge clock ) begin
     if (reset) begin
-      cnt_after <= s;
+      cnt_after <= apb_s;
       entity_pready <= 0;
     end
     else if (latch_pready) begin
-      cnt_after <= cnt_after + s;
-      if (cnt_after >= cnt_before*(r-1)*s)
+      cnt_after <= cnt_after + apb_s;
+      if (cnt_after >= cnt_before*(DELAYER-1)*apb_s)
         entity_pready <= 1;
       else
         entity_pready <= 0;
     end
     else begin
-      cnt_after <= s;
+      cnt_after <= apb_s;
       entity_pready <= 0;
     end
   end

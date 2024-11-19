@@ -569,7 +569,7 @@ static void print_ipc()
     //hit_num = D_HIT;
     //miss_num = D_MISS;
     num = 100 * (double)hit_num / (double)(hit_num + miss_num);
-    printf("D$ = %.2f%%\n\033[0m", num);
+    printf("I$ = %.2f%%\n\033[0m", num);
 
     printf("\033[1;33mHIT = %d MISS = %d SKIP = %d\n\033[0m", hit_num, miss_num, skip_num);
 

@@ -111,16 +111,16 @@ module ysyx_24080006_dcu
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
       axi_lsu.arvalid <= '0;
-      axi_lsu.rready  <= '0;
+      axi_lsu.rready <= '0;
       axi_lsu.awvalid <= '0;
-      axi_lsu.wvalid  <= '0;
-      axi_lsu.bready  <= '0;
-      axi_lsu.wdata   <= '0;
-      axi_lsu.wstrb   <= '0;
-      axi_lsu.awsize  <= '0;
-      axi_lsu.awaddr  <= '0;
-      axi_lsu.arsize  <= '0;
-      axi_lsu.araddr  <= '0;
+      axi_lsu.wvalid <= '0;
+      axi_lsu.bready <= '0;
+      axi_lsu.wdata <= '0;
+      axi_lsu.wstrb <= '0;
+      axi_lsu.awsize <= '0;
+      axi_lsu.awaddr <= '0;
+      axi_lsu.arsize <= '0;
+      axi_lsu.araddr <= '0;
       sext <= '0;
     end else begin
       unique case (curr)
@@ -138,12 +138,12 @@ module ysyx_24080006_dcu
               axi_lsu.awaddr  <= dcu_addr;
             end else begin
               axi_lsu.arvalid <= 1'b1;
-              axi_lsu.rready  <= 1'b0;
+              axi_lsu.rready <= 1'b0;
               axi_lsu.awvalid <= 1'b0;
-              axi_lsu.wvalid  <= 1'b0;
-              axi_lsu.bready  <= 1'b0;
-              axi_lsu.arsize  <= {1'b0, dcu_size};
-              axi_lsu.araddr  <= dcu_addr;
+              axi_lsu.wvalid <= 1'b0;
+              axi_lsu.bready <= 1'b0;
+              axi_lsu.arsize <= {1'b0, dcu_size};
+              axi_lsu.araddr <= dcu_addr;
               sext <= dcu_sext;
             end
           end else begin
@@ -167,13 +167,13 @@ module ysyx_24080006_dcu
     end
   end
 
-  assign axi_lsu.arid    = 4'h0;
+  assign axi_lsu.arid = 4'h0;
   assign axi_lsu.arburst = 2'b10;
-  assign axi_lsu.arlen   = 8'h0;
-  assign axi_lsu.awid    = 4'h0;
-  assign axi_lsu.awlen   = 8'h0;
+  assign axi_lsu.arlen = 8'h0;
+  assign axi_lsu.awid = 4'h0;
+  assign axi_lsu.awlen = 8'h0;
   assign axi_lsu.awburst = 2'h0;
-  assign axi_lsu.wlast   = 1'b1;
+  assign axi_lsu.wlast = 1'b1;
 
   assign dcu_rdata = Mr(axi_lsu.rdata, axi_lsu.araddr[1:0], sext, axi_lsu.arsize[1:0]);  // use reg?
 

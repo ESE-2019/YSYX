@@ -1,5 +1,7 @@
 package ysyx_24080006_pkg;
 
+  parameter real DELAYER = 7.69;
+
   typedef enum logic [1:0] {
     RS1,
     PC,
@@ -84,7 +86,6 @@ package ysyx_24080006_pkg;
   typedef struct packed {
     logic csr_enable;
     logic csr_uimm;
-    csr_name_e csr_name;
     csr_op_e csr_op;
   } csr_set_t;
 
@@ -126,7 +127,7 @@ package ysyx_24080006_pkg;
     csr_set_t csr_set;
     lsu_set_t lsu_set;
     mdu_set_t mdu_set;
-
+    csr_name_e csr_name;
     logic reg_we;
 
     logic jal;
@@ -137,10 +138,13 @@ package ysyx_24080006_pkg;
   } decoder_t;
 
   typedef struct packed {
-    logic valid;
     logic [31:0] pc, dnpc;
+    logic [31:0] alu_a, alu_b;
+    logic [31:0] rs1_data, rs2_data, csr_rdata;
     logic jump, branch;
-    logic [31:0] rs1_data, rs2_data;
+    logic is_zc;
+    logic flush;
+    logic valid;
   } stage_t;
 
   typedef struct packed {
@@ -165,6 +169,7 @@ package ysyx_24080006_pkg;
   } icache_t;
 
   parameter logic [31:0] EBREAK_INST = 32'b0000000_00001_00000_000_00000_11100_11;
+  parameter logic [31:0] NOP = 32'b0000000_00000_00000_000_00000_00100_11;
 
 
 `ifdef SOC_MODE

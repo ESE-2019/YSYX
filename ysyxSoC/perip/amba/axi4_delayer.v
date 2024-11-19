@@ -62,8 +62,8 @@ module axi4_delayer (
     input  logic [ 3:0] out_bid,
     input  logic [ 1:0] out_bresp
 );
-  localparam r = 32'd6;  // freq(npc) / 100 MHz
-  localparam s = 32'h100;  // ratio
+  import ysyx_24080006_pkg::*;
+  localparam axi_s = 32'h100;  // ratio
   assign in_arready = out_arready;
   assign out_arvalid = in_arvalid;
   assign out_arid = in_arid;
@@ -116,16 +116,16 @@ module axi4_delayer (
   end
   always_ff @(posedge clock) begin
     if (reset) begin
-      cnt_after <= s;
+      cnt_after <= axi_s;
       in_rvalid <= 0;
     end else if (read & out_rvalid) begin
-      if (in_rready) cnt_after <= s;
-      else cnt_after <= cnt_after + s;
+      if (in_rready) cnt_after <= axi_s;
+      else cnt_after <= cnt_after + axi_s;
       if (in_rready) in_rvalid <= 0;
-      else if (cnt_after >= cnt_before * (r - 1) * s) in_rvalid <= 1;
+      else if (cnt_after >= cnt_before * (DELAYER - 1) * axi_s) in_rvalid <= 1;
       else in_rvalid <= 0;
     end else begin
-      cnt_after <= s;
+      cnt_after <= axi_s;
       in_rvalid <= 0;
     end
   end
@@ -152,14 +152,14 @@ module axi4_delayer (
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      cnt_after_1 <= s;
+      cnt_after_1 <= axi_s;
       in_bvalid   <= 0;
     end else if (write & out_bvalid) begin
-      cnt_after_1 <= cnt_after_1 + s;
-      if (cnt_after_1 >= cnt_before_1 * (r - 1) * s) in_bvalid <= 1;
+      cnt_after_1 <= cnt_after_1 + axi_s;
+      if (cnt_after_1 >= cnt_before_1 * (DELAYER - 1) * axi_s) in_bvalid <= 1;
       else in_bvalid <= 0;
     end else begin
-      cnt_after_1 <= s;
+      cnt_after_1 <= axi_s;
       in_bvalid   <= 0;
     end
   end

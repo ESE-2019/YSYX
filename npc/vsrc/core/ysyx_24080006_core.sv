@@ -17,6 +17,14 @@ module ysyx_24080006_core
   stage_t exu2ifu;
   stage_t ifu2exu;
 
+  logic ecall;
+  logic mret;
+  csr_set_t csr_set;
+  csr_name_e csr_name;
+  logic [31:0] csr_pc;
+  logic [31:0] csr_wdata;
+  logic [31:0] csr_rdata;
+
   ysyx_24080006_axi axi_ifu (), axi_lsu ();
   decoder_t decoder;
   logic     reg_we;
@@ -28,4 +36,5 @@ module ysyx_24080006_core
   ysyx_24080006_id_stage ID (.*);
   ysyx_24080006_ex_stage EX (.*);
   ysyx_24080006_reg REG (.*);
+  ysyx_24080006_csr CS (.*);
 endmodule

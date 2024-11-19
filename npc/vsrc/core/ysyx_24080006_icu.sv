@@ -125,7 +125,7 @@ module ysyx_24080006_icu
     end else begin
       unique case (curr)
         IDLE: begin
-          ic_addr <= fetch_addr;
+          ic_addr  <= fetch_addr;
           ic_waddr <= ic_index;
           if (ifu2icu_valid & icu2ifu_ready) begin
             unique if (skip_icache) begin  // SKIP

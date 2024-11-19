@@ -48,7 +48,7 @@ clean_c:
 	make -C $(YSYX_TEST_HOME) clean
 	rm -rf $(AM_HOME)/../rt-thread-am/bsp/abstract-machine/build/
 	
-clear:
+del_build:
 	make -C $(AM_HOME)/../fceux-am clean	
 	rm -rf $(AM_HOME)/am/build/
 	rm -rf $(AM_HOME)/klib/build/
@@ -58,4 +58,4 @@ clear:
 	rm -rf $(AM_HOME)/../rt-thread-am/bsp/abstract-machine/build/
 
 
-.PHONY: .git_commit .clean_index _default clear clean_c
+.PHONY: .git_commit .clean_index _default del_build clean_c

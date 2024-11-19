@@ -162,7 +162,7 @@ module ysyx_24080006_icu16
             axi_ifu.arvalid <= 1'b0;
             axi_ifu.rready <= 1'b0;
             ic_we <= 1'b0;
-            burst_offset <='0;
+            burst_offset <= '0;
             icu2ifu_valid <= 1'b0;
             icu2ifu_ready <= 1'b1;
           end

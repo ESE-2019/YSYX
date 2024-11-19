@@ -55,19 +55,27 @@ module ysyx_24080006_arb (
   always_comb begin  // fsm 2
     unique case (curr)
       IDLE: begin
-        if (axi_lsu.arvalid || axi_lsu.rvalid) next = LSUR;
-        else if (axi_ifu.arvalid || axi_ifu.rvalid) next = IFUR;
-        else next = IDLE;
+        if (axi_ifu.arvalid) begin
+          next = IFUR;
+        end else if (axi_lsu.arvalid) begin
+          next = LSUR;
+        end else begin
+          next = IDLE;
+        end
       end
       LSUR: begin
-        if (axi_lsu.rready && axi_lsu.rvalid)  // && axi_lsu.rlast
+        if (axi_lsu.rready && axi_lsu.rvalid && axi_lsu.rlast) begin
           next = IDLE;
-        else next = LSUR;
+        end else begin
+          next = LSUR;
+        end
       end
       IFUR: begin
-        if (axi_ifu.rready && axi_ifu.rvalid && (axi_ifu.arlen == '0 || axi_ifu.rlast))  // && axi_ifu.rlast
+        if (axi_ifu.rready && axi_ifu.rvalid && axi_ifu.rlast) begin
           next = IDLE;
-        else next = IFUR;
+        end else begin
+          next = IFUR;
+        end
       end
     endcase
   end
@@ -76,6 +84,7 @@ module ysyx_24080006_arb (
   assign axi_lsu.arready = curr == LSUR ? axi.arready : 0;
   assign axi_ifu.rvalid  = curr == IFUR ? axi.rvalid : 0;
   assign axi_lsu.rvalid  = curr == LSUR ? axi.rvalid : 0;
+
   always_comb begin
     unique case (curr)
       IDLE: begin
@@ -94,9 +103,9 @@ module ysyx_24080006_arb (
   end
 
   assign axi.araddr  = curr == LSUR ? axi_lsu.araddr  : axi_ifu.araddr;
-  assign axi.arid    = curr == LSUR ? axi_lsu.arid    : axi_ifu.arid  ;
+  assign axi.arid    = '0; //curr == LSUR ? axi_lsu.arid    : axi_ifu.arid  ;
   assign axi.arlen   = curr == LSUR ? axi_lsu.arlen   : axi_ifu.arlen ;
   assign axi.arsize  = curr == LSUR ? axi_lsu.arsize  : axi_ifu.arsize;
-  assign axi.arburst = curr == LSUR ? axi_lsu.arburst : axi_ifu.arburst;
+  assign axi.arburst = 2'b10; //curr == LSUR ? axi_lsu.arburst : axi_ifu.arburst;
 
 endmodule

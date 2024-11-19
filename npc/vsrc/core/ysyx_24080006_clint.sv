@@ -17,23 +17,23 @@ module ysyx_24080006_clint (
   end
   always_ff @(posedge clock) begin
     if (reset) begin
-      axi_clint.awready <= 1;
-      axi_clint.wready  <= 1;
-      axi_clint.bvalid  <= 0;
+      // axi_clint.awready <= 1;
+      // axi_clint.wready  <= 1;
+      // axi_clint.bvalid  <= 0;
       axi_clint.arready <= 1;
       axi_clint.rvalid  <= 0;
     end else begin
 
-      if (axi_clint.awvalid && axi_clint.wvalid && axi_clint.awready && axi_clint.wready && !axi_clint.bvalid) begin
-        axi_clint.awready <= 0;
-        axi_clint.wready  <= 0;
-        axi_clint.bvalid  <= 1;
-        axi_clint.bresp   <= 2'b00;
-      end else if (axi_clint.bready) begin
-        axi_clint.awready <= 1;
-        axi_clint.wready  <= 1;
-        axi_clint.bvalid  <= 0;
-      end
+      // if (axi_clint.awvalid && axi_clint.wvalid && axi_clint.awready && axi_clint.wready && !axi_clint.bvalid) begin
+      //   axi_clint.awready <= 0;
+      //   axi_clint.wready  <= 0;
+      //   axi_clint.bvalid  <= 1;
+      //   axi_clint.bresp   <= 2'b00;
+      // end else if (axi_clint.bready) begin
+      //   axi_clint.awready <= 1;
+      //   axi_clint.wready  <= 1;
+      //   axi_clint.bvalid  <= 0;
+      // end
 
       if (axi_clint.arvalid && axi_clint.arready && !axi_clint.rvalid) begin
         axi_clint.arready <= 0;
@@ -47,6 +47,8 @@ module ysyx_24080006_clint (
     end
 
   end
+
+  assign axi_clint.rlast = 1'b1;
 
   always_comb begin
     dout = '0;
