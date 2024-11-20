@@ -26,11 +26,11 @@ module ysyx_24080006_ex_stage
   logic mdu_valid_o, mdu_valid_i;
   mdu2alu_t mdu2alu;
   alu2mdu_t alu2mdu;
-  logic lsu2dcu_valid;
-  logic lsu2dcu_ready;
-  logic dcu2lsu_valid;
-  logic dcu2lsu_ready;
-  assign lsu2dcu_ready = 1'b1;
+  logic exu2lsu_valid;
+  logic exu2lsu_ready;
+  logic lsu2exu_valid;
+  logic lsu2exu_ready;
+  assign exu2lsu_ready = 1'b1;
 
   typedef enum logic [1:0] {
     IDLE,
@@ -62,7 +62,7 @@ module ysyx_24080006_ex_stage
         end else next = IDLE;
       end
       LSU_EXEC: begin
-        if (dcu2lsu_valid) next = WAIT;
+        if (lsu2exu_valid) next = WAIT;
         else next = LSU_EXEC;
       end
       MD_EXEC: begin
@@ -100,7 +100,7 @@ module ysyx_24080006_ex_stage
           end
         end
         LSU_EXEC: begin
-          if (dcu2lsu_valid) begin
+          if (lsu2exu_valid) begin
             exu2idu_ready <= 1'b0;
             exu2ifu.valid <= 1'b1;
           end else begin
@@ -131,30 +131,30 @@ module ysyx_24080006_ex_stage
   end
 
   logic [31:0] alu_a, alu_b, alu_c, mdu_c;
-  logic [31:0] dnpc, dcu_addr;
-  logic [1:0] dcu_size;
-  logic dcu_sext;
-  logic dcu_write;
-  logic [31:0] dcu_wdata;
-  logic [31:0] dcu_rdata;
+  logic [31:0] dnpc, lsu_addr;
+  logic [1:0] lsu_size;
+  logic lsu_sext;
+  logic lsu_write;
+  logic [31:0] lsu_wdata;
+  logic [31:0] lsu_rdata;
   logic [31:0] mdu_a, mdu_b;
   mdu_set_t mdu_set;
   logic mdu_enable;
 
   always_ff @(posedge clock) begin  //fsm 3 for axi
     unique if (reset) begin
-      lsu2dcu_valid <= 1'b0;
+      exu2lsu_valid <= 1'b0;
       reg_we <= 1'b0;
       rd_data <= 32'b0;
       exu2ifu.dnpc <= 32'b0;
       exu2ifu.jump <= 1'b0;
       exu2ifu.branch <= 1'b0;
       mdu_valid_o <= 1'b0;
-      dcu_addr <= 32'b0;
-      dcu_sext <= 1'b0;
-      dcu_size <= 2'b0;
-      dcu_write <= 1'b0;
-      dcu_wdata <= 32'b0;
+      lsu_addr <= 32'b0;
+      lsu_sext <= 1'b0;
+      lsu_size <= 2'b0;
+      lsu_write <= 1'b0;
+      lsu_wdata <= 32'b0;
       rd_addr <= '0;
       mdu_a <= 32'b0;
       mdu_b <= 32'b0;
@@ -171,14 +171,14 @@ module ysyx_24080006_ex_stage
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
             if (decoder.lsu_set.lsu_enable) begin
-              lsu2dcu_valid <= 1'b1;
-              dcu_addr <= alu2mdu.res_32;
-              dcu_size <= decoder.lsu_set.lsu_size;
-              dcu_write <= decoder.lsu_set.lsu_write;
-              dcu_sext <= decoder.lsu_set.lsu_sext;
-              dcu_wdata <= idu2exu.rs2_data;
+              exu2lsu_valid <= 1'b1;
+              lsu_addr <= alu2mdu.res_32;
+              lsu_size <= decoder.lsu_set.lsu_size;
+              lsu_write <= decoder.lsu_set.lsu_write;
+              lsu_sext <= decoder.lsu_set.lsu_sext;
+              lsu_wdata <= idu2exu.rs2_data;
             end else if (decoder.mdu_set.mdu_enable) begin  // mul/div
-              lsu2dcu_valid <= 1'b0;
+              exu2lsu_valid <= 1'b0;
               reg_we <= 1'b0;
               mdu_valid_o <= 1'b1;
               mdu_a <= alu_a;
@@ -186,7 +186,7 @@ module ysyx_24080006_ex_stage
               mdu_set <= decoder.mdu_set;
               mdu_enable <= 1'b1;
             end else begin  // bypass
-              lsu2dcu_valid <= 1'b0;
+              exu2lsu_valid <= 1'b0;
               reg_we <= decoder.reg_we;
               rd_data <= alu_c;
               ecall <= decoder.ecall;
@@ -196,14 +196,14 @@ module ysyx_24080006_ex_stage
             end
           end else begin
             rd_addr <= '0;
-            lsu2dcu_valid <= 1'b0;
+            exu2lsu_valid <= 1'b0;
             reg_we <= 1'b0;
           end
         end
         LSU_EXEC: begin
-          if (lsu2dcu_valid & dcu2lsu_ready) lsu2dcu_valid <= 1'b0;
-          if (dcu2lsu_valid) begin
-            rd_data <= dcu_rdata;
+          if (exu2lsu_valid & lsu2exu_ready) exu2lsu_valid <= 1'b0;
+          if (lsu2exu_valid) begin
+            rd_data <= lsu_rdata;
             reg_we  <= 1'b1;
           end
         end
@@ -242,7 +242,7 @@ module ysyx_24080006_ex_stage
       endcase
   end
 
-  ysyx_24080006_dcu DCU (.*);
+  ysyx_24080006_lsu LSU (.*);
   ysyx_24080006_alu ALU (
       .*,
       .alu_op(decoder.alu_set.alu_op)
@@ -305,21 +305,21 @@ module ysyx_24080006_ex_stage
   always_ff @(posedge clock) begin
     if (curr == IDLE) lsu_cnt = 1;
     else lsu_cnt++;
-    if (lsu2dcu_valid && dcu2lsu_ready && dcu_write) begin
-      //$display("[LSU] 0x%08x write [0x%08x]", dcu_addr, dcu_wdata);
+    if (exu2lsu_valid && lsu2exu_ready && lsu_write) begin
+      //$display("[LSU] 0x%08x write [0x%08x]", lsu_addr, lsu_wdata);
       LSU_CNT(0, lsu_cnt);
-      if (INSIDE_PERIP(dcu_addr)) SKIP_DIFFTEST();
-      if (!INSIDE_STORE(dcu_addr)) begin
-        $display("[LSU] store addr error 0x%08x at pc 0x%08x", dcu_addr, idu2exu.pc);
+      if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
+      if (!INSIDE_STORE(lsu_addr)) begin
+        $display("[LSU] store addr error 0x%08x at pc 0x%08x", lsu_addr, idu2exu.pc);
         $finish;
       end
     end
-    if (lsu2dcu_valid && dcu2lsu_ready && !dcu_write) begin
-      //$display("[LSU] 0x%08x read [0x%08x]", dcu_addr, dcu_rdata);
+    if (exu2lsu_valid && lsu2exu_ready && !lsu_write) begin
+      //$display("[LSU] 0x%08x read [0x%08x]", lsu_addr, lsu_rdata);
       LSU_CNT(1, lsu_cnt);
-      if (INSIDE_PERIP(dcu_addr)) SKIP_DIFFTEST();
-      if (!INSIDE_LOAD(dcu_addr)) begin
-        $display("[LSU] load addr error 0x%08x at pc 0x%08x", dcu_addr, idu2exu.pc);
+      if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
+      if (!INSIDE_LOAD(lsu_addr)) begin
+        $display("[LSU] load addr error 0x%08x at pc 0x%08x", lsu_addr, idu2exu.pc);
         $finish;
       end
     end
