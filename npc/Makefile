@@ -41,8 +41,8 @@ CSRCS += $(SRC_AUTO_BIND)
 
 VERILATOR_CFLAGS += -I$(SOC_PATH)/perip/uart16550/rtl -I$(SOC_PATH)/perip/spi/rtl -I$(SOC_PATH)/perip/gpio
 
-VERILATOR_CFLAGS += -CFLAGS -Ofast -CFLAGS -fno-exceptions -CFLAGS -flto \
-	-LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
+VERILATOR_CFLAGS += -CFLAGS -flto -CFLAGS -fno-exceptions
+VERILATOR_CFLAGS += -LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/libdisasm.so \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
 	-LDFLAGS -lLLVM-18 -LDFLAGS -flto

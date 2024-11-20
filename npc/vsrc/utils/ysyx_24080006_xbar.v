@@ -37,6 +37,7 @@ module ysyx_24080006_xbar (
 
 
   // read channel
+  assign axi.rlast = axi.araddr >= 32'h8000_0000 ? axi_sram.rlast : axi_soc.rlast;
   assign axi.arready = axi.araddr >= 32'h8000_0000 ? axi_sram.arready : axi_soc.arready;
   assign axi_sram.arvalid = axi.araddr >= 32'h8000_0000 ? axi.arvalid : 0;
   assign axi_soc.arvalid = axi.araddr < 32'h8000_0000 ? axi.arvalid : 0;

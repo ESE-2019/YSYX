@@ -329,7 +329,7 @@ static void cache_sim(uint32_t pc)
     if (dummy_cache[index].vld[i] && dummy_cache[index].pc[i] == pc)
     {
       hit_num++;
-      //dummy_cache[index].del = 1 ^ i;
+      // dummy_cache[index].del = 1 ^ i;
       return;
     }
   }
@@ -376,7 +376,7 @@ static void Dcache_sim(uint32_t addr)
     if (Ddummy_cache[index].vld[i] && Ddummy_cache[index].addr[i] == addr)
     {
       Dhit_num++;
-      //dummy_cache[index].del = 1 ^ i;
+      // dummy_cache[index].del = 1 ^ i;
       return;
     }
   }
@@ -385,11 +385,25 @@ static void Dcache_sim(uint32_t addr)
   Ddummy_cache[index].vld[Ddummy_cache[index].del] = 1;
   Ddummy_cache[index].addr[Ddummy_cache[index].del] = addr;
 
-  //dummy_cache[index].del ^= 1;
-   Ddummy_cache[index].del++;
+  // dummy_cache[index].del ^= 1;
+  Ddummy_cache[index].del++;
 
   if (Ddummy_cache[index].del >= DCACHE_WAY)
     Ddummy_cache[index].del = 0;
+}
+
+uint32_t b_hit = 0, b_miss = 0;
+void branch_sim(bool cond, int imm)
+{
+  bool pred = imm < 0;
+  if (pred == cond)
+  {
+    b_hit++;
+  }
+  else
+  {
+    b_miss++;
+  }
 }
 
 static void print_cachesim()
@@ -398,6 +412,8 @@ static void print_cachesim()
   printf("I$ H/(H+M) = %.3f%% \n", num);
   num = 100 * (double)Dhit_num / (double)(Dhit_num + Dmiss_num);
   printf("D$ H/(H+M) = %.3f%% \n", num);
+  num = 100 * (double)b_hit / (double)(b_hit + b_miss);
+  printf("BRANCH H/(H+M) = %.3f%% \n", num);
 }
 
 extern void print_iringbuf();
@@ -458,22 +474,22 @@ static int decode_exec(Decode *s)
                     (int32_t)-2;
           IFDEF(CONFIG_FTRACE, ftrace_jump(s->dnpc, s->pc, R(rd)))
           /*; Log("jalr") */);
-  INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq, B,
+  INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq, B, branch_sim(src1 == src2, sign_extend(imm, 13));
           if (src1 == src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("beq") */);
-  INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne, B,
+  INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne, B, branch_sim(src1 != src2, sign_extend(imm, 13));
           if (src1 != src2) s->dnpc =
               ((int32_t)(s->pc) + sign_extend(imm, 13)) /*; Log("bne") */);
-  INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt, B,
+  INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt, B, branch_sim((int32_t)src1 < (int32_t)src2, sign_extend(imm, 13));
           if ((int32_t)src1 < (int32_t)src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("blt") */);
-  INSTPAT("??????? ????? ????? 101 ????? 11000 11", bge, B,
+  INSTPAT("??????? ????? ????? 101 ????? 11000 11", bge, B, branch_sim((int32_t)src1 >= (int32_t)src2, sign_extend(imm, 13));
           if ((int32_t)src1 >= (int32_t)src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("bge") */);
-  INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu, B,
+  INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu, B, branch_sim(src1 < src2, sign_extend(imm, 13));
           if (src1 < src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("bltu") */);
-  INSTPAT("??????? ????? ????? 111 ????? 11000 11", bgeu, B,
+  INSTPAT("??????? ????? ????? 111 ????? 11000 11", bgeu, B, branch_sim(src1 >= src2, sign_extend(imm, 13));
           if (src1 >= src2) s->dnpc =
               s->pc + sign_extend_13_to_32(imm) /*; Log("bgeu") */);
 
@@ -558,9 +574,11 @@ static int decode_exec(Decode *s)
       "0000001 ????? ????? 011 ????? 01100 11", mulhu, R,
       R(rd) = mulhu(src1, src2));
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div, R,
-          if (src2) R(rd) = (int32_t)src1 / (int32_t)src2; else  R(rd) = (int32_t)-1/*; Log("div") */);
+          if (src2) R(rd) = (int32_t)src1 / (int32_t)src2;
+          else R(rd) = (int32_t)-1 /*; Log("div") */);
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R,
-          if (src2) R(rd) = (int32_t)src1 / src2; else  R(rd) = (int32_t)-1 /*; Log("divu") */);
+          if (src2) R(rd) = (int32_t)src1 / src2;
+          else R(rd) = (int32_t)-1 /*; Log("divu") */);
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem, R,
           R(rd) = (int32_t)src1 % (int32_t)src2 /*; Log("rem") */);
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R,

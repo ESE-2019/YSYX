@@ -8,6 +8,7 @@ module ysyx_24080006_id_stage
     output decoder_t decoder,
     output logic fencei,
 
+    input  logic                 reg_we,
     input  logic [REG_WIDTH-1:0] rd_addr,
     output logic [REG_WIDTH-1:0] rs1_addr,
     output logic [REG_WIDTH-1:0] rs2_addr,
@@ -193,7 +194,7 @@ module ysyx_24080006_id_stage
 
   always_comb begin
     detect_hazard_d = 0;
-    if (rd_addr != '0) begin
+    if (rd_addr != '0 && !reg_we) begin
       detect_hazard_d = rd_addr == rs1_addr || rd_addr == rs2_addr;
     end
   end

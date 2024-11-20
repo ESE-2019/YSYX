@@ -1,6 +1,6 @@
 package ysyx_24080006_pkg;
 
-  parameter real DELAYER = 7.69;
+  parameter real DELAYER = 6;
 
   typedef enum logic [1:0] {
     RS1,
@@ -15,7 +15,7 @@ package ysyx_24080006_pkg;
     CSR
   } alu_b_e;
 
-  typedef enum logic [4:0] {
+  typedef enum logic [3:0] {
     ADD,
     SUB,
     SLL,
@@ -29,10 +29,7 @@ package ysyx_24080006_pkg;
     EQ,
     NE,
     GE,
-    GEU,
-    SH1ADD,  //Zba
-    SH2ADD,
-    SH3ADD
+    GEU
   } alu_op_e;
 
   typedef struct packed {

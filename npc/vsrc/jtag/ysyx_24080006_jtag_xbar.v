@@ -37,6 +37,7 @@ module ysyx_24080006_jtag_xbar (
 
 
   // read channel
+  assign axi.rlast = axi.araddr >= 32'h0200_0000 ? axi_soc.rlast : axi_jtag.rlast;
   assign axi.arready = axi.araddr >= 32'h0200_0000 ? axi_soc.arready : axi_jtag.arready;
   assign axi_soc.arvalid = axi.araddr >= 32'h0200_0000 ? axi.arvalid : 0;
   assign axi_jtag.arvalid = axi.araddr < 32'h0200_0000 ? axi.arvalid : 0;
