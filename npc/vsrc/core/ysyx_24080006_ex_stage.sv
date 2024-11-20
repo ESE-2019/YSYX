@@ -166,7 +166,7 @@ module ysyx_24080006_ex_stage
         IDLE: begin
           if (idu2exu.valid) begin
             exu2ifu.dnpc <= dnpc;
-            exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
+            exu2ifu.jump <=  decoder.jalr | decoder.ecall | decoder.mret; //decoder.jal |
             exu2ifu.branch <= alu_c[0] & decoder.branch;
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
@@ -268,12 +268,16 @@ module ysyx_24080006_ex_stage
   function automatic logic INSIDE_MEM(input logic [31:0] addr);
     INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
+        `ifdef NPC_MODE
         INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
+        `endif
         INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff);  // SDRAM
   endfunction
   function automatic logic INSIDE_STORE(input logic [31:0] addr);
     INSIDE_STORE = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
+    `ifdef NPC_MODE
         INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
+        `endif
         INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff) ||  // SDRAM
         INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
         INSIDE(addr, 32'h1000_2000, 32'h1000_200f) ||  // GPIO
@@ -282,7 +286,9 @@ module ysyx_24080006_ex_stage
   function automatic logic INSIDE_LOAD(input logic [31:0] addr);
     INSIDE_LOAD = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
         INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
+        `ifdef NPC_MODE
         INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
+        `endif
         INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff) ||  // SDRAM
         INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) ||  // CLINT
         INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
