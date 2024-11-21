@@ -39,8 +39,11 @@ module ysyx_24080006_ifu
   logic [31:0] inst_d, inst_q;
   assign inst = inst_q;
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
-  wire jal = inst[6:0] == JAL;//1'b0;//
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
+  // wire jal = 1'b0;  //inst[6:0] == JAL;//
+  // assign detect_hazard_d = inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};  //
+  wire jal = inst[6:0] == JAL;
+  assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -195,6 +198,7 @@ module ysyx_24080006_ifu
             inst_buf <= ic_val[31:16];
             if (fetch_twice) begin
               if (is_zc_d) begin  // fetch_twice_terminated
+                if (zc_err) $display("zc_errat pc 0x%08x", pc_q);
                 is_zc_q <= is_zc_d;
                 ifu2idu.pc <= pc_q;
                 inst_q <= inst_d;
@@ -209,6 +213,7 @@ module ysyx_24080006_ifu
                 fetch_twice_terminated <= 1'b0;
               end
             end else begin  // common case
+              if (zc_err) $display("zc_errat pc 0x%08x", pc_q);
               is_zc_q <= is_zc_d;
               ifu2idu.pc <= pc_q;
               inst_q <= inst_d;
@@ -243,7 +248,6 @@ module ysyx_24080006_ifu
     end
   end  // fsm 3 for axi
 
-  assign detect_hazard_d = inst_d[6:0] inside { JALR, SYSTEM, BRANCH, MISC_MEM};//JAL,
   always_comb begin
     if (fetch_twice) begin  // fetch_twice occurs in misaligned pc
       zc_val = {16'b0, ic_val[31:16]};
@@ -298,10 +302,10 @@ module ysyx_24080006_ifu
         RESET, EXEC, WAIT: begin
           ifu_cnt <= ifu_cnt + 1;
           if (ifu2idu.valid && idu2ifu_ready) begin
-            // if(zc_err) begin
-            //   $display("[Zc] inst error 0x%08x at pc 0x%08x", zc_val, pc_q);
-            //   $finish;
-            // end
+            if(zc_err) begin
+              $display("[Zc] inst error 0x%08x at pc 0x%08x", zc_val, pc_q);
+              $finish;
+            end
             dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
             type_cnt <= 1;
             if (branch_or_jump) ftrace <= exu2ifu.dnpc;
@@ -318,6 +322,19 @@ module ysyx_24080006_ifu
         $display("[IFU]pc error 0x%08x", pc_q);
         $finish;
       end
+    end
+  end
+  import "DPI-C" function void retirement(input int pc);
+  bit retire = 0;
+  bit [31:0] retire_pc;
+  always_ff @(posedge clock) begin
+    if (exu2ifu.valid && ifu2exu_ready) begin
+      retire <= 1'b1;
+      if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
+      else retire_pc <= exu2ifu.pc+32'h4;
+    end else if (retire) begin
+      retire <= 1'b0;
+      retirement(retire_pc);
     end
   end
 `endif

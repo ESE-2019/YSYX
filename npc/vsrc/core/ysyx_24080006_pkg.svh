@@ -1,6 +1,6 @@
 package ysyx_24080006_pkg;
 
-  parameter real DELAYER = 6;
+  parameter real DELAYER = 7;
 
   typedef enum logic [1:0] {
     RS1,

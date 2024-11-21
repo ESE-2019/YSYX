@@ -2,9 +2,9 @@
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 static bool LOG = 0;
 static bool WAVE = 1;
-static bool SDB = 1;
+static bool SDB = 0;
 
-static bool DIFF_EN = 0;
+static bool DIFF_EN = 1;
 static bool IT_EN = 1;
 static bool FT_EN = 1;
 static bool FLASH_TRACE = 0;
@@ -443,51 +443,6 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t type_cn
     if (FT_EN && ft_pc != 0)
         ftrace_jump(pc, ft_pc, ft_pc + 4); // ftrace
 
-    // diff test
-    uint32_t check[32];
-    if (DIFF_EN)
-
-        if (initial)
-        {
-            initial = false;
-        }
-        else if (SKIP)
-        {
-            SKIP = 0;
-            for (int j = 0; j < 32; j++)
-            {
-                check[j] = NPC_REG[j];
-            }
-            check[0] = pc;
-            difftest_regcpy(check, 1); // 0 for normal, 1 for skip
-        }
-        else
-        {
-            difftest_exec(1);
-            difftest_regcpy(check, 0); // 0 for normal, 1 for skip
-            for (int j = 0; j < 32; j++)
-            {
-                if (j == 0)
-                {
-                    if (check[j] != pc)
-                    {
-                        printf("pc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", check[j], pc);
-                        cycle = 0;
-                    }
-                }
-                else
-                {
-                    if (check[j] != NPC_REG[j])
-                    {
-                        printf("%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x\n", j, check[j], NPC_REG[j]);
-                        cycle = 0;
-                    }
-                }
-            }
-        }
-
-    wp_exec(); // watchpoint
-
     if (IT_EN)
     {
         char logbuf[128];
@@ -517,6 +472,50 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t type_cn
             iringbuf_index = 0;
     }
 }
+extern "C" void retirement(uint32_t pc)
+{
+    // diff test
+    uint32_t check[32];
+    if (DIFF_EN)
+
+        if (SKIP)
+        {
+            SKIP = 0;
+            for (int j = 0; j < 32; j++)
+            {
+                check[j] = NPC_REG[j];
+            }
+            check[0] = pc;
+            difftest_regcpy(check, 1); // 0 for normal, 1 for skip
+        }
+        else
+        {
+            difftest_exec(1);
+            difftest_regcpy(check, 0); // 0 for normal, 1 for skip
+            for (int j = 0; j < 32; j++)
+            {
+                if (j == 0)
+                {
+                    if (check[j] != pc)
+                    {
+                        printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", check[j], pc);
+                        cycle = 0;
+                    }
+                }
+                else
+                {
+                    if (check[j] != NPC_REG[j])
+                    {
+                        printf("\033[1;31m%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", j, check[j], NPC_REG[j]);
+                        cycle = 0;
+                    }
+                }
+            }
+        }
+
+    wp_exec(); // watchpoint
+}
+
 uint64_t ipc_cycle = 0;
 static void print_ipc()
 {

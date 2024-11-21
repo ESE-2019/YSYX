@@ -288,7 +288,7 @@ module ysyx_24080006_zcu
                   3'b111: begin
                     unique case (zc_val[4:2])
                       3'b000: begin  // c.zext.b -> andi rd'/rs1', rd'/rs1', 0xff
-                        inst = {12'hff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], OP_IMM};
+                        inst = {12'h0ff, 2'b01, zc_val[9:7], 3'b111, 2'b01, zc_val[9:7], OP_IMM};
                       end
                       // no zbb
                       3'b101: begin  // c.not -> xori rd'/rs1', rd'/rs1', -1

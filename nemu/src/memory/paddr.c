@@ -113,17 +113,26 @@ word_t paddr_read(paddr_t addr, int len)
   else if (in_soc_flash(addr))
   {
     word_t ret = soc_flash_read(addr, len);
+#ifdef CONFIG_MTRACE
+    Log("[paddr_read] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, ret, cpu.pc);
+#endif
     return ret;
   }
   else if (in_soc_sram(addr))
   {
     word_t ret = soc_sram_read(addr, len);
+#ifdef CONFIG_MTRACE
+    Log("[paddr_read] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, ret, cpu.pc);
+#endif
     return ret;
   }
   else if (in_soc_sdram(addr))
   {
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
     word_t ret = soc_sdram_read(addr, len);
+#ifdef CONFIG_MTRACE
+    Log("[paddr_read] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, ret, cpu.pc);
+#endif
     return ret;
   }
   MUXDEF(CONFIG_CACHESIM, return 1 << 5;, out_of_bound(addr);)
@@ -132,11 +141,11 @@ word_t paddr_read(paddr_t addr, int len)
 
 void paddr_write(paddr_t addr, int len, word_t data)
 {
-#ifdef CONFIG_MTRACE
-  Log("[paddr_write] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, data, cpu.pc);
-#endif
   if (likely(in_pmem(addr)))
   {
+#ifdef CONFIG_MTRACE
+    Log("[paddr_write] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, data, cpu.pc);
+#endif
     pmem_write(addr, len, data);
     return;
   }
@@ -147,11 +156,17 @@ void paddr_write(paddr_t addr, int len, word_t data)
   }
   else if (in_soc_sram(addr))
   {
+#ifdef CONFIG_MTRACE
+    Log("[paddr_write] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, data, cpu.pc);
+#endif
     soc_sram_write(addr, len, data);
     return;
   }
   else if (in_soc_sdram(addr))
   {
+#ifdef CONFIG_MTRACE
+    Log("[paddr_write] addr: " FMT_PADDR " len: %d data: " FMT_WORD " pc = " FMT_WORD, addr, len, data, cpu.pc);
+#endif
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data);)
     soc_sdram_write(addr, len, data);
     return;

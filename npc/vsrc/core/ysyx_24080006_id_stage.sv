@@ -194,8 +194,10 @@ module ysyx_24080006_id_stage
 
   always_comb begin
     detect_hazard_d = 0;
-    if (rd_addr != '0 && !reg_we) begin
-      detect_hazard_d = rd_addr == rs1_addr || rd_addr == rs2_addr;
+    if (rd_addr != '0) begin
+      if (!reg_we) begin
+        detect_hazard_d = rd_addr == rs1_addr || rd_addr == rs2_addr;
+      end
     end
   end
 

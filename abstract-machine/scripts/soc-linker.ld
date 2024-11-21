@@ -151,9 +151,11 @@ SECTIONS {
     
   } > SDRAM : bss
 
-    _stack_top = ALIGN(4);
-    . = . + 0x10000;
-    _stack_pointer = ALIGN(4);
+  _stack_top = ALIGN(0x1000);
+  . = _stack_top + 0x8000;
+  _stack_pointer = .;
+  end = .;
+  _end = .;
     
     _heap_start = ALIGN(4);
     . = ORIGIN(SDRAM) + LENGTH(SDRAM) - 3;

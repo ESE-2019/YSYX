@@ -165,14 +165,16 @@ module ysyx_24080006_ex_stage
       unique case (curr)
         IDLE: begin
           if (idu2exu.valid) begin
+            exu2ifu.pc <= idu2exu.pc; // for diff test only
             exu2ifu.dnpc <= dnpc;
-            exu2ifu.jump <=  decoder.jalr | decoder.ecall | decoder.mret; //decoder.jal |
+            //exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
+            exu2ifu.jump <= decoder.jalr | decoder.ecall | decoder.mret; //
             exu2ifu.branch <= alu_c[0] & decoder.branch;
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
-            if (decoder.lsu_set.lsu_enable) begin
+            if (decoder.lsu_set.lsu_enable) begin  // load/store
               exu2lsu_valid <= 1'b1;
-              lsu_addr <= alu2mdu.res_32;
+              lsu_addr <= alu_c;
               lsu_size <= decoder.lsu_set.lsu_size;
               lsu_write <= decoder.lsu_set.lsu_write;
               lsu_sext <= decoder.lsu_set.lsu_sext;
@@ -305,8 +307,8 @@ module ysyx_24080006_ex_stage
   always_ff @(posedge clock) begin
     if (curr == IDLE) lsu_cnt = 1;
     else lsu_cnt++;
-    if (exu2lsu_valid && lsu2exu_ready && lsu_write) begin
-      //$display("[LSU] 0x%08x write [0x%08x]", lsu_addr, lsu_wdata);
+    if (lsu2exu_valid && lsu_write) begin
+      //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, idu2exu.pc);
       LSU_CNT(0, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
       if (!INSIDE_STORE(lsu_addr)) begin
@@ -314,8 +316,8 @@ module ysyx_24080006_ex_stage
         $finish;
       end
     end
-    if (exu2lsu_valid && lsu2exu_ready && !lsu_write) begin
-      //$display("[LSU] 0x%08x read [0x%08x]", lsu_addr, lsu_rdata);
+    if (lsu2exu_valid && !lsu_write) begin
+      //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, idu2exu.pc);
       LSU_CNT(1, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
       if (!INSIDE_LOAD(lsu_addr)) begin
