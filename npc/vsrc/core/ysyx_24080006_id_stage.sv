@@ -118,7 +118,7 @@ module ysyx_24080006_id_stage
   end  // fsm 3 for handshake
 
   decoder_t idu;
-  logic [31:0] dnpc, alu_a, alu_b;
+  logic [31:0] alu_a, alu_b;
 
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin

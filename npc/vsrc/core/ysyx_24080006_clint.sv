@@ -1,15 +1,21 @@
-module ysyx_24080006_clint (
+module ysyx_24080006_clint
+  import ysyx_24080006_pkg::*;
+(
     input logic clock,
     input logic reset,
-    ysyx_24080006_axi.slave axi_clint
+
+    input  axi_w_m2s_t clint_w_m2s,
+    output axi_w_s2m_t clint_w_s2m,
+    input  axi_r_m2s_t clint_r_m2s,
+    output axi_r_s2m_t clint_r_s2m
 );
   logic [31:0] mtime_low_d, mtime_low_q, mtime_high_d, mtime_high_q;
-  assign {mtime_high_d, mtime_low_d} = {mtime_high_q, mtime_low_q} + 64'b1;
+  assign {mtime_high_d, mtime_low_d} = {mtime_high_q, mtime_low_q} + 64'd1;
   logic [31:0] dout;
   always_ff @(posedge clock) begin
     if (reset) begin
-      mtime_high_q <= 0;
-      mtime_low_q  <= 0;
+      mtime_high_q <= 32'b0;
+      mtime_low_q  <= 32'b0;
     end else begin
       mtime_high_q <= mtime_high_d;
       mtime_low_q  <= mtime_low_d;
@@ -17,42 +23,29 @@ module ysyx_24080006_clint (
   end
   always_ff @(posedge clock) begin
     if (reset) begin
-      // axi_clint.awready <= 1;
-      // axi_clint.wready  <= 1;
-      // axi_clint.bvalid  <= 0;
-      axi_clint.arready <= 1;
-      axi_clint.rvalid  <= 0;
+      // write deleted
+      clint_r_s2m.arready <= 1'b1;
+      clint_r_s2m.rvalid  <= 1'b0;
+      clint_r_s2m.rlast   <= 1'b1;
     end else begin
 
-      // if (axi_clint.awvalid && axi_clint.wvalid && axi_clint.awready && axi_clint.wready && !axi_clint.bvalid) begin
-      //   axi_clint.awready <= 0;
-      //   axi_clint.wready  <= 0;
-      //   axi_clint.bvalid  <= 1;
-      //   axi_clint.bresp   <= 2'b00;
-      // end else if (axi_clint.bready) begin
-      //   axi_clint.awready <= 1;
-      //   axi_clint.wready  <= 1;
-      //   axi_clint.bvalid  <= 0;
-      // end
+      // write deleted
 
-      if (axi_clint.arvalid && axi_clint.arready && !axi_clint.rvalid) begin
-        axi_clint.arready <= 0;
-        axi_clint.rdata   <= dout;
-        axi_clint.rvalid  <= 1;
-        axi_clint.rresp   <= 2'b00;
-      end else if (axi_clint.rready) begin
-        axi_clint.arready <= 1;
-        axi_clint.rvalid  <= 0;
+      if (clint_r_m2s.arvalid && clint_r_s2m.arready && !clint_r_s2m.rvalid) begin
+        clint_r_s2m.arready <= 1'b0;
+        clint_r_s2m.rdata   <= dout;
+        clint_r_s2m.rvalid  <= 1'b1;
+      end else if (clint_r_m2s.rready) begin
+        clint_r_s2m.arready <= 1'b1;
+        clint_r_s2m.rvalid  <= 1'b0;
       end
     end
 
   end
 
-  assign axi_clint.rlast = 1'b1;
-
   always_comb begin
-    dout = '0;
-    unique case (axi_clint.araddr[15:0])
+    dout = 32'b0;
+    unique case (clint_r_m2s.araddr[15:0])
       16'hBFF8: dout = mtime_low_q;
       16'hBFFc: dout = mtime_high_q;
       default:  ;

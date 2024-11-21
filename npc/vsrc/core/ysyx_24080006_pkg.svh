@@ -1,7 +1,5 @@
 package ysyx_24080006_pkg;
 
-  parameter real DELAYER = 7;
-
   typedef enum logic [1:0] {
     RS1,
     PC,
@@ -156,7 +154,7 @@ package ysyx_24080006_pkg;
   } alu2mdu_t;
 
   parameter int unsigned IC_M = 5;  // 4
-  parameter int unsigned IC_N = 1;
+  parameter int unsigned IC_N = 1;  // 1
   parameter int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
 
   typedef struct packed {
@@ -175,10 +173,45 @@ package ysyx_24080006_pkg;
   parameter RST_ADDR = 32'h8000_0000;
 `endif
 
-  parameter logic [3:0] WSTRB_LUT[4] = '{
-      4'b0001,  // funct3 == 3'b000
-      4'b0011,  // funct3 == 3'b001
-      4'b1111,  // funct3 == 3'b010
-      4'b0000  // others
-  };
+  typedef struct packed {
+    logic        awvalid;
+    logic [31:0] awaddr;
+    logic [3:0]  awid;
+    logic [7:0]  awlen;
+    logic [2:0]  awsize;
+    logic [1:0]  awburst;
+    logic        wvalid;
+    logic [31:0] wdata;
+    logic [3:0]  wstrb;
+    logic        wlast;
+    logic        bready;
+  } axi_w_m2s_t;
+
+  typedef struct packed {
+    logic       awready;
+    logic       wready;
+    logic       bvalid;
+    logic [1:0] bresp;
+    logic [3:0] bid;
+  } axi_w_s2m_t;
+
+  typedef struct packed {
+    logic        arvalid;
+    logic [31:0] araddr;
+    logic [3:0]  arid;
+    logic [7:0]  arlen;
+    logic [2:0]  arsize;
+    logic [1:0]  arburst;
+    logic        rready;
+  } axi_r_m2s_t;
+
+  typedef struct packed {
+    logic        arready;
+    logic        rvalid;
+    logic [1:0]  rresp;
+    logic [31:0] rdata;
+    logic        rlast;
+    logic [3:0]  rid;
+  } axi_r_s2m_t;
+
 endpackage

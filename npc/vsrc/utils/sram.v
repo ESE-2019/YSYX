@@ -58,7 +58,7 @@ module sram (
 
 
 
-assign axi.rlast = 1;
+  assign axi.rlast = 1;
   always_ff @(posedge clock) begin  // read / load
     if (reset) begin
       axi.arready <= 1;

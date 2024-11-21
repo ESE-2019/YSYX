@@ -83,9 +83,14 @@ wave:
 run: $(BIN)
 	@$^
 	
-syn: $(VSRCS)
-	verilator --lint-only --timescale "1ns/1ns" --top-module top ./vsrc/core/*.svh $(SYN_VSRCS) #./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv ./vsrc/core/*/*.sv
-	verilator -E --timescale "1ns/1ns" --top-module top ./vsrc/core/*.svh $(SYN_VSRCS) > $(BUILD_DIR)/top.v  #./vsrc/core/*.svh ./vsrc/top.v ./vsrc/core/*.sv ./vsrc/core/*/*.sv> $(BUILD_DIR)/top.v
+lint: $(SYN_VSRCS)
+	verible-verilog-syntax ./vsrc/core/*.svh $(SYN_VSRCS)
+	verible-verilog-lint ./vsrc/core/*.svh $(SYN_VSRCS)
+	verilator --lint-only -Wall --timescale "1ns/1ns" --top-module top ./vsrc/core/*.svh $(SYN_VSRCS)
+	
+syn: $(SYN_VSRCS)
+	verilator --lint-only --timescale "1ns/1ns" --top-module top ./vsrc/core/*.svh $(SYN_VSRCS)
+	verilator -E --timescale "1ns/1ns" --top-module top ./vsrc/core/*.svh $(SYN_VSRCS) > $(BUILD_DIR)/top.v
 	sed -i '/^`line/d' $(BUILD_DIR)/top.v
 	verible-verilog-format --inplace $(BUILD_DIR)/top.v
 
@@ -95,6 +100,6 @@ format: $(FMT_VSRCS)
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: default all run clean
+.PHONY: default all run clean lint
 
 include ../Makefile

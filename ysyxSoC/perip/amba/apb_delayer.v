@@ -23,7 +23,7 @@ module apb_delayer(
   input  [31:0] out_prdata,
   input         out_pslverr
 );
-  import ysyx_24080006_pkg::*;
+  import ysyx_24080006_sim_pkg::*;
   localparam apb_s = 32'h100; // ratio
   
   assign out_paddr   = in_paddr;

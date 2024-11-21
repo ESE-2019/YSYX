@@ -7,7 +7,7 @@ ASFLAGS       += $(COMMON_CFLAGS)
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
-#SIM_FLAGS     := -fast
+SIM_FLAGS     := -fast
 
 AM_SRCS += riscv/soc/start.S \
            riscv/soc/trm.c \
@@ -27,7 +27,7 @@ insert-arg: image
 	@python3 $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) "$(MAINARGS_PLACEHOLDER)" "$(mainargs)"
 
 image: image-dep
-	@$(OBJDUMP) -d -M no-aliases $(IMAGE).elf > $(IMAGE).txt
+	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 

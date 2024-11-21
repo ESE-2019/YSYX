@@ -20,7 +20,7 @@ void putch(char ch)
     outb(SOC_UART_THR, ch);
 }
 
-void halt(int code)
+void inline halt(int code)
 {
     __asm__ volatile("mv a0, %0; ebreak" : : "r"(code));
     while (1)

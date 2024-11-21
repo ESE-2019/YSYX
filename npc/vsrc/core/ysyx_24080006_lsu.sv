@@ -16,7 +16,10 @@ module ysyx_24080006_lsu
     input  logic exu2lsu_ready,
     output logic lsu2exu_valid,
 
-    ysyx_24080006_axi.master axi_lsu
+    output axi_w_m2s_t lsu_w_m2s,
+    input  axi_w_s2m_t lsu_w_s2m,
+    output axi_r_m2s_t lsu_r_m2s,
+    input  axi_r_s2m_t lsu_r_s2m
 );
 
   typedef enum logic {
@@ -69,7 +72,7 @@ module ysyx_24080006_lsu
         end
       end
       EXEC: begin
-        if (axi_lsu.rvalid || axi_lsu.bvalid) begin
+        if (lsu_r_s2m.rvalid || lsu_w_s2m.bvalid) begin
           next = IDLE;
         end else begin
           next = curr;
@@ -99,10 +102,10 @@ module ysyx_24080006_lsu
           end
         end
         EXEC: begin
-          if (axi_lsu.rvalid) begin
+          if (lsu_r_s2m.rvalid) begin
             lsu2exu_valid <= 1'b1;
             lsu2exu_ready <= 1'b1;
-          end else if (axi_lsu.bvalid) begin
+          end else if (lsu_w_s2m.bvalid) begin
             lsu2exu_valid <= 1'b0;
             lsu2exu_ready <= 1'b1;
           end else begin
@@ -116,17 +119,24 @@ module ysyx_24080006_lsu
 
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
-      axi_lsu.arvalid <= 1'b0;
-      axi_lsu.rready <= 1'b0;
-      axi_lsu.awvalid <= 1'b0;
-      axi_lsu.wvalid <= 1'b0;
-      axi_lsu.bready <= 1'b0;
-      axi_lsu.wdata <= 32'b0;
-      axi_lsu.wstrb <= 4'b0;
-      axi_lsu.awsize <= 3'b0;
-      axi_lsu.awaddr <= 32'b0;
-      axi_lsu.arsize <= 3'b0;
-      axi_lsu.araddr <= '0;
+      lsu_r_m2s.arid <= 4'h0;
+      lsu_r_m2s.arburst <= 2'b10;
+      lsu_r_m2s.arlen <= 8'h0;
+      lsu_w_m2s.awid <= 4'h0;
+      lsu_w_m2s.awlen <= 8'h0;
+      lsu_w_m2s.awburst <= 2'b10;
+      lsu_w_m2s.wlast <= 1'b1;
+      lsu_r_m2s.arvalid <= 1'b0;
+      lsu_r_m2s.rready <= 1'b0;
+      lsu_w_m2s.awvalid <= 1'b0;
+      lsu_w_m2s.wvalid <= 1'b0;
+      lsu_w_m2s.bready <= 1'b0;
+      lsu_w_m2s.wdata <= 32'b0;
+      lsu_w_m2s.wstrb <= 4'b0;
+      lsu_w_m2s.awsize <= 3'b0;
+      lsu_w_m2s.awaddr <= 32'b0;
+      lsu_r_m2s.arsize <= 3'b0;
+      lsu_r_m2s.araddr <= '0;
       lsu_rdata <= '0;
       sext_tmp <= '0;
     end else begin
@@ -134,53 +144,47 @@ module ysyx_24080006_lsu
         IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
             if (lsu_write) begin
-              axi_lsu.arvalid <= 1'b0;
-              axi_lsu.rready  <= 1'b0;
-              axi_lsu.awvalid <= 1'b1;
-              axi_lsu.wvalid  <= 1'b1;
-              axi_lsu.bready  <= 1'b0;
-              axi_lsu.wdata   <= lsu_wdata_shifted;
-              axi_lsu.awsize  <= {1'b0, lsu_size};
-              axi_lsu.wstrb   <= lsu_strb;
-              axi_lsu.awaddr  <= lsu_addr;
+              lsu_r_m2s.arvalid <= 1'b0;
+              lsu_r_m2s.rready  <= 1'b0;
+              lsu_w_m2s.awvalid <= 1'b1;
+              lsu_w_m2s.wvalid  <= 1'b1;
+              lsu_w_m2s.bready  <= 1'b0;
+              lsu_w_m2s.wdata   <= lsu_wdata_shifted;
+              lsu_w_m2s.awsize  <= {1'b0, lsu_size};
+              lsu_w_m2s.wstrb   <= lsu_strb;
+              lsu_w_m2s.awaddr  <= lsu_addr;
             end else begin
-              axi_lsu.arvalid <= 1'b1;
-              axi_lsu.rready  <= 1'b0;
-              axi_lsu.awvalid <= 1'b0;
-              axi_lsu.wvalid  <= 1'b0;
-              axi_lsu.bready  <= 1'b0;
-              axi_lsu.arsize  <= {1'b0, lsu_size};
-              axi_lsu.araddr  <= lsu_addr;
-              sext_tmp        <= lsu_sext;
+              lsu_r_m2s.arvalid <= 1'b1;
+              lsu_r_m2s.rready  <= 1'b0;
+              lsu_w_m2s.awvalid <= 1'b0;
+              lsu_w_m2s.wvalid  <= 1'b0;
+              lsu_w_m2s.bready  <= 1'b0;
+              lsu_r_m2s.arsize  <= {1'b0, lsu_size};
+              lsu_r_m2s.araddr  <= lsu_addr;
+              sext_tmp          <= lsu_sext;
             end
           end else begin
-            axi_lsu.arvalid <= 1'b0;
-            axi_lsu.rready  <= 1'b0;
-            axi_lsu.awvalid <= 1'b0;
-            axi_lsu.wvalid  <= 1'b0;
-            axi_lsu.bready  <= 1'b0;
+            lsu_r_m2s.arvalid <= 1'b0;
+            lsu_r_m2s.rready  <= 1'b0;
+            lsu_w_m2s.awvalid <= 1'b0;
+            lsu_w_m2s.wvalid  <= 1'b0;
+            lsu_w_m2s.bready  <= 1'b0;
           end
         end
         EXEC: begin
-          if (axi_lsu.arready) axi_lsu.arvalid <= 1'b0;
-          if (axi_lsu.awready) axi_lsu.awvalid <= 1'b0;
-          if (axi_lsu.wready) axi_lsu.wvalid <= 1'b0;
-          if (axi_lsu.bvalid) axi_lsu.bready <= 1'b1;
-          if (axi_lsu.rvalid) begin
-            axi_lsu.rready <= 1'b1;
-            lsu_rdata <= Mr(axi_lsu.rdata, axi_lsu.araddr[1:0], sext_tmp, axi_lsu.arsize[1:0]);
+          if (lsu_r_s2m.arready) lsu_r_m2s.arvalid <= 1'b0;
+          if (lsu_w_s2m.awready) lsu_w_m2s.awvalid <= 1'b0;
+          if (lsu_w_s2m.wready) lsu_w_m2s.wvalid <= 1'b0;
+          if (lsu_w_s2m.bvalid) lsu_w_m2s.bready <= 1'b1;
+          if (lsu_r_s2m.rvalid) begin
+            lsu_r_m2s.rready <= 1'b1;
+            lsu_rdata <= Mr(
+                lsu_r_s2m.rdata, lsu_r_m2s.araddr[1:0], sext_tmp, lsu_r_m2s.arsize[1:0]
+            );
           end
         end
       endcase
     end
   end
-
-  assign axi_lsu.arid = 4'h1;
-  assign axi_lsu.arburst = 2'b10;
-  assign axi_lsu.arlen = 8'h0;
-  assign axi_lsu.awid = 4'he;
-  assign axi_lsu.awlen = 8'h0;
-  assign axi_lsu.awburst = 2'b10;
-  assign axi_lsu.wlast = 1'b1;
 
 endmodule

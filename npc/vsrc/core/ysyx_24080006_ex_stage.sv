@@ -20,7 +20,10 @@ module ysyx_24080006_ex_stage
     input  stage_t idu2exu,
     output stage_t exu2ifu,
 
-    ysyx_24080006_axi.master axi_lsu
+    output axi_w_m2s_t lsu_w_m2s,
+    input  axi_w_s2m_t lsu_w_s2m,
+    output axi_r_m2s_t lsu_r_m2s,
+    input  axi_r_s2m_t lsu_r_s2m
 );
 
   logic mdu_valid_o, mdu_valid_i;
@@ -165,10 +168,10 @@ module ysyx_24080006_ex_stage
       unique case (curr)
         IDLE: begin
           if (idu2exu.valid) begin
-            exu2ifu.pc <= idu2exu.pc; // for diff test only
+            exu2ifu.pc <= idu2exu.pc;  // for diff test only
             exu2ifu.dnpc <= dnpc;
-            //exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
-            exu2ifu.jump <= decoder.jalr | decoder.ecall | decoder.mret; //
+            exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
+            // exu2ifu.jump <= decoder.jalr | decoder.ecall | decoder.mret;
             exu2ifu.branch <= alu_c[0] & decoder.branch;
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
@@ -234,14 +237,14 @@ module ysyx_24080006_ex_stage
   assign alu_a = idu2exu.alu_a;
   assign alu_b = idu2exu.alu_b;
   always_comb begin
-      unique case (1'b1)
-        decoder.jal: dnpc = idu2exu.pc + decoder.imm;
-        decoder.jalr: dnpc = (idu2exu.rs1_data + decoder.imm) & 32'hffff_fffe;
-        decoder.branch: dnpc = idu2exu.pc + decoder.imm;
-        decoder.ecall: dnpc = idu2exu.csr_rdata;
-        decoder.mret: dnpc = idu2exu.csr_rdata;
-        default: dnpc = idu2exu.csr_rdata;
-      endcase
+    unique case (1'b1)
+      decoder.jal: dnpc = idu2exu.pc + decoder.imm;
+      decoder.jalr: dnpc = (idu2exu.rs1_data + decoder.imm) & 32'hffff_fffe;
+      decoder.branch: dnpc = idu2exu.pc + decoder.imm;
+      decoder.ecall: dnpc = idu2exu.csr_rdata;
+      decoder.mret: dnpc = idu2exu.csr_rdata;
+      default: dnpc = idu2exu.csr_rdata;
+    endcase
   end
 
   ysyx_24080006_lsu LSU (.*);
@@ -256,48 +259,8 @@ module ysyx_24080006_ex_stage
   );
 
 
-`ifdef SOC_MODE
-  function automatic logic INSIDE(input logic [31:0] addr, left, right);
-    INSIDE = addr >= left && addr <= right;
-  endfunction
-  function automatic logic INSIDE_PERIP(input logic [31:0] addr);
-    INSIDE_PERIP = INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) ||  // CLINT
-        INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
-        INSIDE(addr, 32'h1000_2000, 32'h1000_200f) ||  // GPIO
-        INSIDE(addr, 32'h1001_1000, 32'h1001_1007) ||  // PS2
-        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff);  // VGA
-  endfunction
-  function automatic logic INSIDE_MEM(input logic [31:0] addr);
-    INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
-        INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
-        `ifdef NPC_MODE
-        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
-        `endif
-        INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff);  // SDRAM
-  endfunction
-  function automatic logic INSIDE_STORE(input logic [31:0] addr);
-    INSIDE_STORE = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
-    `ifdef NPC_MODE
-        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
-        `endif
-        INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff) ||  // SDRAM
-        INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
-        INSIDE(addr, 32'h1000_2000, 32'h1000_200f) ||  // GPIO
-        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff);  // VGA
-  endfunction
-  function automatic logic INSIDE_LOAD(input logic [31:0] addr);
-    INSIDE_LOAD = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
-        INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
-        `ifdef NPC_MODE
-        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
-        `endif
-        INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff) ||  // SDRAM
-        INSIDE(addr, 32'h0200_0000, 32'h0200_ffff) ||  // CLINT
-        INSIDE(addr, 32'h1000_0000, 32'h1000_0fff) ||  // UART
-        INSIDE(addr, 32'h1000_2000, 32'h1000_200f) ||  // GPIO
-        INSIDE(addr, 32'h1001_1000, 32'h1001_1007) ||  // PS2
-        INSIDE(addr, 32'h2100_0000, 32'h211f_ffff);  // VGA
-  endfunction
+`ifdef SIM_MODE
+  import ysyx_24080006_sim_pkg::*;
   import "DPI-C" function void SKIP_DIFFTEST();
   import "DPI-C" function void LSU_CNT(
     input int load_en,

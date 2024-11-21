@@ -62,7 +62,7 @@ module axi4_delayer (
     input  logic [ 3:0] out_bid,
     input  logic [ 1:0] out_bresp
 );
-  import ysyx_24080006_pkg::*;
+  import ysyx_24080006_sim_pkg::*;
   localparam axi_s = 32'h100;  // ratio
   assign in_arready = out_arready;
   assign out_arvalid = in_arvalid;

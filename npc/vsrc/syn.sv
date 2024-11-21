@@ -1,11 +1,9 @@
-// use for syn
-module top
-  import ysyx_24080006_pkg::*;
+/* verilator lint_off DECLFILENAME */
+module top  // use for syn
 (
-    input  logic        clock,
-    input  logic        reset,
-    input  logic        io_interrupt,
-    // AXI4 Master Interface
+    input logic clock,
+    input logic reset,
+
     input  logic        io_master_awready,
     output logic        io_master_awvalid,
     output logic [31:0] io_master_awaddr,
@@ -41,53 +39,62 @@ module top
     input  logic [ 3:0] io_master_rid
 );
 
-  //axi
-  ysyx_24080006_axi axi (), axi_core (), axi_clint ();
-  ysyx_24080006_core CORE (
-      .*,
-      .axi(axi_core)
-  );
-  ysyx_24080006_clint_xbar CLINT_XBAR (
-      .axi(axi_core),
-      .axi_soc(axi),
-      .axi_clint(axi_clint)
-  );
+  import ysyx_24080006_pkg::*;
+
+  axi_r_m2s_t ifu_r_m2s;
+  axi_r_s2m_t ifu_r_s2m;
+
+  axi_w_m2s_t lsu_w_m2s;
+  axi_w_s2m_t lsu_w_s2m;
+  axi_r_m2s_t lsu_r_m2s;
+  axi_r_s2m_t lsu_r_s2m;
+
+  axi_w_m2s_t clint_w_m2s;
+  axi_w_s2m_t clint_w_s2m;
+  axi_r_m2s_t clint_r_m2s;
+  axi_r_s2m_t clint_r_s2m;
+
+  axi_w_m2s_t core_w_m2s;
+  axi_w_s2m_t core_w_s2m;
+  axi_r_m2s_t core_r_m2s;
+  axi_r_s2m_t core_r_s2m;
+
+  ysyx_24080006_core CORE (.*);
+  ysyx_24080006_interconnect ITCNT (.*);
   ysyx_24080006_clint CLINT (.*);
 
-  // Connect master signals to the AXI interface using assign statements
-  assign axi.awready = io_master_awready;
-  assign io_master_awvalid = axi.awvalid;
-  assign io_master_awaddr = axi.awaddr;
-  assign io_master_awid = axi.awid;
-  assign io_master_awlen = axi.awlen;
-  assign io_master_awsize = axi.awsize;
-  assign io_master_awburst = axi.awburst;
+  assign core_w_s2m.awready = io_master_awready;
+  assign io_master_awvalid = core_w_m2s.awvalid;
+  assign io_master_awaddr = core_w_m2s.awaddr;
+  assign io_master_awid = core_w_m2s.awid;
+  assign io_master_awlen = core_w_m2s.awlen;
+  assign io_master_awsize = core_w_m2s.awsize;
+  assign io_master_awburst = core_w_m2s.awburst;
 
-  assign axi.wready = io_master_wready;
-  assign io_master_wvalid = axi.wvalid;
-  assign io_master_wdata = axi.wdata;
-  assign io_master_wstrb = axi.wstrb;
-  assign io_master_wlast = axi.wlast;
+  assign core_w_s2m.wready = io_master_wready;
+  assign io_master_wvalid = core_w_m2s.wvalid;
+  assign io_master_wdata = core_w_m2s.wdata;
+  assign io_master_wstrb = core_w_m2s.wstrb;
+  assign io_master_wlast = core_w_m2s.wlast;
 
-  assign io_master_bready = axi.bready;
-  assign axi.bvalid = io_master_bvalid;
-  assign axi.bresp = io_master_bresp;
-  assign axi.bid = io_master_bid;
+  assign io_master_bready = core_w_m2s.bready;
+  assign core_w_s2m.bvalid = io_master_bvalid;
+  assign core_w_s2m.bresp = io_master_bresp;
+  assign core_w_s2m.bid = io_master_bid;
 
-  assign axi.arready = io_master_arready;
-  assign io_master_arvalid = axi.arvalid;
-  assign io_master_araddr = axi.araddr;
-  assign io_master_arid = axi.arid;
-  assign io_master_arlen = axi.arlen;
-  assign io_master_arsize = axi.arsize;
-  assign io_master_arburst = axi.arburst;
+  assign core_r_s2m.arready = io_master_arready;
+  assign io_master_arvalid = core_r_m2s.arvalid;
+  assign io_master_araddr = core_r_m2s.araddr;
+  assign io_master_arid = core_r_m2s.arid;
+  assign io_master_arlen = core_r_m2s.arlen;
+  assign io_master_arsize = core_r_m2s.arsize;
+  assign io_master_arburst = core_r_m2s.arburst;
 
-  assign io_master_rready = axi.rready;
-  assign axi.rvalid = io_master_rvalid;
-  assign axi.rresp = io_master_rresp;
-  assign axi.rdata = io_master_rdata;
-  assign axi.rlast = io_master_rlast;
-  assign axi.rid = io_master_rid;
-
+  assign io_master_rready = core_r_m2s.rready;
+  assign core_r_s2m.rvalid = io_master_rvalid;
+  assign core_r_s2m.rresp = io_master_rresp;
+  assign core_r_s2m.rdata = io_master_rdata;
+  assign core_r_s2m.rlast = io_master_rlast;
+  assign core_r_s2m.rid = io_master_rid;
 
 endmodule

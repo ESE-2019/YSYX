@@ -12,7 +12,8 @@ module ysyx_24080006_ifu
     input  stage_t exu2ifu,
     output stage_t ifu2idu,
 
-    ysyx_24080006_axi.master axi_ifu
+    output axi_r_m2s_t ifu_r_m2s,
+    input  axi_r_s2m_t ifu_r_s2m
 );
 
   typedef enum logic [2:0] {
@@ -32,7 +33,7 @@ module ysyx_24080006_ifu
   logic detect_hazard_q, detect_hazard_d;
   logic [31:0] ic_val, zc_val;
   logic is_zc_d, is_zc_q;
-  logic zc_err, inst_err;
+  logic zc_err;
   logic [31:0] pc_d, pc_q;
   logic [31:0] fetch_addr_d, fetch_addr_q;
   logic [15:0] inst_buf;
@@ -40,10 +41,10 @@ module ysyx_24080006_ifu
   assign inst = inst_q;
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-  // wire jal = 1'b0;  //inst[6:0] == JAL;//
-  // assign detect_hazard_d = inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};  //
-  wire jal = inst[6:0] == JAL;
-  assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
+  wire jal = 1'b0;
+  assign detect_hazard_d = inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
+  // wire jal = inst[6:0] == JAL;
+  // assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -198,7 +199,7 @@ module ysyx_24080006_ifu
             inst_buf <= ic_val[31:16];
             if (fetch_twice) begin
               if (is_zc_d) begin  // fetch_twice_terminated
-                if (zc_err) $display("zc_errat pc 0x%08x", pc_q);
+                if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
                 is_zc_q <= is_zc_d;
                 ifu2idu.pc <= pc_q;
                 inst_q <= inst_d;
@@ -213,7 +214,7 @@ module ysyx_24080006_ifu
                 fetch_twice_terminated <= 1'b0;
               end
             end else begin  // common case
-              if (zc_err) $display("zc_errat pc 0x%08x", pc_q);
+              if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
               is_zc_q <= is_zc_d;
               ifu2idu.pc <= pc_q;
               inst_q <= inst_d;
@@ -269,6 +270,7 @@ module ysyx_24080006_ifu
 
 
 `ifdef SIM_MODE
+  import ysyx_24080006_sim_pkg::*;
   import "DPI-C" function void dbg(
     input int inst,
     input int pc,
@@ -276,17 +278,6 @@ module ysyx_24080006_ifu
     input int type_cnt,
     input int ifu_cnt
   );
-  function automatic logic INSIDE(input logic [31:0] addr, left, right);
-    INSIDE = addr >= left && addr <= right;
-  endfunction
-  function automatic logic INSIDE_MEM(input logic [31:0] addr);
-    INSIDE_MEM = INSIDE(addr, 32'h0f00_0000, 32'h0f00_1fff) ||  // SRAM
-        INSIDE(addr, 32'h3000_0000, 32'h30ff_ffff) ||  // FLASH
-        `ifdef NPC_MODE
-        INSIDE(addr, 32'h8000_0000, 32'h87ff_ffff) ||  // NPC SRAM
-        `endif 
-        INSIDE(addr, 32'ha000_0000, 32'ha3ff_ffff);  // SDRAM
-  endfunction
   logic [31:0] ftrace, type_cnt, ifu_cnt;
   always_ff @(posedge clock) begin
     if (reset) begin
@@ -302,10 +293,6 @@ module ysyx_24080006_ifu
         RESET, EXEC, WAIT: begin
           ifu_cnt <= ifu_cnt + 1;
           if (ifu2idu.valid && idu2ifu_ready) begin
-            if(zc_err) begin
-              $display("[Zc] inst error 0x%08x at pc 0x%08x", zc_val, pc_q);
-              $finish;
-            end
             dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
             type_cnt <= 1;
             if (branch_or_jump) ftrace <= exu2ifu.dnpc;
@@ -331,7 +318,7 @@ module ysyx_24080006_ifu
     if (exu2ifu.valid && ifu2exu_ready) begin
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
-      else retire_pc <= exu2ifu.pc+32'h4;
+      else retire_pc <= exu2ifu.pc + 32'h4;
     end else if (retire) begin
       retire <= 1'b0;
       retirement(retire_pc);

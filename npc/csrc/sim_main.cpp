@@ -4,7 +4,7 @@ static bool LOG = 0;
 static bool WAVE = 1;
 static bool SDB = 0;
 
-static bool DIFF_EN = 1;
+static bool DIFF_EN = 0;
 static bool IT_EN = 1;
 static bool FT_EN = 1;
 static bool FLASH_TRACE = 0;
