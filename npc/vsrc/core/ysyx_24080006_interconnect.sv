@@ -59,33 +59,48 @@ module ysyx_24080006_interconnect
   assign lsu_r_s2m.rlast   = imd_r_s2m.rlast;
   assign lsu_r_s2m.rid     = imd_r_s2m.rid;
 
-  enum logic [1:0] {
+  typedef enum logic [1:0] {
     IDLE,
     IFUR,
     LSUR
-  }
-      curr, next;
+  } xbar_fsm_t;
+  xbar_fsm_t curr, next;
+
+  logic pri_d, pri_q;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr  <= IDLE;
+      pri_q <= 1'b0;
     end else begin
-      curr <= next;
+      curr  <= next;
+      pri_q <= 1'b0;  //pri_d;
     end
   end
 
   always_comb begin  // fsm 2
     unique case (curr)
       IDLE: begin
-        if (ifu_r_m2s.arvalid) begin
-          next = IFUR;
-        end else if (lsu_r_m2s.arvalid) begin
-          next = LSUR;
+        if (!pri_q) begin
+          if (ifu_r_m2s.arvalid) begin
+            next = IFUR;
+          end else if (lsu_r_m2s.arvalid) begin
+            next = LSUR;
+          end else begin
+            next = IDLE;
+          end
         end else begin
-          next = IDLE;
+          if (lsu_r_m2s.arvalid) begin
+            next = LSUR;
+          end else if (ifu_r_m2s.arvalid) begin
+            next = IFUR;
+          end else begin
+            next = IDLE;
+          end
         end
       end
       LSUR: begin
+        pri_d = 0;
         if (lsu_r_m2s.rready && lsu_r_s2m.rvalid && lsu_r_s2m.rlast) begin
           if (ifu_r_m2s.arvalid) begin
             next = IFUR;
@@ -97,6 +112,7 @@ module ysyx_24080006_interconnect
         end
       end
       IFUR: begin
+        pri_d = 1;
         if (ifu_r_m2s.rready && ifu_r_s2m.rvalid && ifu_r_s2m.rlast) begin
           if (lsu_r_m2s.arvalid) begin
             next = LSUR;

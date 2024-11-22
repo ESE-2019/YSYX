@@ -1,5 +1,5 @@
 CROSS_COMPILE := riscv32-unknown-linux-gnu-
-COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -mabi=ilp32e -march=rv32em_zicsr_zifencei#_zca_zcb
+COMMON_CFLAGS := -fno-pic -mcmodel=medany -mstrict-align -mabi=ilp32e -march=rv32em_zicsr_zifencei_zca_zcb
 COMMON_CFLAGS += -fdata-sections -ffunction-sections -O2
 COMMON_CFLAGS += -falign-jumps=4 -falign-loops=4 -falign-functions=4 -falign-labels=4
 CFLAGS        += $(COMMON_CFLAGS) -static
