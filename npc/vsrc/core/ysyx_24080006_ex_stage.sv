@@ -60,7 +60,7 @@ module ysyx_24080006_ex_stage
           end else if (decoder.mdu_set.mdu_enable) begin
             next = MD_EXEC;
           end else begin
-            next = WAIT;
+            next = IDLE;
           end
         end else next = IDLE;
       end
@@ -69,7 +69,7 @@ module ysyx_24080006_ex_stage
         else next = LSU_EXEC;
       end
       MD_EXEC: begin
-        if (mdu_valid_i) next = WAIT;
+        if (mdu_valid_i) next = IDLE;
         else next = MD_EXEC;
       end
       WAIT: begin
@@ -94,7 +94,7 @@ module ysyx_24080006_ex_stage
               exu2idu_ready <= 1'b0;
               exu2ifu.valid <= 1'b0;
             end else begin  // bypass
-              exu2idu_ready <= 1'b0;
+              exu2idu_ready <= 1'b1;
               exu2ifu.valid <= 1'b1;
             end
           end else begin
@@ -113,7 +113,7 @@ module ysyx_24080006_ex_stage
         end
         MD_EXEC: begin
           if (mdu_valid_i) begin
-            exu2idu_ready <= 1'b0;
+            exu2idu_ready <= 1'b1;
             exu2ifu.valid <= 1'b1;
           end else begin
             exu2idu_ready <= 1'b0;
@@ -202,6 +202,7 @@ module ysyx_24080006_ex_stage
           end else begin
             rd_addr <= '0;
             exu2lsu_valid <= 1'b0;
+            mdu_valid_o <= 1'b0;
             reg_we <= 1'b0;
           end
         end
@@ -209,7 +210,7 @@ module ysyx_24080006_ex_stage
           if (exu2lsu_valid & lsu2exu_ready) exu2lsu_valid <= 1'b0;
           if (lsu2exu_valid) begin
             rd_data <= lsu_rdata;
-            reg_we  <= 1'b1;
+            reg_we  <= ~lsu_write;
           end
         end
         MD_EXEC: begin
@@ -270,7 +271,7 @@ module ysyx_24080006_ex_stage
   always_ff @(posedge clock) begin
     if (curr == IDLE) lsu_cnt = 1;
     else lsu_cnt++;
-    if (lsu2exu_valid && lsu_write) begin
+    if (curr == LSU_EXEC && lsu2exu_valid && lsu_write) begin
       //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, idu2exu.pc);
       LSU_CNT(0, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
@@ -279,7 +280,7 @@ module ysyx_24080006_ex_stage
         $finish;
       end
     end
-    if (lsu2exu_valid && !lsu_write) begin
+    if (curr == LSU_EXEC && lsu2exu_valid && !lsu_write) begin
       //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, idu2exu.pc);
       LSU_CNT(1, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();

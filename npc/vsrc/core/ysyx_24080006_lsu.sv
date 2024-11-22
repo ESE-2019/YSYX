@@ -174,7 +174,9 @@ module ysyx_24080006_lsu
         EXEC: begin
           if (lsu_r_s2m.arready) lsu_r_m2s.arvalid <= 1'b0;
           if (lsu_w_s2m.awready) lsu_w_m2s.awvalid <= 1'b0;
-          if (lsu_w_s2m.wready) lsu_w_m2s.wvalid <= 1'b0;
+          if (lsu_w_s2m.wready) begin
+            lsu_w_m2s.wvalid <= 1'b0;
+          end
           if (lsu_w_s2m.bvalid) lsu_w_m2s.bready <= 1'b1;
           if (lsu_r_s2m.rvalid) begin
             lsu_r_m2s.rready <= 1'b1;

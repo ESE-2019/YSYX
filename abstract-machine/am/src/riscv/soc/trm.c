@@ -18,7 +18,7 @@ void __attribute__((section(".klib"))) putch(char ch)
     outb(SOC_UART_THR, ch);
 }
 
-__attribute__((section(".klib"))) void halt(int code)
+__attribute__((section(".klib"))) void inline halt(int code)
 {
     __asm__ volatile("mv a0, %0; ebreak" : : "r"(code));
     while (1)
