@@ -47,9 +47,9 @@ __attribute__((section(".klib"))) Context *kcontext(Area kstack, void (*entry)(v
 __attribute__((section(".klib"))) void yield()
 {
 #ifdef __riscv_e
-  asm volatile("ecall");
+  asm volatile("li a5, 11; ecall");
 #else
-  asm volatile("ecall");
+  asm volatile("li a7, 11; ecall");
 #endif
 }
 

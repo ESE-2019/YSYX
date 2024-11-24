@@ -35,6 +35,7 @@ module ysyx_24080006_csr
       end else if (mret) begin
         csr_reg[mstatus] <= 32'h1800;
       end else if (csr_set.csr_enable) begin
+        //$display("csr_%d en_%d wdata 0x%08x at pc 0x%08x", csr_name, csr_set.csr_op, csr_wdata, csr_pc);
         unique case (csr_set.csr_op)
           READ:  csr_reg[csr_name] <= csr_reg[csr_name];
           WRITE: csr_reg[csr_name] <= csr_wdata;

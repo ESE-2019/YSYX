@@ -437,6 +437,9 @@ static int decode_exec(Decode *s)
           R(rd) = CSR_r(imm);
           CSR_w(imm, src1);
           IFDEF(CONFIG_ETRACE, Log(FMT_WORD "csrrw, R(%d) = " FMT_WORD " src" FMT_WORD, cpu.pc, rd, R(rd), src1)););
+  INSTPAT("??????? ????? 00000 010 ????? 11100 11", csrrs_read, I,
+          R(rd) = CSR_r(imm);
+          IFDEF(CONFIG_ETRACE, Log(FMT_WORD "csrrs_read, R(%d) = " FMT_WORD " src" FMT_WORD " tmp" FMT_WORD, cpu.pc, rd, R(rd), src1, tmp)););
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs, I,
           tmp = CSR_r(imm);
           R(rd) = tmp; CSR_w(imm, src1 | tmp);
@@ -550,16 +553,8 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and, R,
           R(rd) = src1 & src2 /*; Log("and") */);
   // fence TODO
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N,
-          bool flag = false;
-          tmp = isa_reg_str2val("$a7", &flag); if (flag) s->dnpc = isa_raise_intr(tmp, s->pc); else panic(););
-  /*void yield() {
-  #ifdef __riscv_e
-    asm volatile("li a5, 11; ecall");
-  #else
-    asm volatile("li a7, 11; ecall");
-  #endif
-  }*/
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(11, s->pc));
+
   // ebreak
   // RV32M Standard Extension
   INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul, R,

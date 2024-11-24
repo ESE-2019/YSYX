@@ -1,7 +1,12 @@
-module sram (
-    input logic                   clock,
-    input logic                   reset,
-          ysyx_24080006_axi.slave axi
+module sram
+  import ysyx_24080006_pkg::*;
+(
+    input  logic       clock,
+    input  logic       reset,
+    input  axi_w_m2s_t sram_w_m2s,
+    output axi_w_s2m_t sram_w_s2m,
+    input  axi_r_m2s_t sram_r_m2s,
+    output axi_r_s2m_t sram_r_s2m
 );
 
   import "DPI-C" function int pmem_read(input int raddr);
@@ -11,67 +16,38 @@ module sram (
     input int wmask
   );
 
-  //clint begin
-  logic [63:0] mtime;
-  logic [31:0] dout;
-  always_ff @(posedge clock) begin
-    unique if (reset) begin
-      mtime <= '0;
-    end else begin
-      mtime <= mtime + 64'b1;
-    end
-  end
-  always_comb begin
-    dout = '0;
-    unique case (axi.araddr)
-      32'ha0000048: dout = mtime[31:0];
-      32'ha000004c: dout = mtime[63:32];
-      default: ;
-    endcase
-  end
-  //clint end
-
   always_ff @(posedge clock) begin  // write / store
     if (reset) begin
-      axi.awready <= 1;
-      axi.wready  <= 1;
-      axi.bvalid  <= 0;
+      sram_w_s2m.awready <= 1;
+      sram_w_s2m.wready  <= 1;
+      sram_w_s2m.bvalid  <= 0;
     end else begin
-
-      if (axi.awvalid && axi.wvalid && axi.awready && axi.wready && !axi.bvalid) begin
-        axi.awready <= 0;
-        axi.wready  <= 0;
-        axi.bvalid  <= 1;
-        axi.bresp   <= 2'b00;
-        if (axi.awaddr == 32'ha00003F8) begin
-          $write("%c", axi.wdata[7:0]);
-        end else begin
-          pmem_write(axi.awaddr, axi.wdata, {28'b0, axi.wstrb});
-        end
-      end else if (axi.bready) begin
-        axi.awready <= 1;
-        axi.wready  <= 1;
-        axi.bvalid  <= 0;
+      if (sram_w_m2s.awvalid && sram_w_m2s.wvalid) begin
+        sram_w_s2m.awready <= 0;
+        sram_w_s2m.wready  <= 0;
+        sram_w_s2m.bvalid  <= 1;
+        pmem_write(sram_w_m2s.awaddr, sram_w_m2s.wdata, {28'b0, sram_w_m2s.wstrb});
+      end else if (sram_w_m2s.bready) begin
+        sram_w_s2m.awready <= 1;
+        sram_w_s2m.wready  <= 1;
+        sram_w_s2m.bvalid  <= 0;
       end
     end
   end
 
-
-
-  assign axi.rlast = 1;
   always_ff @(posedge clock) begin  // read / load
     if (reset) begin
-      axi.arready <= 1;
-      axi.rvalid  <= 0;
+      sram_r_s2m.arready <= 1;
+      sram_r_s2m.rvalid  <= 0;
+      sram_r_s2m.rlast <= 1;
     end else begin
-      if (axi.arvalid && axi.arready && !axi.rvalid) begin
-        axi.arready <= 0;
-        axi.rdata   <= axi.araddr >= 32'ha0000000 ? (dout) : (pmem_read(axi.araddr));
-        axi.rvalid  <= 1;
-        axi.rresp   <= 2'b00;
-      end else if (axi.rready) begin
-        axi.arready <= 1;
-        axi.rvalid  <= 0;
+      if (sram_r_m2s.arvalid) begin
+        sram_r_s2m.arready <= 0;
+        sram_r_s2m.rdata   <= pmem_read(sram_r_m2s.araddr);
+        sram_r_s2m.rvalid  <= 1;
+      end else if (sram_r_m2s.rready) begin
+        sram_r_s2m.arready <= 1;
+        sram_r_s2m.rvalid  <= 0;
       end
     end
   end

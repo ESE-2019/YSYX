@@ -1,7 +1,7 @@
 #include <am.h>
 #include <klib-macros.h>
 #include <riscv/riscv.h>
-#define RTC_ADDR (0xa0000048)
+#define RTC_ADDR (0x0200BFF8)
 
 void __am_timer_init() {}
 

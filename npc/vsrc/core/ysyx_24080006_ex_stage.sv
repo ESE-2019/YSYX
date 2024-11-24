@@ -204,6 +204,7 @@ module ysyx_24080006_ex_stage
             exu2lsu_valid <= 1'b0;
             mdu_valid_o <= 1'b0;
             reg_we <= 1'b0;
+            csr_set <= '0;
           end
         end
         LSU_EXEC: begin
