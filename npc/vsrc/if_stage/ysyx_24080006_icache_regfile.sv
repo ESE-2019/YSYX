@@ -1,4 +1,4 @@
-module ysyx_24080006_icache_reg
+module ysyx_24080006_icache_regfile
   import ysyx_24080006_pkg::*;
 (
     input  logic               clock,

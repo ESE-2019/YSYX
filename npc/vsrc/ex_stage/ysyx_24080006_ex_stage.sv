@@ -76,6 +76,7 @@ module ysyx_24080006_ex_stage
         if (ifu2exu_ready) next = IDLE;
         else next = WAIT;
       end
+      default: next = IDLE;
     endcase
   end
 
@@ -128,6 +129,10 @@ module ysyx_24080006_ex_stage
             exu2idu_ready <= 1'b0;
             exu2ifu.valid <= 1'b1;
           end
+        end
+        default: begin
+          exu2idu_ready <= 1'b0;
+          exu2ifu.valid <= 1'b0;
         end
       endcase
     end
@@ -228,6 +233,26 @@ module ysyx_24080006_ex_stage
         WAIT: begin
           rd_addr <= '0;
           reg_we <= 1'b0;
+          ecall <= 1'b0;
+          mret <= 1'b0;
+          csr_set <= '0;
+        end
+        default: begin
+          exu2lsu_valid <= 1'b0;
+          reg_we <= 1'b0;
+          rd_data <= 32'b0;
+          exu2ifu.dnpc <= 32'b0;
+          exu2ifu.jump <= 1'b0;
+          exu2ifu.branch <= 1'b0;
+          mdu_valid_o <= 1'b0;
+          lsu_addr <= 32'b0;
+          lsu_sext <= 1'b0;
+          lsu_size <= 2'b0;
+          lsu_write <= 1'b0;
+          lsu_wdata <= 32'b0;
+          rd_addr <= '0;
+          mdu_a <= 32'b0;
+          mdu_b <= 32'b0;
           ecall <= 1'b0;
           mret <= 1'b0;
           csr_set <= '0;

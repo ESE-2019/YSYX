@@ -1,4 +1,4 @@
-module ysyx_24080006_icu16
+module ysyx_24080006_icu
   import ysyx_24080006_pkg::*;
 (
     input logic clock,
@@ -55,7 +55,6 @@ module ysyx_24080006_icu16
   end
 
   always_comb begin  //fsm 2
-    next = IDLE;
     unique case (curr)
       IDLE: begin
         if (ifu2icu_valid & icu2ifu_ready) begin
@@ -109,7 +108,7 @@ module ysyx_24080006_icu16
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
       ifu_r_m2s.arid <= 4'h0;
-      ifu_r_m2s.arsize <= 3'h2;
+      ifu_r_m2s.arsize <= 3'd2;
       ifu_r_m2s.arburst <= 2'b10;
       ifu_r_m2s.arvalid <= 1'b0;
       ifu_r_m2s.rready <= 1'b0;
@@ -247,7 +246,22 @@ module ysyx_24080006_icu16
             icu2ifu_ready <= 1'b0;
           end
         end
-        default: ;
+        default: begin
+          ifu_r_m2s.arid <= 4'h0;
+          ifu_r_m2s.arsize <= 3'd2;
+          ifu_r_m2s.arburst <= 2'b10;
+          ifu_r_m2s.arvalid <= 1'b0;
+          ifu_r_m2s.rready <= 1'b0;
+          ifu_r_m2s.araddr <= 32'b0;
+          ifu_r_m2s.arlen <= 8'h0;
+          ic_addr <= 32'b0;
+          ic_we <= 1'b0;
+          foreach (ic_wdata_tmp[i]) ic_wdata_tmp[i] <= 32'b0;
+          ic_val <= 32'b0;
+          burst_offset <= '0;
+          icu2ifu_valid <= 1'b0;
+          icu2ifu_ready <= 1'b1;
+        end
       endcase
     end
   end  // fsm 3 for axi
@@ -273,7 +287,7 @@ module ysyx_24080006_icu16
   assign ic_rdata_tmp[1] = ic_rdata.data[32+:32];
   assign ic_rdata_tmp[0] = ic_rdata.data[0+:32];
 
-  ysyx_24080006_icache_reg16 WAY1 (
+  ysyx_24080006_icache_regfile ICR (
       .*,
       .ic_rdata(ic_rdata),
       .ic_we(ic_we)

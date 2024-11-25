@@ -42,7 +42,7 @@ module ysyx_24080006_ifu
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
-  assign detect_hazard_d = 1;//inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
+  assign detect_hazard_d = 1;  //inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
   // wire jal = inst[6:0] == JAL;
   // assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
 
@@ -55,9 +55,8 @@ module ysyx_24080006_ifu
   end
 
   always_comb begin  //fsm 2
-    next = IDLE;
     unique case (curr)
-      RESET: next = EXEC;
+      RESET:   next = EXEC;
       IDLE: begin
         next = EXEC;
       end
@@ -86,12 +85,13 @@ module ysyx_24080006_ifu
           next = curr;
         end
       end
+      default: next = IDLE;
     endcase
   end
 
   always_ff @(posedge clock) begin  // fsm 3 for handshake
     if (reset) begin
-      ifu2exu_ready <= 1'b1;
+      ifu2exu_ready <= 1'b0;
       ifu2idu.valid <= 1'b0;
     end else begin
       unique case (curr)
@@ -123,6 +123,10 @@ module ysyx_24080006_ifu
         end
         HAZARD: begin
           ifu2exu_ready <= 1'b1;
+          ifu2idu.valid <= 1'b0;
+        end
+        default: begin
+          ifu2exu_ready <= 1'b0;
           ifu2idu.valid <= 1'b0;
         end
       endcase
@@ -245,6 +249,20 @@ module ysyx_24080006_ifu
             end
           end
         end
+        default: begin
+          ifu2icu_valid <= 1'b0;
+          pc_q <= RST_ADDR;
+          fetch_addr_q <= RST_ADDR;
+          ifu2idu.pc <= RST_ADDR;
+          ifu2idu.is_zc <= 1'b0;
+          ifu2idu.flush <= 1'b0;
+          inst_q <= 32'b0;
+          is_zc_q <= 1'b0;
+          fetch_twice <= 1'b0;
+          inst_buf <= 16'b0;
+          detect_hazard_q <= 1'b0;
+          fetch_twice_terminated <= 1'b0;
+        end
       endcase
     end
   end  // fsm 3 for axi
@@ -258,7 +276,7 @@ module ysyx_24080006_ifu
   end
 
 
-  ysyx_24080006_icu16 ICU (
+  ysyx_24080006_icu ICU (
       .*,
       .fetch_addr(fetch_addr_q)
   );

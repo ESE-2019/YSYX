@@ -18,21 +18,22 @@ module ysyx_24080006_idu
   logic use_rs2;
 
   always_comb begin
-    idu.imm     = immI;
-    idu.alu_set = '0;
-    idu.csr_set = '0;
-    idu.lsu_set = '0;
-    idu.mdu_set = '0;
-    idu.reg_we  = 1'b0;
-    idu.jal     = 1'b0;
-    idu.jalr    = 1'b0;
-    idu.branch  = 1'b0;
-    idu.ecall   = 1'b0;
-    idu.mret    = 1'b0;
-    inst_err    = 1'b0;
-    fencei      = 1'b0;
-    use_rs1     = 1'b0;
-    use_rs2     = 1'b0;
+    idu.imm      = immI;
+    idu.alu_set  = '0;
+    idu.csr_set  = '0;
+    idu.lsu_set  = '0;
+    idu.mdu_set  = '0;
+    idu.csr_name = '0;
+    idu.reg_we   = 1'b0;
+    idu.jal      = 1'b0;
+    idu.jalr     = 1'b0;
+    idu.branch   = 1'b0;
+    idu.ecall    = 1'b0;
+    idu.mret     = 1'b0;
+    inst_err     = 1'b0;
+    fencei       = 1'b0;
+    use_rs1      = 1'b0;
+    use_rs2      = 1'b0;
     unique case (inst[6:0])
 
       LUI: begin

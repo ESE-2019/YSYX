@@ -37,10 +37,11 @@ module ysyx_24080006_csr
       end else if (csr_set.csr_enable) begin
         //$display("csr_%d en_%d wdata 0x%08x at pc 0x%08x", csr_name, csr_set.csr_op, csr_wdata, csr_pc);
         unique case (csr_set.csr_op)
-          READ:  csr_reg[csr_name] <= csr_reg[csr_name];
+          READ: csr_reg[csr_name] <= csr_reg[csr_name];
           WRITE: csr_reg[csr_name] <= csr_wdata;
-          SET:   csr_reg[csr_name] <= csr_wdata | csr_reg[csr_name];
+          SET: csr_reg[csr_name] <= csr_wdata | csr_reg[csr_name];
           CLEAR: csr_reg[csr_name] <= ~csr_wdata & csr_reg[csr_name];
+          default: csr_reg[csr_name] <= csr_reg[csr_name];
         endcase
       end
     end

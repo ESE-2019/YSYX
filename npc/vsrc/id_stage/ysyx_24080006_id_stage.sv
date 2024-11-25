@@ -69,6 +69,7 @@ module ysyx_24080006_id_stage
           next = WAIT;
         end
       end
+      default: next = IDLE;
     endcase
   end
 
@@ -113,6 +114,10 @@ module ysyx_24080006_id_stage
             // $display("%d: 0x%08x", rs2_addr, rs2_data);
           end
         end
+        default: begin
+          idu2ifu_ready <= 1'b0;
+          idu2exu.valid <= 1'b0;
+        end
       endcase
     end
   end  // fsm 3 for handshake
@@ -123,6 +128,15 @@ module ysyx_24080006_id_stage
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin
       decoder <= '0;
+      idu2exu.pc <= 32'b0;
+      idu2exu.alu_a <= 32'b0;
+      idu2exu.alu_b <= 32'b0;
+      idu2exu.rs1_data <= 32'b0;
+      idu2exu.rs2_data <= 32'b0;
+      idu2exu.csr_rdata <= 32'b0;
+      idu2exu.is_zc <= 1'b0;
+      idu2exu.flush <= 1'b0;
+      csr_wdata <= 32'b0;
     end else begin
       unique case (curr)
         IDLE: begin
@@ -147,6 +161,18 @@ module ysyx_24080006_id_stage
           idu2exu.rs1_data <= rs1_data;
           idu2exu.rs2_data <= rs2_data;
           csr_wdata <= rs1_data;
+        end
+        default: begin
+          decoder <= '0;
+          idu2exu.pc <= 32'b0;
+          idu2exu.alu_a <= 32'b0;
+          idu2exu.alu_b <= 32'b0;
+          idu2exu.rs1_data <= 32'b0;
+          idu2exu.rs2_data <= 32'b0;
+          idu2exu.csr_rdata <= 32'b0;
+          idu2exu.is_zc <= 1'b0;
+          idu2exu.flush <= 1'b0;
+          csr_wdata <= 32'b0;
         end
       endcase
     end

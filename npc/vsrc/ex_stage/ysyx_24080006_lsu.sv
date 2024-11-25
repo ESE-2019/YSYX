@@ -78,6 +78,7 @@ module ysyx_24080006_lsu
           next = curr;
         end
       end
+      default: next = IDLE;
     endcase
   end
 
@@ -112,6 +113,10 @@ module ysyx_24080006_lsu
             lsu2exu_valid <= 1'b0;
             lsu2exu_ready <= 1'b0;
           end
+        end
+        default: begin
+          lsu2exu_valid <= 1'b0;
+          lsu2exu_ready <= 1'b1;
         end
       endcase
     end
@@ -184,6 +189,28 @@ module ysyx_24080006_lsu
                 lsu_r_s2m.rdata, lsu_r_m2s.araddr[1:0], sext_tmp, lsu_r_m2s.arsize[1:0]
             );
           end
+        end
+        default: begin
+          lsu_r_m2s.arid <= 4'h0;
+          lsu_r_m2s.arburst <= 2'b10;
+          lsu_r_m2s.arlen <= 8'h0;
+          lsu_w_m2s.awid <= 4'h0;
+          lsu_w_m2s.awlen <= 8'h0;
+          lsu_w_m2s.awburst <= 2'b10;
+          lsu_w_m2s.wlast <= 1'b1;
+          lsu_r_m2s.arvalid <= 1'b0;
+          lsu_r_m2s.rready <= 1'b0;
+          lsu_w_m2s.awvalid <= 1'b0;
+          lsu_w_m2s.wvalid <= 1'b0;
+          lsu_w_m2s.bready <= 1'b0;
+          lsu_w_m2s.wdata <= 32'b0;
+          lsu_w_m2s.wstrb <= 4'b0;
+          lsu_w_m2s.awsize <= 3'b0;
+          lsu_w_m2s.awaddr <= 32'b0;
+          lsu_r_m2s.arsize <= 3'b0;
+          lsu_r_m2s.araddr <= '0;
+          lsu_rdata <= '0;
+          sext_tmp <= '0;
         end
       endcase
     end
