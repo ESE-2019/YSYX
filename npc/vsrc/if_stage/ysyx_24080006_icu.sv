@@ -107,7 +107,7 @@ module ysyx_24080006_icu
 
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
-      ifu_r_m2s.arid <= 4'h0;
+      //ifu_r_m2s.arid <= 4'h0;
       ifu_r_m2s.arsize <= 3'd2;
       ifu_r_m2s.arburst <= 2'b10;
       ifu_r_m2s.arvalid <= 1'b0;
@@ -192,7 +192,7 @@ module ysyx_24080006_icu
           end
           if (ifu_r_s2m.rvalid && !ifu_r_m2s.rready) begin
             ifu_r_m2s.rready <= 1'b1;
-            burst_offset <= burst_offset + 3'b1;
+            burst_offset <= burst_offset + 3'b001;
             ic_wdata_tmp[addr_offset] <= ifu_r_s2m.rdata;
 
             if (burst_offset == '0) begin
@@ -205,7 +205,6 @@ module ysyx_24080006_icu
             if (ifu_r_s2m.rlast) begin
               ic_we <= 1'b1;
               icu2ifu_ready <= 1'b1;
-              icu2ifu_valid <= 1'b0;
             end
           end else begin
             ic_we <= 1'b0;
@@ -221,7 +220,7 @@ module ysyx_24080006_icu
           if (ifu_r_s2m.rvalid) begin
             ifu_r_m2s.rready <= 1'b1;
             ic_val <= ifu_r_s2m.rdata;
-            burst_offset <= burst_offset + 3'b1;
+            burst_offset <= burst_offset + 3'b001;
             ic_wdata_tmp[addr_offset] <= ifu_r_s2m.rdata;
             if (burst_offset == '0) begin
               icu2ifu_valid <= 1'b1;
@@ -247,7 +246,7 @@ module ysyx_24080006_icu
           end
         end
         default: begin
-          ifu_r_m2s.arid <= 4'h0;
+          //ifu_r_m2s.arid <= 4'h0;
           ifu_r_m2s.arsize <= 3'd2;
           ifu_r_m2s.arburst <= 2'b10;
           ifu_r_m2s.arvalid <= 1'b0;

@@ -1,4 +1,3 @@
-/* verilator lint_off DECLFILENAME */
 module top  // use for syn
 (
     input logic clock,
@@ -66,7 +65,7 @@ module top  // use for syn
   assign core_w_s2m.awready = io_master_awready;
   assign io_master_awvalid = core_w_m2s.awvalid;
   assign io_master_awaddr = core_w_m2s.awaddr;
-  assign io_master_awid = core_w_m2s.awid;
+  assign io_master_awid = '0;  //core_w_m2s.awid;
   assign io_master_awlen = core_w_m2s.awlen;
   assign io_master_awsize = core_w_m2s.awsize;
   assign io_master_awburst = core_w_m2s.awburst;
@@ -79,22 +78,22 @@ module top  // use for syn
 
   assign io_master_bready = core_w_m2s.bready;
   assign core_w_s2m.bvalid = io_master_bvalid;
-  assign core_w_s2m.bresp = io_master_bresp;
-  assign core_w_s2m.bid = io_master_bid;
+  //assign core_w_s2m.bresp = io_master_bresp;
+  //assign core_w_s2m.bid = io_master_bid;
 
   assign core_r_s2m.arready = io_master_arready;
   assign io_master_arvalid = core_r_m2s.arvalid;
   assign io_master_araddr = core_r_m2s.araddr;
-  assign io_master_arid = core_r_m2s.arid;
+  assign io_master_arid = '0;  //core_r_m2s.arid;
   assign io_master_arlen = core_r_m2s.arlen;
   assign io_master_arsize = core_r_m2s.arsize;
   assign io_master_arburst = core_r_m2s.arburst;
 
   assign io_master_rready = core_r_m2s.rready;
   assign core_r_s2m.rvalid = io_master_rvalid;
-  assign core_r_s2m.rresp = io_master_rresp;
+  //assign core_r_s2m.rresp = io_master_rresp;
   assign core_r_s2m.rdata = io_master_rdata;
   assign core_r_s2m.rlast = io_master_rlast;
-  assign core_r_s2m.rid = io_master_rid;
+  //assign core_r_s2m.rid = io_master_rid;
 
 endmodule

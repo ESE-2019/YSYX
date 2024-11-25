@@ -42,7 +42,7 @@ module ysyx_24080006_ifu
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
-  assign detect_hazard_d = 1;  //inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
+  assign detect_hazard_d = 1'b1;  //inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
   // wire jal = inst[6:0] == JAL;
   // assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
 
@@ -163,6 +163,10 @@ module ysyx_24080006_ifu
           pc_d = pc_q + 32'h2;
           fetch_addr_d = fetch_addr_q;
         end
+        default: begin
+          pc_d = pc_q;
+          fetch_addr_d = fetch_addr_q;
+        end
       endcase
     end
   end
@@ -198,33 +202,38 @@ module ysyx_24080006_ifu
         EXEC: begin
           if (ifu2icu_valid & icu2ifu_ready) begin
             ifu2icu_valid <= 1'b0;
-          end
-          if (icu2ifu_valid) begin
-            inst_buf <= ic_val[31:16];
-            if (fetch_twice) begin
-              if (is_zc_d) begin  // fetch_twice_terminated
+          end else begin
+            if (icu2ifu_valid) begin
+              inst_buf <= ic_val[31:16];
+              if (fetch_twice) begin
+                if (is_zc_d) begin  // fetch_twice_terminated
+`ifdef SIM_MODE
+                  if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
+`endif
+                  is_zc_q <= is_zc_d;
+                  ifu2idu.pc <= pc_q;
+                  inst_q <= inst_d;
+                  detect_hazard_q <= detect_hazard_d;
+                  ifu2idu.is_zc <= is_zc_d;
+                  ifu2idu.flush <= detect_hazard_d;
+                  fetch_twice_terminated <= 1'b1;
+                end else begin  // fetch_twice
+                  ifu2icu_valid <= 1'b1;
+                  fetch_addr_q <= fetch_addr_d;
+                  fetch_twice <= 1'b0;
+                  fetch_twice_terminated <= 1'b0;
+                end
+              end else begin  // common case
+`ifdef SIM_MODE
                 if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
+`endif
                 is_zc_q <= is_zc_d;
                 ifu2idu.pc <= pc_q;
                 inst_q <= inst_d;
                 detect_hazard_q <= detect_hazard_d;
                 ifu2idu.is_zc <= is_zc_d;
                 ifu2idu.flush <= detect_hazard_d;
-                fetch_twice_terminated <= 1'b1;
-              end else begin  // fetch_twice
-                ifu2icu_valid <= 1'b1;
-                fetch_addr_q <= fetch_addr_d;
-                fetch_twice <= 1'b0;
-                fetch_twice_terminated <= 1'b0;
               end
-            end else begin  // common case
-              if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
-              is_zc_q <= is_zc_d;
-              ifu2idu.pc <= pc_q;
-              inst_q <= inst_d;
-              detect_hazard_q <= detect_hazard_d;
-              ifu2idu.is_zc <= is_zc_d;
-              ifu2idu.flush <= detect_hazard_d;
             end
           end
         end

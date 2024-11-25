@@ -29,13 +29,13 @@ module ysyx_24080006_lsu
   ls_fsm_e curr, next;
 
   logic sext_tmp;
-  localparam logic [3:0] WSTRB_LUT[4] = '{
+  localparam logic [3:0] WSTRB[4] = '{
       4'b0001,  // funct3 == 3'b000
       4'b0011,  // funct3 == 3'b001
       4'b1111,  // funct3 == 3'b010
       4'b0000
   };
-  wire [ 3:0] lsu_strb = WSTRB_LUT[lsu_size] << lsu_addr[1:0];
+  wire [ 3:0] lsu_strb = WSTRB[lsu_size] << lsu_addr[1:0];
   wire [31:0] lsu_wdata_shifted = lsu_wdata << {lsu_addr[1:0], 3'b0};
 
   function automatic logic [31:0] Mr(input logic [31:0] Mr_rdata, input logic [1:0] Mr_raddr,
@@ -124,10 +124,10 @@ module ysyx_24080006_lsu
 
   always_ff @(posedge clock) begin  // fsm 3 for axi
     if (reset) begin
-      lsu_r_m2s.arid <= 4'h0;
+      //lsu_r_m2s.arid <= 4'h0;
       lsu_r_m2s.arburst <= 2'b10;
       lsu_r_m2s.arlen <= 8'h0;
-      lsu_w_m2s.awid <= 4'h0;
+      //lsu_w_m2s.awid <= 4'h0;
       lsu_w_m2s.awlen <= 8'h0;
       lsu_w_m2s.awburst <= 2'b10;
       lsu_w_m2s.wlast <= 1'b1;
@@ -191,10 +191,10 @@ module ysyx_24080006_lsu
           end
         end
         default: begin
-          lsu_r_m2s.arid <= 4'h0;
+          //lsu_r_m2s.arid <= 4'h0;
           lsu_r_m2s.arburst <= 2'b10;
           lsu_r_m2s.arlen <= 8'h0;
-          lsu_w_m2s.awid <= 4'h0;
+          //lsu_w_m2s.awid <= 4'h0;
           lsu_w_m2s.awlen <= 8'h0;
           lsu_w_m2s.awburst <= 2'b10;
           lsu_w_m2s.wlast <= 1'b1;

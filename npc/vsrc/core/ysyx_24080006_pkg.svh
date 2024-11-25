@@ -168,15 +168,15 @@ package ysyx_24080006_pkg;
 
 
 `ifdef SOC_MODE
-  parameter RST_ADDR = 32'h3000_0000;
+  parameter logic [31:0] RST_ADDR = 32'h3000_0000;
 `else
-  parameter RST_ADDR = 32'h8000_0000;
+  parameter logic [31:0] RST_ADDR = 32'h8000_0000;
 `endif
 
   typedef struct packed {
     logic        awvalid;
     logic [31:0] awaddr;
-    logic [3:0]  awid;
+    //logic [3:0]  awid;
     logic [7:0]  awlen;
     logic [2:0]  awsize;
     logic [1:0]  awburst;
@@ -188,17 +188,17 @@ package ysyx_24080006_pkg;
   } axi_w_m2s_t;
 
   typedef struct packed {
-    logic       awready;
-    logic       wready;
-    logic       bvalid;
-    logic [1:0] bresp;
-    logic [3:0] bid;
+    logic awready;
+    logic wready;
+    logic bvalid;
+    //logic [1:0] bresp;
+    //logic [3:0] bid;
   } axi_w_s2m_t;
 
   typedef struct packed {
     logic        arvalid;
     logic [31:0] araddr;
-    logic [3:0]  arid;
+    //logic [3:0]  arid;
     logic [7:0]  arlen;
     logic [2:0]  arsize;
     logic [1:0]  arburst;
@@ -208,10 +208,10 @@ package ysyx_24080006_pkg;
   typedef struct packed {
     logic        arready;
     logic        rvalid;
-    logic [1:0]  rresp;
+    //logic [1:0]  rresp;
     logic [31:0] rdata;
     logic        rlast;
-    logic [3:0]  rid;
+    //logic [3:0]  rid;
   } axi_r_s2m_t;
 
 endpackage

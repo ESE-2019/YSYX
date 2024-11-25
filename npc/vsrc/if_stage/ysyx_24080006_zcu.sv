@@ -10,7 +10,7 @@ module ysyx_24080006_zcu
   always_comb begin
     inst   = zc_val;
     zc_err = 1'b0;
-
+    is_zc  = 1'b1;
     unique case (zc_val[1:0])
       // C0
       2'b00: begin
@@ -280,7 +280,7 @@ module ysyx_24080006_zcu
                   3'b110: begin
                     // c.mul -> mul rd', rd', rs2'
                     inst = {
-                      7'b1, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b000, 2'b01, zc_val[9:7], OP
+                      7'd1, 2'b01, zc_val[4:2], 2'b01, zc_val[9:7], 3'b000, 2'b01, zc_val[9:7], OP
                     };
                     if (zc_val[11:10] != 2'b11) zc_err = 1'b1;
                   end
@@ -406,14 +406,12 @@ module ysyx_24080006_zcu
       end
 
       // not compressed.
-      2'b11: ;
+      2'b11: is_zc = 1'b0;
 
       default: begin
         zc_err = 1'b1;
       end
     endcase
   end
-
-  assign is_zc = (zc_val[1:0] != 2'b11);
 
 endmodule

@@ -26,12 +26,10 @@ module npc_xbar
   assign sram_w_m2s.awvalid = imd_w_m2s.awaddr >= 32'h8000_0000 ? imd_w_m2s.awvalid : 0;
   assign core_w_m2s.awvalid = imd_w_m2s.awaddr < 32'h8000_0000 ? imd_w_m2s.awvalid : 0;
   assign sram_w_m2s.awaddr = imd_w_m2s.awaddr;
-  assign sram_w_m2s.awid = imd_w_m2s.awid;
   assign sram_w_m2s.awlen = imd_w_m2s.awlen;
   assign sram_w_m2s.awsize = imd_w_m2s.awsize;
   assign sram_w_m2s.awburst = imd_w_m2s.awburst;
   assign core_w_m2s.awaddr = imd_w_m2s.awaddr;
-  assign core_w_m2s.awid = imd_w_m2s.awid;
   assign core_w_m2s.awlen = imd_w_m2s.awlen;
   assign core_w_m2s.awsize = imd_w_m2s.awsize;
   assign core_w_m2s.awburst = imd_w_m2s.awburst;
@@ -55,12 +53,10 @@ module npc_xbar
   assign sram_r_m2s.arvalid = imd_r_m2s.araddr >= 32'h8000_0000 ? imd_r_m2s.arvalid : 0;
   assign core_r_m2s.arvalid = imd_r_m2s.araddr < 32'h8000_0000 ? imd_r_m2s.arvalid : 0;
   assign sram_r_m2s.araddr = imd_r_m2s.araddr;
-  assign sram_r_m2s.arid = imd_r_m2s.arid;
   assign sram_r_m2s.arlen = imd_r_m2s.arlen;
   assign sram_r_m2s.arsize = imd_r_m2s.arsize;
   assign sram_r_m2s.arburst = imd_r_m2s.arburst;
   assign core_r_m2s.araddr = imd_r_m2s.araddr;
-  assign core_r_m2s.arid = imd_r_m2s.arid;
   assign core_r_m2s.arlen = imd_r_m2s.arlen;
   assign core_r_m2s.arsize = imd_r_m2s.arsize;
   assign core_r_m2s.arburst = imd_r_m2s.arburst;

@@ -48,7 +48,10 @@ module ysyx_24080006_clint
     unique case (clint_r_m2s.araddr[15:0])
       16'hBFF8: dout = mtime_low_q;
       16'hBFFc: dout = mtime_high_q;
-      default:  ;
+      default:  dout = mtime_low_q;
     endcase
   end
+
+  assign clint_w_s2m = '1;
+
 endmodule

@@ -11,7 +11,15 @@ module ysyx_24080006_alu
     output logic [31:0] alu_c
 );
 
-  //add  
+  function automatic logic [31:0] bit_revert(logic [31:0] data_in);
+    logic [31:0] data_out;
+    for (int i = 0; i < 32; i++) begin
+      data_out[i] = data_in[31-i];
+    end
+    return data_out;
+  endfunction
+
+  //add
   logic [32:0] srcA;
   always_comb begin
     if (mdu_enable) begin
@@ -25,14 +33,13 @@ module ysyx_24080006_alu
   wire  [32:0] srcB_inv = ~srcB_tmp;
   logic [32:0] srcB;
   always_comb begin
-    srcB = srcB_tmp;
     if (mdu_enable) begin
       srcB = mdu2alu.b;
     end else begin
       case (alu_op)
         ADD: srcB = srcB_tmp;
         SUB, LT, LTU, EQ, NE, GE, GEU: srcB = srcB_inv;
-        default: ;
+        default: srcB = srcB_tmp;
       endcase
     end
   end
@@ -47,13 +54,13 @@ module ysyx_24080006_alu
   //comp
   logic comp_res;
   always_comb begin
-    comp_res = add_res_34[33];
     case (alu_op)
       LT, GE:
       comp_res = add_res_34[32] ^  //detect overflow
-      ((!srcA[32] && srcB_tmp[32] && add_res_34[32]) || (srcA[32] && !srcB_tmp[32] && !add_res_34[32]));
+      ((!srcA[32] && srcB_tmp[32] && add_res_34[32]) ||
+      (srcA[32] && !srcB_tmp[32] && !add_res_34[32]));
       LTU, GEU: comp_res = !add_res_34[33];  //caution
-      default: ;
+      default: comp_res = !add_res_34[33];
     endcase
   end
 
@@ -61,11 +68,10 @@ module ysyx_24080006_alu
   wire  [ 4:0] shamt = alu_b[4:0];
   logic [31:0] shift_src;
   always_comb begin
-    shift_src = alu_a;
     case (alu_op)
-      SLL: for (int i = 0; i < 32; i++) shift_src[i] = alu_a[31-i];
+      SLL: shift_src = bit_revert(alu_a);
       SRL, SRA: shift_src = alu_a;
-      default: ;
+      default: shift_src = alu_a;
     endcase
   end
   wire [32:0] shift_entity = {(alu_op == SRA) & shift_src[31], shift_src};
@@ -75,27 +81,25 @@ module ysyx_24080006_alu
   //and or xor
   logic [31:0] bit_res;
   always_comb begin
-    bit_res = alu_a & alu_b;
     case (alu_op)
       AND: bit_res = alu_a & alu_b;
       OR: bit_res = alu_a | alu_b;
       XOR: bit_res = alu_a ^ alu_b;
-      default: ;
+      default: bit_res = alu_a & alu_b;
     endcase
   end
 
   always_comb begin
-    alu_c = add_res_32;
     case (alu_op)
       ADD, SUB: alu_c = add_res_32;
       EQ: alu_c = {31'b0, ~not_zero};
       NE: alu_c = {31'b0, not_zero};
       LT, LTU: alu_c = {31'b0, comp_res};
       GE, GEU: alu_c = {31'b0, ~comp_res};
-      SLL: for (int i = 0; i < 32; i++) alu_c[i] = shift_res[31-i];
+      SLL: alu_c = bit_revert(shift_res);
       SRL, SRA: alu_c = shift_res;
       AND, OR, XOR: alu_c = bit_res;
-      default: ;
+      default: alu_c = add_res_32;
     endcase
   end
 
