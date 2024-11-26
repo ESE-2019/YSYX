@@ -265,10 +265,21 @@ static inline ps2_key __attribute__((section(".klib"))) ps2_scan_code_to_enum(in
 
 void __attribute__((section(".klib"))) __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd)
 {
+  static bool F0 = 0;
   uint8_t k = ps2_KEY_NONE;
   k = inb(KBD_ADDR);
-  kbd->keydown = k ? true : false;
-  kbd->keycode = ps2_scan_code_to_enum(k);
+  if (F0)
+  {
+    kbd->keydown = false;
+    kbd->keycode = ps2_scan_code_to_enum(k);
+    F0 = 0;
+  }
+  else
+  {
+    kbd->keydown = k ? true : false;
+    kbd->keycode = ps2_scan_code_to_enum(k);
+    F0 = k == 0xF0;
+  }
 }
 
 void __attribute__((section(".klib"))) __am_uart_rx(AM_UART_RX_T *uart)
