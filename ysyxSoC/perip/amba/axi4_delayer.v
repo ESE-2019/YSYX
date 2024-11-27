@@ -72,7 +72,7 @@ module axi4_delayer (
   assign out_arsize = in_arsize;
   assign out_arburst = in_arburst;
   assign out_rready = in_rready;
-  
+
   //assign in_rvalid = out_rvalid;
   assign in_rid = out_rid;
   assign in_rdata = out_rdata;
@@ -91,7 +91,7 @@ module axi4_delayer (
   assign out_wstrb = in_wstrb;
   assign out_wlast = in_wlast;
   assign out_bready = in_bready;
-  
+
   //assign in_bvalid = out_bvalid;
   assign in_bid = out_bid;
   assign in_bresp = out_bresp;

@@ -190,6 +190,31 @@ module ysyx_24080006_icu
           if (ifu_r_m2s.arvalid & ifu_r_s2m.arready) begin
             ifu_r_m2s.arvalid <= 1'b0;
           end
+          // if (ifu_r_s2m.rvalid) begin
+          //   burst_offset <= burst_offset + 3'b001;
+          //   ic_wdata_tmp[addr_offset] <= ifu_r_s2m.rdata;
+          //   if (ifu_r_s2m.rlast && ifu_r_m2s.rready) begin
+          //     ifu_r_m2s.rready <= 1'b0;
+          //     ic_we <= 1'b1;
+          //     icu2ifu_ready <= 1'b1;
+          //     icu2ifu_valid <= 1'b0;
+          //   end else begin
+          //     ic_we <= 1'b0;
+          //     icu2ifu_ready <= 1'b0;
+          //     ifu_r_m2s.rready <= 1'b1;
+          //     if (burst_offset == '0) begin
+          //       ic_val <= ifu_r_s2m.rdata;
+          //       icu2ifu_valid <= 1'b1;
+          //     end else begin
+          //       icu2ifu_valid <= 1'b0;
+          //     end
+          //   end
+          // end else begin
+          //   ic_we <= 1'b0;
+          //   icu2ifu_ready <= 1'b0;
+          //   icu2ifu_valid <= 1'b0;
+          // end
+
           if (ifu_r_s2m.rvalid && !ifu_r_m2s.rready) begin
             ifu_r_m2s.rready <= 1'b1;
             burst_offset <= burst_offset + 3'b001;
@@ -212,6 +237,7 @@ module ysyx_24080006_icu
             icu2ifu_valid <= 1'b0;
           end
         end
+
         FLASH_BEGIN: begin
           icu2ifu_ready <= 1'b0;
           if (ifu_r_s2m.arready) begin

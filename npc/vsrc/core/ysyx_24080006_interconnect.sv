@@ -12,8 +12,8 @@ module ysyx_24080006_interconnect
     input  axi_r_m2s_t lsu_r_m2s,
     output axi_r_s2m_t lsu_r_s2m,
 
-    output axi_w_m2s_t clint_w_m2s,
-    input  axi_w_s2m_t clint_w_s2m,
+    // output axi_w_m2s_t clint_w_m2s,
+    // input  axi_w_s2m_t clint_w_s2m,
     output axi_r_m2s_t clint_r_m2s,
     input  axi_r_s2m_t clint_r_s2m,
 
@@ -162,36 +162,38 @@ module ysyx_24080006_interconnect
   assign imd_r_m2s.arburst = 2'b10;  //curr == LSUR ? lsu_r_m2s.arburst : ifu_r_m2s.arburst;
 
   // write channel
-  assign imd_w_s2m.awready = imd_w_m2s.awaddr >= 32'h0200_ffff ?
-    core_w_s2m.awready : clint_w_s2m.awready;
-  assign core_w_m2s.awvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.awvalid : 1'b0;
-  assign clint_w_m2s.awvalid = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.awvalid : 1'b0;
+  assign imd_w_s2m.awready = core_w_s2m.awready;
+  assign core_w_m2s.awvalid = imd_w_m2s.awvalid;
+  // assign core_w_m2s.awvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.awvalid : 1'b0;
+  // assign clint_w_m2s.awvalid = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.awvalid : 1'b0;
   assign core_w_m2s.awaddr = imd_w_m2s.awaddr;
   //assign core_w_m2s.awid = imd_w_m2s.awid;
   assign core_w_m2s.awlen = imd_w_m2s.awlen;
   assign core_w_m2s.awsize = imd_w_m2s.awsize;
   assign core_w_m2s.awburst = imd_w_m2s.awburst;
-  assign clint_w_m2s.awaddr = imd_w_m2s.awaddr;
-  //assign clint_w_m2s.awid = imd_w_m2s.awid;
-  assign clint_w_m2s.awlen = imd_w_m2s.awlen;
-  assign clint_w_m2s.awsize = imd_w_m2s.awsize;
-  assign clint_w_m2s.awburst = imd_w_m2s.awburst;
+  // assign clint_w_m2s.awaddr = imd_w_m2s.awaddr;
+  // assign clint_w_m2s.awid = imd_w_m2s.awid;
+  // assign clint_w_m2s.awlen = imd_w_m2s.awlen;
+  // assign clint_w_m2s.awsize = imd_w_m2s.awsize;
+  // assign clint_w_m2s.awburst = imd_w_m2s.awburst;
 
-  assign imd_w_s2m.wready = imd_w_m2s.awaddr >= 32'h0200_ffff ?
-    core_w_s2m.wready : clint_w_s2m.wready;
-  assign core_w_m2s.wvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.wvalid : 1'b0;
-  assign clint_w_m2s.wvalid = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.wvalid : 1'b0;
+  assign imd_w_s2m.wready = core_w_s2m.wready;
+  assign core_w_m2s.wvalid = imd_w_m2s.wvalid;
+  // assign imd_w_s2m.wready = imd_w_m2s.awaddr >= 32'h0200_ffff ? core_w_s2m.wready : clint_w_s2m.wready;
+  // assign core_w_m2s.wvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.wvalid : 1'b0;
+  // assign clint_w_m2s.wvalid = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.wvalid : 1'b0;
   assign core_w_m2s.wdata = imd_w_m2s.wdata;
   assign core_w_m2s.wstrb = imd_w_m2s.wstrb;
   assign core_w_m2s.wlast = imd_w_m2s.wlast;
-  assign clint_w_m2s.wdata = imd_w_m2s.wdata;
-  assign clint_w_m2s.wstrb = imd_w_m2s.wstrb;
-  assign clint_w_m2s.wlast = imd_w_m2s.wlast;
+  // assign clint_w_m2s.wdata = imd_w_m2s.wdata;
+  // assign clint_w_m2s.wstrb = imd_w_m2s.wstrb;
+  // assign clint_w_m2s.wlast = imd_w_m2s.wlast;
 
-  assign core_w_m2s.bready = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.bready : 1'b0;
-  assign clint_w_m2s.bready = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.bready : 1'b0;
-  assign imd_w_s2m.bvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ?
-    core_w_s2m.bvalid : clint_w_s2m.bvalid;
+  assign core_w_m2s.bready = imd_w_m2s.bready;
+  assign imd_w_s2m.bvalid = core_w_s2m.bvalid;
+  // assign core_w_m2s.bready = imd_w_m2s.awaddr >= 32'h0200_ffff ? imd_w_m2s.bready : 1'b0;
+  // assign clint_w_m2s.bready = imd_w_m2s.awaddr < 32'h0200_ffff ? imd_w_m2s.bready : 1'b0;
+  // assign imd_w_s2m.bvalid = imd_w_m2s.awaddr >= 32'h0200_ffff ? core_w_s2m.bvalid : clint_w_s2m.bvalid;
 
   // read channel
   assign imd_r_s2m.arready = imd_r_m2s.araddr >= 32'h0200_ffff ?

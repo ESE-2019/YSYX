@@ -4,8 +4,8 @@ module ysyx_24080006_clint
     input logic clock,
     input logic reset,
 
-    input  axi_w_m2s_t clint_w_m2s,
-    output axi_w_s2m_t clint_w_s2m,
+    // input  axi_w_m2s_t clint_w_m2s,
+    // output axi_w_s2m_t clint_w_s2m,
     input  axi_r_m2s_t clint_r_m2s,
     output axi_r_s2m_t clint_r_s2m
 );
@@ -51,7 +51,5 @@ module ysyx_24080006_clint
       default:  dout = mtime_low_q;
     endcase
   end
-
-  assign clint_w_s2m = '1;
 
 endmodule

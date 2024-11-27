@@ -42,7 +42,7 @@ module ysyx_24080006_ifu
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
-  assign detect_hazard_d = 1'b1;  //inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
+  assign detect_hazard_d = inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
   // wire jal = inst[6:0] == JAL;
   // assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
 
