@@ -36,16 +36,16 @@ module ysyx_24080006_ex_stage
   assign exu2lsu_ready = 1'b1;
 
   typedef enum logic [1:0] {
-    IDLE,
-    LSU_EXEC,
-    MD_EXEC,
-    WAIT
+    EX_IDLE,
+    EX_LSU,
+    EX_MDU,
+    EX_WAIT
   } ex_fsm_e;
   ex_fsm_e curr, next;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr <= EX_IDLE;
     end else begin
       curr <= next;
     end
@@ -53,30 +53,30 @@ module ysyx_24080006_ex_stage
 
   always_comb begin  //fsm 2
     unique case (curr)
-      IDLE: begin
+      EX_IDLE: begin
         if (idu2exu.valid) begin
           if (decoder.lsu_set.lsu_enable) begin
-            next = LSU_EXEC;
+            next = EX_LSU;
           end else if (decoder.mdu_set.mdu_enable) begin
-            next = MD_EXEC;
+            next = EX_MDU;
           end else begin
-            next = IDLE;
+            next = EX_IDLE;
           end
-        end else next = IDLE;
+        end else next = EX_IDLE;
       end
-      LSU_EXEC: begin
-        if (lsu2exu_valid) next = WAIT;
-        else next = LSU_EXEC;
+      EX_LSU: begin
+        if (lsu2exu_valid) next = EX_WAIT;
+        else next = EX_LSU;
       end
-      MD_EXEC: begin
-        if (mdu_valid_i) next = IDLE;
-        else next = MD_EXEC;
+      EX_MDU: begin
+        if (mdu_valid_i) next = EX_IDLE;
+        else next = EX_MDU;
       end
-      WAIT: begin
-        if (ifu2exu_ready) next = IDLE;
-        else next = WAIT;
+      EX_WAIT: begin
+        if (ifu2exu_ready) next = EX_IDLE;
+        else next = EX_WAIT;
       end
-      default: next = IDLE;
+      default: next = EX_IDLE;
     endcase
   end
 
@@ -86,7 +86,7 @@ module ysyx_24080006_ex_stage
       exu2ifu.valid <= 1'b0;
     end else begin
       unique case (curr)
-        IDLE: begin
+        EX_IDLE: begin
           if (idu2exu.valid) begin
             if (decoder.lsu_set.lsu_enable) begin
               exu2idu_ready <= 1'b0;
@@ -103,7 +103,7 @@ module ysyx_24080006_ex_stage
             exu2ifu.valid <= 1'b0;
           end
         end
-        LSU_EXEC: begin
+        EX_LSU: begin
           if (lsu2exu_valid) begin
             exu2idu_ready <= 1'b0;
             exu2ifu.valid <= 1'b1;
@@ -112,7 +112,7 @@ module ysyx_24080006_ex_stage
             exu2ifu.valid <= 1'b0;
           end
         end
-        MD_EXEC: begin
+        EX_MDU: begin
           if (mdu_valid_i) begin
             exu2idu_ready <= 1'b1;
             exu2ifu.valid <= 1'b1;
@@ -121,7 +121,7 @@ module ysyx_24080006_ex_stage
             exu2ifu.valid <= 1'b0;
           end
         end
-        WAIT: begin
+        EX_WAIT: begin
           if (ifu2exu_ready) begin
             exu2idu_ready <= 1'b1;
             exu2ifu.valid <= 1'b0;
@@ -171,7 +171,7 @@ module ysyx_24080006_ex_stage
       csr_set <= '0;
     end else begin
       unique case (curr)
-        IDLE: begin
+        EX_IDLE: begin
           if (idu2exu.valid) begin
             exu2ifu.pc <= idu2exu.pc;  // for diff test only
             exu2ifu.dnpc <= dnpc;
@@ -212,14 +212,14 @@ module ysyx_24080006_ex_stage
             csr_set <= '0;
           end
         end
-        LSU_EXEC: begin
+        EX_LSU: begin
           if (exu2lsu_valid & lsu2exu_ready) exu2lsu_valid <= 1'b0;
           if (lsu2exu_valid) begin
             rd_data <= lsu_rdata;
             reg_we  <= ~lsu_write;
           end
         end
-        MD_EXEC: begin
+        EX_MDU: begin
           if (mdu_valid_i) begin
             reg_we <= 1'b1;
             rd_data <= mdu_c;
@@ -230,7 +230,7 @@ module ysyx_24080006_ex_stage
             mdu_valid_o <= 1'b1;
           end
         end
-        WAIT: begin
+        EX_WAIT: begin
           rd_addr <= '0;
           reg_we <= 1'b0;
           ecall <= 1'b0;
@@ -295,9 +295,9 @@ module ysyx_24080006_ex_stage
   );
   int lsu_cnt = 0;
   always_ff @(posedge clock) begin
-    if (curr == IDLE) lsu_cnt = 1;
+    if (curr == EX_IDLE) lsu_cnt = 1;
     else lsu_cnt++;
-    if (curr == LSU_EXEC && lsu2exu_valid && lsu_write) begin
+    if (curr == EX_LSU && lsu2exu_valid && lsu_write) begin
       //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, idu2exu.pc);
       LSU_CNT(0, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
@@ -306,7 +306,7 @@ module ysyx_24080006_ex_stage
         $finish;
       end
     end
-    if (curr == LSU_EXEC && lsu2exu_valid && !lsu_write) begin
+    if (curr == EX_LSU && lsu2exu_valid && !lsu_write) begin
       //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, idu2exu.pc);
       LSU_CNT(1, lsu_cnt);
       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();

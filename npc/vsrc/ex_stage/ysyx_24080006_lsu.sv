@@ -23,8 +23,8 @@ module ysyx_24080006_lsu
 );
 
   typedef enum logic {
-    IDLE,
-    EXEC
+    LS_IDLE,
+    LS_EXEC
   } ls_fsm_e;
   ls_fsm_e curr, next;
 
@@ -56,7 +56,7 @@ module ysyx_24080006_lsu
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr <= LS_IDLE;
     end else begin
       curr <= next;
     end
@@ -64,21 +64,21 @@ module ysyx_24080006_lsu
 
   always_comb begin  //fsm 2
     unique case (curr)
-      IDLE: begin
+      LS_IDLE: begin
         if (exu2lsu_valid & lsu2exu_ready) begin
-          next = EXEC;
+          next = LS_EXEC;
         end else begin
-          next = IDLE;
+          next = LS_IDLE;
         end
       end
-      EXEC: begin
+      LS_EXEC: begin
         if (lsu_r_s2m.rvalid || lsu_w_s2m.bvalid) begin
-          next = IDLE;
+          next = LS_IDLE;
         end else begin
           next = curr;
         end
       end
-      default: next = IDLE;
+      default: next = LS_IDLE;
     endcase
   end
 
@@ -88,7 +88,7 @@ module ysyx_24080006_lsu
       lsu2exu_ready <= 1'b1;
     end else begin
       unique case (curr)
-        IDLE: begin
+        LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
             if (lsu_write) begin
               lsu2exu_valid <= 1'b1;
@@ -102,7 +102,7 @@ module ysyx_24080006_lsu
             lsu2exu_ready <= 1'b1;
           end
         end
-        EXEC: begin
+        LS_EXEC: begin
           if (lsu_r_s2m.rvalid) begin
             lsu2exu_valid <= 1'b1;
             lsu2exu_ready <= 1'b1;
@@ -146,7 +146,7 @@ module ysyx_24080006_lsu
       sext_tmp <= '0;
     end else begin
       unique case (curr)
-        IDLE: begin
+        LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
             if (lsu_write) begin
               lsu_r_m2s.arvalid <= 1'b0;
@@ -176,7 +176,7 @@ module ysyx_24080006_lsu
             lsu_w_m2s.bready  <= 1'b0;
           end
         end
-        EXEC: begin
+        LS_EXEC: begin
           if (lsu_r_s2m.arready) lsu_r_m2s.arvalid <= 1'b0;
           if (lsu_w_s2m.awready) lsu_w_m2s.awvalid <= 1'b0;
           if (lsu_w_s2m.wready) begin

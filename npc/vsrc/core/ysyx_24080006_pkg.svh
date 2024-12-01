@@ -138,6 +138,7 @@ package ysyx_24080006_pkg;
     logic [31:0] rs1_data, rs2_data, csr_rdata;
     logic jump, branch;
     logic is_zc;
+    logic zc_err;
     logic flush;
     logic valid;
   } stage_t;

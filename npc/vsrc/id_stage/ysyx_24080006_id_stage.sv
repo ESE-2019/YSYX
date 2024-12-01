@@ -26,9 +26,9 @@ module ysyx_24080006_id_stage
 );
 
   typedef enum logic [1:0] {
-    IDLE,
-    WAIT,
-    HAZARD
+    ID_IDLE,
+    ID_WAIT,
+    ID_HAZARD
   } id_fsm_e;
   id_fsm_e curr, next;
 
@@ -36,7 +36,7 @@ module ysyx_24080006_id_stage
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr <= ID_IDLE;
     end else begin
       curr <= next;
     end
@@ -44,32 +44,32 @@ module ysyx_24080006_id_stage
 
   always_comb begin  //fsm 2
     unique case (curr)
-      IDLE: begin
+      ID_IDLE: begin
         if (ifu2idu.valid) begin
           if (detect_hazard_d) begin
-            next = HAZARD;
+            next = ID_HAZARD;
           end else begin
-            next = WAIT;
+            next = ID_WAIT;
           end
         end else begin
           next = curr;
         end
       end
-      WAIT: begin
+      ID_WAIT: begin
         if (exu2idu_ready) begin
-          next = IDLE;
+          next = ID_IDLE;
         end else begin
           next = curr;
         end
       end
-      HAZARD: begin
+      ID_HAZARD: begin
         if (detect_hazard_d) begin
           next = curr;
         end else begin
-          next = WAIT;
+          next = ID_WAIT;
         end
       end
-      default: next = IDLE;
+      default: next = ID_IDLE;
     endcase
   end
 
@@ -79,7 +79,7 @@ module ysyx_24080006_id_stage
       idu2exu.valid <= 1'b0;
     end else begin
       unique case (curr)
-        IDLE: begin
+        ID_IDLE: begin
           if (ifu2idu.valid) begin
             if (detect_hazard_d) begin
               idu2ifu_ready <= 1'b0;
@@ -94,7 +94,7 @@ module ysyx_24080006_id_stage
             idu2exu.valid <= 1'b0;
           end
         end
-        WAIT: begin
+        ID_WAIT: begin
           if (exu2idu_ready) begin
             idu2ifu_ready <= 1'b1;
             idu2exu.valid <= 1'b0;
@@ -103,7 +103,7 @@ module ysyx_24080006_id_stage
             idu2exu.valid <= 1'b1;
           end
         end
-        HAZARD: begin
+        ID_HAZARD: begin
           if (detect_hazard_d) begin
             idu2ifu_ready <= 1'b0;
             idu2exu.valid <= 1'b0;
@@ -139,7 +139,7 @@ module ysyx_24080006_id_stage
       csr_wdata <= 32'b0;
     end else begin
       unique case (curr)
-        IDLE: begin
+        ID_IDLE: begin
           if (ifu2idu.valid) begin
             decoder <= idu;
             idu2exu.pc <= ifu2idu.pc;
@@ -153,9 +153,9 @@ module ysyx_24080006_id_stage
             csr_wdata <= rs1_data;
           end
         end
-        WAIT: begin
+        ID_WAIT: begin
         end
-        HAZARD: begin
+        ID_HAZARD: begin
           idu2exu.alu_a <= alu_a;
           idu2exu.alu_b <= alu_b;
           idu2exu.rs1_data <= rs1_data;
@@ -180,8 +180,10 @@ module ysyx_24080006_id_stage
 
   logic inst_err;
   ysyx_24080006_idu IDU (.*);
+  wire illegal_inst = inst_err | ifu2idu.zc_err;
+  
   always_comb begin
-    if (curr == IDLE) begin
+    if (curr == ID_IDLE) begin
       rs1_addr = idu.rs1_addr;
       rs2_addr = idu.rs2_addr;
       csr_name = idu.csr_name;
@@ -235,7 +237,7 @@ module ysyx_24080006_id_stage
     if (idu2exu.valid && exu2idu_ready) begin
       if (inst == EBREAK_INST) begin
         ebreak();
-      end else if (inst_err) begin
+      end else if (illegal_inst) begin
         $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, ifu2idu.pc);
         $finish;
       end

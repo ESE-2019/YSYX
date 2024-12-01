@@ -18,11 +18,11 @@ module ysyx_24080006_icu
 );
 
   typedef enum logic [2:0] {
-    IDLE,
-    SKIP,
-    BURST,
-    FLASH_BEGIN,
-    FLASH_END
+    IC_IDLE,
+    IC_SKIP,
+    IC_BURST,
+    IC_FLASH_BEGIN,
+    IC_FLASH_END
   } ic_fsm_e;
   ic_fsm_e curr, next;
 
@@ -48,7 +48,7 @@ module ysyx_24080006_icu
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= IDLE;
+      curr <= IC_IDLE;
     end else begin
       curr <= next;
     end
@@ -56,52 +56,52 @@ module ysyx_24080006_icu
 
   always_comb begin  //fsm 2
     unique case (curr)
-      IDLE: begin
+      IC_IDLE: begin
         if (ifu2icu_valid & icu2ifu_ready) begin
           if (skip_icache) begin
-            next = SKIP;
+            next = IC_SKIP;
           end else if (hit) begin
-            next = IDLE;
+            next = IC_IDLE;
           end else begin
             if (burst_icache) begin
-              next = BURST;
+              next = IC_BURST;
             end else begin
-              next = FLASH_BEGIN;
+              next = IC_FLASH_BEGIN;
             end
           end
         end else begin
-          next = IDLE;
+          next = IC_IDLE;
         end
       end
-      SKIP: begin
+      IC_SKIP: begin
         if (ifu_r_s2m.rvalid) begin
-          next = IDLE;
+          next = IC_IDLE;
         end else begin
           next = curr;
         end
       end
-      BURST: begin
+      IC_BURST: begin
         if (ifu_r_s2m.rvalid && ifu_r_s2m.rlast) begin
-          next = IDLE;
+          next = IC_IDLE;
         end else begin
           next = curr;
         end
       end
-      FLASH_BEGIN: begin
+      IC_FLASH_BEGIN: begin
         if (ifu_r_s2m.rvalid) begin
-          next = FLASH_END;
+          next = IC_FLASH_END;
         end else begin
           next = curr;
         end
       end
-      FLASH_END: begin
+      IC_FLASH_END: begin
         if (burst_offset == '0) begin
-          next = IDLE;
+          next = IC_IDLE;
         end else begin
-          next = FLASH_BEGIN;
+          next = IC_FLASH_BEGIN;
         end
       end
-      default: next = IDLE;
+      default: next = IC_IDLE;
     endcase
   end
 
@@ -123,11 +123,11 @@ module ysyx_24080006_icu
       icu2ifu_ready <= 1'b1;
     end else begin
       unique case (curr)
-        IDLE: begin
+        IC_IDLE: begin
           ic_addr  <= fetch_addr;
           ic_waddr <= ic_index;
           if (ifu2icu_valid & icu2ifu_ready) begin
-            unique if (skip_icache) begin  // SKIP
+            unique if (skip_icache) begin  // IC_SKIP
               ifu_r_m2s.arvalid <= 1'b1;
               ifu_r_m2s.rready <= 1'b0;
               ifu_r_m2s.araddr <= fetch_addr;
@@ -174,7 +174,7 @@ module ysyx_24080006_icu
             icu2ifu_ready <= 1'b1;
           end
         end
-        SKIP: begin
+        IC_SKIP: begin
           ic_we <= 1'b0;
           if (ifu_r_s2m.arready) begin
             ifu_r_m2s.arvalid <= 1'b0;
@@ -186,7 +186,7 @@ module ysyx_24080006_icu
             icu2ifu_ready <= 1'b1;
           end
         end
-        BURST: begin
+        IC_BURST: begin
           if (ifu_r_m2s.arvalid & ifu_r_s2m.arready) begin
             ifu_r_m2s.arvalid <= 1'b0;
           end
@@ -238,7 +238,7 @@ module ysyx_24080006_icu
           end
         end
 
-        FLASH_BEGIN: begin
+        IC_FLASH_BEGIN: begin
           icu2ifu_ready <= 1'b0;
           if (ifu_r_s2m.arready) begin
             ifu_r_m2s.arvalid <= 1'b0;
@@ -257,7 +257,7 @@ module ysyx_24080006_icu
             ifu_r_m2s.rready <= 1'b0;
           end
         end
-        FLASH_END: begin
+        IC_FLASH_END: begin
           icu2ifu_valid <= 1'b0;
           ifu_r_m2s.rready <= 1'b0;
           ifu_r_m2s.araddr <= {ic_addr[31:IC_M], addr_offset, 2'b0};
@@ -324,7 +324,7 @@ module ysyx_24080006_icu
   int miss_num = 0;
 
   always_ff @(posedge clock) begin
-    if (ifu2icu_valid & icu2ifu_ready && curr == IDLE) begin
+    if (ifu2icu_valid & icu2ifu_ready && curr == IC_IDLE) begin
 `ifdef NPC_MODE
       hit_num++;
       miss_num++;

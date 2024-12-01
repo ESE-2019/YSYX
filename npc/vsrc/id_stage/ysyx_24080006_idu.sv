@@ -322,6 +322,9 @@ module ysyx_24080006_idu
     idu.rs2_addr = inst[20+:REG_WIDTH] & {REG_WIDTH{use_rs2}};
     idu.rd_addr  = inst[7+:REG_WIDTH] & {REG_WIDTH{idu.reg_we}};
     if (idu.rd_addr == '0) idu.reg_we = 1'b0;
+    if (REG_WIDTH == 4) begin
+      inst_err = inst_err | (use_rs1 & inst[19]) | (use_rs2 & inst[24]) | (idu.reg_we & inst[11]);
+    end
   end
 
 endmodule

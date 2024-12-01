@@ -17,11 +17,11 @@ module ysyx_24080006_ifu
 );
 
   typedef enum logic [2:0] {
-    RESET,
-    IDLE,
-    EXEC,
-    HAZARD,
-    WAIT
+    IF_RESET,
+    IF_IDLE,
+    IF_EXEC,
+    IF_HAZARD,
+    IF_WAIT
   } if_fsm_e;
   if_fsm_e curr, next;
 
@@ -48,7 +48,7 @@ module ysyx_24080006_ifu
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
-      curr <= RESET;
+      curr <= IF_RESET;
     end else begin
       curr <= next;
     end
@@ -56,36 +56,36 @@ module ysyx_24080006_ifu
 
   always_comb begin  //fsm 2
     unique case (curr)
-      RESET:   next = EXEC;
-      IDLE: begin
-        next = EXEC;
+      IF_RESET: next = IF_EXEC;
+      IF_IDLE: begin
+        next = IF_EXEC;
       end
-      EXEC: begin
+      IF_EXEC: begin
         if (icu2ifu_valid && (!fetch_twice | is_zc_d)) begin
-          next = WAIT;
+          next = IF_WAIT;
         end else begin
           next = curr;
         end
       end
-      WAIT: begin
+      IF_WAIT: begin
         if (idu2ifu_ready) begin
           if (detect_hazard_q) begin
-            next = HAZARD;
+            next = IF_HAZARD;
           end else begin
-            next = IDLE;
+            next = IF_IDLE;
           end
         end else begin
           next = curr;
         end
       end
-      HAZARD: begin
+      IF_HAZARD: begin
         if (exu2ifu.valid && exu2ifu.flush) begin
-          next = EXEC;
+          next = IF_EXEC;
         end else begin
           next = curr;
         end
       end
-      default: next = IDLE;
+      default:  next = IF_IDLE;
     endcase
   end
 
@@ -95,15 +95,15 @@ module ysyx_24080006_ifu
       ifu2idu.valid <= 1'b0;
     end else begin
       unique case (curr)
-        RESET: begin
+        IF_RESET: begin
           ifu2exu_ready <= 1'b1;
           ifu2idu.valid <= 1'b0;
         end
-        IDLE: begin
+        IF_IDLE: begin
           ifu2exu_ready <= 1'b1;
           ifu2idu.valid <= 1'b0;
         end
-        EXEC: begin
+        IF_EXEC: begin
           if (icu2ifu_valid && (!fetch_twice | is_zc_d)) begin
             ifu2exu_ready <= 1'b1;
             ifu2idu.valid <= 1'b1;
@@ -112,7 +112,7 @@ module ysyx_24080006_ifu
             ifu2idu.valid <= 1'b0;
           end
         end
-        WAIT: begin
+        IF_WAIT: begin
           if (idu2ifu_ready) begin
             ifu2exu_ready <= 1'b1;
             ifu2idu.valid <= 1'b0;
@@ -121,7 +121,7 @@ module ysyx_24080006_ifu
             ifu2idu.valid <= 1'b1;
           end
         end
-        HAZARD: begin
+        IF_HAZARD: begin
           ifu2exu_ready <= 1'b1;
           ifu2idu.valid <= 1'b0;
         end
@@ -188,10 +188,10 @@ module ysyx_24080006_ifu
       fetch_twice_terminated <= 1'b0;
     end else begin
       unique case (curr)
-        RESET: begin
+        IF_RESET: begin
           ifu2icu_valid <= 1'b1;
         end
-        IDLE: begin
+        IF_IDLE: begin
           pc_q <= pc_d;
           fetch_addr_q <= fetch_addr_d;
           ifu2icu_valid <= 1'b1;
@@ -199,7 +199,7 @@ module ysyx_24080006_ifu
           //if (jal & pc_d[1]) $display("unsuggested misaligned jump taken at pc 0x%08x", pc_q);
           fetch_twice_terminated <= 1'b0;
         end
-        EXEC: begin
+        IF_EXEC: begin
           if (ifu2icu_valid & icu2ifu_ready) begin
             ifu2icu_valid <= 1'b0;
           end else begin
@@ -207,14 +207,12 @@ module ysyx_24080006_ifu
               inst_buf <= ic_val[31:16];
               if (fetch_twice) begin
                 if (is_zc_d) begin  // fetch_twice_terminated
-`ifdef SIM_MODE
-                  if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
-`endif
                   is_zc_q <= is_zc_d;
                   ifu2idu.pc <= pc_q;
                   inst_q <= inst_d;
                   detect_hazard_q <= detect_hazard_d;
                   ifu2idu.is_zc <= is_zc_d;
+                  ifu2idu.zc_err <= zc_err;
                   ifu2idu.flush <= detect_hazard_d;
                   fetch_twice_terminated <= 1'b1;
                 end else begin  // fetch_twice
@@ -224,23 +222,21 @@ module ysyx_24080006_ifu
                   fetch_twice_terminated <= 1'b0;
                 end
               end else begin  // common case
-`ifdef SIM_MODE
-                if (zc_err) $display("zc_err at pc 0x%08x", pc_q);
-`endif
                 is_zc_q <= is_zc_d;
                 ifu2idu.pc <= pc_q;
                 inst_q <= inst_d;
                 detect_hazard_q <= detect_hazard_d;
                 ifu2idu.is_zc <= is_zc_d;
+                ifu2idu.zc_err <= zc_err;
                 ifu2idu.flush <= detect_hazard_d;
               end
             end
           end
         end
-        WAIT: begin
+        IF_WAIT: begin
           ifu2icu_valid <= 1'b0;
         end
-        HAZARD: begin
+        IF_HAZARD: begin
           if (exu2ifu.valid && exu2ifu.flush) begin
             if (branch_or_jump) begin
               pc_q <= exu2ifu.dnpc;
@@ -313,11 +309,11 @@ module ysyx_24080006_ifu
       ifu_cnt  <= 1;
     end else begin
       case (curr)
-        HAZARD, IDLE: begin
+        IF_HAZARD, IF_IDLE: begin
           type_cnt <= type_cnt + 1;
           ifu_cnt  <= 1;
         end
-        RESET, EXEC, WAIT: begin
+        IF_RESET, IF_EXEC, IF_WAIT: begin
           ifu_cnt <= ifu_cnt + 1;
           if (ifu2idu.valid && idu2ifu_ready) begin
             dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
