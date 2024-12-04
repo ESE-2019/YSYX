@@ -342,8 +342,8 @@ module ysyx_24080006_ifu
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
       else retire_pc <= exu2ifu.pc + 32'h4;
-    end else if (retire) begin
-      retire <= 1'b0;
+    end else retire <= 1'b0;
+    if (retire) begin
       retirement(retire_pc);
     end
   end

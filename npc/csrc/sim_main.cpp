@@ -2,7 +2,7 @@
 // DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 static bool LOG = 0;
 static bool WAVE = 1;
-static bool SDB = 0;
+static bool SDB = 1;
 
 static bool DIFF_EN = 1;
 static bool IT_EN = 1;

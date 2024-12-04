@@ -19,7 +19,7 @@ module ysyx_24080006_reg
       foreach (regfile[i]) begin
         regfile[i] <= '0;
       end
-    end else if (reg_we && |rd_addr != 1'b0) begin
+    end else if (reg_we && rd_addr != '0) begin
       regfile[rd_addr] <= rd_data;
       //$display("[rd]%d: 0x%08x", rd_addr, rd_data);
     end
@@ -28,7 +28,7 @@ module ysyx_24080006_reg
   wire forward_1 = reg_we && |rd_addr != 1'b0 && (rd_addr == rs1_addr);
   wire forward_2 = reg_we && |rd_addr != 1'b0 && (rd_addr == rs2_addr);
 
-  assign rs1_data = forward_1 ? rd_data : regfile[rs1_addr];
-  assign rs2_data = forward_2 ? rd_data : regfile[rs2_addr];
+  assign rs1_data = forward_1 ? rd_data : regfile[rs1_addr];  //forward_1 ? rd_data :
+  assign rs2_data = forward_2 ? rd_data : regfile[rs2_addr];  //forward_2 ? rd_data :
 
 endmodule

@@ -15,6 +15,9 @@ module ysyx_24080006_ex_stage
     output csr_set_t csr_set,
     output logic [31:0] csr_pc,
 
+    output logic forward_en,
+    output logic [31:0] forward_data,
+
     input  logic   ifu2exu_ready,
     output logic   exu2idu_ready,
     input  stage_t idu2exu,
@@ -34,12 +37,12 @@ module ysyx_24080006_ex_stage
   logic lsu2exu_valid;
   logic lsu2exu_ready;
   assign exu2lsu_ready = 1'b1;
+  wire [31:0] idu2exu_pc = idu2exu.pc;
 
   typedef enum logic [1:0] {
     EX_IDLE,
     EX_LSU,
-    EX_MDU,
-    EX_WAIT
+    EX_MDU
   } ex_fsm_e;
   ex_fsm_e curr, next;
 
@@ -65,16 +68,12 @@ module ysyx_24080006_ex_stage
         end else next = EX_IDLE;
       end
       EX_LSU: begin
-        if (lsu2exu_valid) next = EX_WAIT;
+        if (lsu2exu_valid) next = EX_IDLE;
         else next = EX_LSU;
       end
       EX_MDU: begin
         if (mdu_valid_i) next = EX_IDLE;
         else next = EX_MDU;
-      end
-      EX_WAIT: begin
-        if (ifu2exu_ready) next = EX_IDLE;
-        else next = EX_WAIT;
       end
       default: next = EX_IDLE;
     endcase
@@ -105,7 +104,7 @@ module ysyx_24080006_ex_stage
         end
         EX_LSU: begin
           if (lsu2exu_valid) begin
-            exu2idu_ready <= 1'b0;
+            exu2idu_ready <= 1'b1;
             exu2ifu.valid <= 1'b1;
           end else begin
             exu2idu_ready <= 1'b0;
@@ -119,15 +118,6 @@ module ysyx_24080006_ex_stage
           end else begin
             exu2idu_ready <= 1'b0;
             exu2ifu.valid <= 1'b0;
-          end
-        end
-        EX_WAIT: begin
-          if (ifu2exu_ready) begin
-            exu2idu_ready <= 1'b1;
-            exu2ifu.valid <= 1'b0;
-          end else begin
-            exu2idu_ready <= 1'b0;
-            exu2ifu.valid <= 1'b1;
           end
         end
         default: begin
@@ -149,7 +139,10 @@ module ysyx_24080006_ex_stage
   mdu_set_t mdu_set;
   logic mdu_enable;
 
-  always_ff @(posedge clock) begin  //fsm 3 for axi
+  assign forward_en   = curr == EX_LSU ? lsu2exu_valid : reg_we;
+  assign forward_data = curr == EX_LSU ? lsu_rdata : rd_data;
+
+  always_ff @(posedge clock) begin  //fsm 3 for data path
     unique if (reset) begin
       exu2lsu_valid <= 1'b0;
       reg_we <= 1'b0;
@@ -229,13 +222,6 @@ module ysyx_24080006_ex_stage
             reg_we <= 1'b0;
             mdu_valid_o <= 1'b1;
           end
-        end
-        EX_WAIT: begin
-          rd_addr <= '0;
-          reg_we <= 1'b0;
-          ecall <= 1'b0;
-          mret <= 1'b0;
-          csr_set <= '0;
         end
         default: begin
           exu2lsu_valid <= 1'b0;

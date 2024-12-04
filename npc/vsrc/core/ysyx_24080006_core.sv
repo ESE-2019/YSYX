@@ -32,6 +32,9 @@ module ysyx_24080006_core
   logic [REG_WIDTH-1:0] rs1_addr, rs2_addr, rd_addr;
   logic [31:0] rs1_data, rs2_data, rd_data;
 
+  logic forward_en;
+  logic [31:0] forward_data;
+
   ysyx_24080006_ifu IFU (.*);
   ysyx_24080006_id_stage ID (.*);
   ysyx_24080006_ex_stage EX (.*);
