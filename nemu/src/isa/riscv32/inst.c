@@ -160,23 +160,60 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2,
   }
 }
 
-int32_t mulh(int32_t a, int32_t b)
+static inline int32_t __mulh__(int32_t a, int32_t b)
 {
   int64_t result = (int64_t)a * (int64_t)b;
   return (int32_t)(result >> 32);
 }
 
-uint32_t mulhu(uint32_t a, uint32_t b)
+static inline uint32_t __mulhu__(uint32_t a, uint32_t b)
 {
   uint64_t result = (uint64_t)a * (uint64_t)b;
   return (uint32_t)(result >> 32);
 }
 
-int32_t mulhsu(int32_t a, uint32_t b)
+static inline int32_t __mulhsu__(int32_t a, uint32_t b)
 {
   int64_t result = (int64_t)a * (uint64_t)b;
   return (int32_t)(result >> 32);
 }
+
+static inline int32_t __div__(int32_t a, int32_t b)
+{
+  if (a == -1 << 31 && b == -1)
+    return -1 << 31;
+  else if (b != 0)
+    return a / b;
+  else
+    return -1;
+}
+
+static inline uint32_t __divu__(uint32_t a, uint32_t b)
+{
+  if (b != 0)
+    return a / b;
+  else
+    return -1;
+}
+
+static inline int32_t __rem__(int32_t a, int32_t b)
+{
+  if (a == -1 << 31 && b == -1)
+    return 0;
+  else if (b != 0)
+    return a % b;
+  else
+    return a;
+}
+
+static inline uint32_t __remu__(uint32_t a, uint32_t b)
+{
+  if (b != 0)
+    return a % b;
+  else
+    return a;
+}
+
 uint32_t CSR_r(uint32_t imm)
 {
   int csr = imm & 0xFFF;
@@ -561,23 +598,21 @@ static int decode_exec(Decode *s)
           R(rd) = (int64_t)src1 * (int64_t)src2 /*; Log("mul") */);
   INSTPAT(
       "0000001 ????? ????? 001 ????? 01100 11", mulh, R,
-      R(rd) = mulh(src1, src2));
+      R(rd) = __mulh__(src1, src2));
   INSTPAT(
       "0000001 ????? ????? 010 ????? 01100 11", mulhsu, R,
-      R(rd) = mulhsu(src1, src2));
+      R(rd) = __mulhsu__(src1, src2));
   INSTPAT(
       "0000001 ????? ????? 011 ????? 01100 11", mulhu, R,
-      R(rd) = mulhu(src1, src2));
+      R(rd) = __mulhu__(src1, src2));
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div, R,
-          if (src2) R(rd) = (int32_t)src1 / (int32_t)src2;
-          else R(rd) = (int32_t)-1 /*; Log("div") */);
+          R(rd) = __div__(src1, src2));
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R,
-          if (src2) R(rd) = (int32_t)src1 / src2;
-          else R(rd) = (int32_t)-1 /*; Log("divu") */);
+          R(rd) = __divu__(src1, src2));
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem, R,
-          R(rd) = (int32_t)src1 % (int32_t)src2 /*; Log("rem") */);
+          R(rd) = __rem__(src1, src2));
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R,
-          R(rd) = (int32_t)src1 % src2 /*; Log("remu") */);
+          R(rd) = __remu__(src1, src2));
 
   // others
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N,
