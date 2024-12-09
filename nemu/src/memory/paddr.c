@@ -141,6 +141,11 @@ word_t paddr_read(paddr_t addr, int len)
 
 void paddr_write(paddr_t addr, int len, word_t data)
 {
+  if (addr == 0x10000000)
+  {
+    putchar(data);
+    return;
+  }
   if (likely(in_pmem(addr)))
   {
 #ifdef CONFIG_MTRACE
@@ -172,8 +177,6 @@ void paddr_write(paddr_t addr, int len, word_t data)
     return;
   }
   MUXDEF(CONFIG_CACHESIM, , out_of_bound(addr));
-  if (addr == 0x10000000)
-    putchar(data);
   return;
   out_of_bound(addr);
 }
