@@ -15,8 +15,8 @@ static bool FLASH_TRACE = 0;
 #define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
 #define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num
 #define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__miss_num
-//#define D_HIT top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__hit_num
-//#define D_MISS top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__miss_num
+// #define D_HIT top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__hit_num
+// #define D_MISS top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__miss_num
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"
@@ -68,6 +68,39 @@ extern "C" void ebreak()
     ebreak_n = false;
     if (0 == NPC_REG[10])
         TRAP = true;
+}
+
+static uint8_t sdram_mem[4][8192][512][4];
+extern "C" int sdram_read(int i, int j, int k)
+{
+    if (i < 4 && j < 8192 && k < 512)
+        return (int)(sdram_mem[i][j][k][3]) << 24 | (int)(sdram_mem[i][j][k][2]) << 16 | (int)(sdram_mem[i][j][k][1]) << 8 | (int)(sdram_mem[i][j][k][0]);
+    else
+        assert(0);
+}
+extern "C" void sdram_write(int i, int j, int k, int dqm, int dq)
+{
+    if (i < 4 && j < 8192 && k < 512)
+    {
+        if (!(dqm & 0x01))
+        {
+            sdram_mem[i][j][k][0] = (dq >> 0) & 0xFF;
+        }
+        if (!(dqm & 0x02))
+        {
+            sdram_mem[i][j][k][1] = (dq >> 8) & 0xFF;
+        }
+        if (!(dqm & 0x04))
+        {
+            sdram_mem[i][j][k][2] = (dq >> 16) & 0xFF;
+        }
+        if (!(dqm & 0x08))
+        {
+            sdram_mem[i][j][k][3] = (dq >> 24) & 0xFF;
+        }
+    }
+    else
+        assert(0);
 }
 
 static int64_t cycle = 0; // to controll sdb
@@ -565,9 +598,9 @@ static void print_ipc()
     num = 100 * (double)(hit_num + skip_num) / (double)(hit_num + miss_num + skip_num);
     printf("(H+S)/A = %.2f%% ", num);
 
-    //hit_num = D_HIT;
-    //miss_num = D_MISS;
-    //num = 100 * (double)hit_num / (double)(hit_num + miss_num);
+    // hit_num = D_HIT;
+    // miss_num = D_MISS;
+    // num = 100 * (double)hit_num / (double)(hit_num + miss_num);
     printf("\n\033[0m");
 
     printf("\033[1;33mHIT = %d MISS = %d SKIP = %d\n\033[0m", hit_num, miss_num, skip_num);

@@ -280,11 +280,8 @@ module ysyx_24080006_ifu
     end
   end
 
-
-  ysyx_24080006_icu ICU (
-      .*,
-      .fetch_addr(fetch_addr_q)
-  );
+  wire [31:0] fetch_addr = fetch_addr_q;
+  ysyx_24080006_icu ICU (.*);
   ysyx_24080006_zcu ZCU (
       .*,
       .is_zc(is_zc_d),
@@ -326,11 +323,32 @@ module ysyx_24080006_ifu
       endcase
     end
   end
+  import "DPI-C" function int sdram_read(
+    int i,
+    int j,
+    int k
+  );
+  import "DPI-C" function int pmem_read(input int raddr);
   always_ff @(posedge clock) begin
     if (ifu2idu.valid && idu2ifu_ready) begin
       if (!INSIDE_MEM(pc_q)) begin
         $display("[IFU]pc error 0x%08x", pc_q);
         $finish;
+      end
+    end
+    if (icu2ifu_valid) begin
+      if (INSIDE(fetch_addr, 32'h3000_0000, 32'h30ff_ffff)) begin
+        if (ic_val != pmem_read({8'h80, fetch_addr[23:0]})) begin
+          $finish;
+        end
+      end else if (INSIDE(fetch_addr, 32'ha000_0000, 32'ha3ff_ffff)) begin
+        if (ic_val != sdram_read(
+                {30'b0, fetch_addr[12:11]},
+                {19'b0, fetch_addr[25:13]},
+                {23'b0, fetch_addr[10:2]}
+            )) begin
+          $finish;
+        end
       end
     end
   end
