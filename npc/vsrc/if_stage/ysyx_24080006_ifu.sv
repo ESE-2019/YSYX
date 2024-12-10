@@ -343,9 +343,7 @@ module ysyx_24080006_ifu
         end
       end else if (INSIDE(fetch_addr, 32'ha000_0000, 32'ha3ff_ffff)) begin
         if (ic_val != sdram_read(
-                {30'b0, fetch_addr[12:11]},
-                {19'b0, fetch_addr[25:13]},
-                {23'b0, fetch_addr[10:2]}
+                {30'b0, fetch_addr[12:11]}, {19'b0, fetch_addr[25:13]}, {23'b0, fetch_addr[10:2]}
             )) begin
           $finish;
         end
