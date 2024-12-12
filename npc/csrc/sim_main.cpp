@@ -1,5 +1,3 @@
-// 反汇编时机：每次IFU取指后
-// DIFFTEST时机：每次IFU取值后对上一轮结束后的状态进行比较
 static bool LOG = 0;
 static bool WAVE = 1;
 static bool SDB = 1;
@@ -10,13 +8,22 @@ static bool FT_EN = 1;
 static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
-
+#define WAVE_MAX 0xffff
 #define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__REG__DOT__regfile
 #define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
 #define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num
 #define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__miss_num
 // #define D_HIT top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__hit_num
 // #define D_MISS top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__EX__DOT__DCU__DOT__miss_num
+
+#define CNT_LS_I top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ls_i;
+#define CNT_LS_C top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ls_c;
+#define CNT_OP_I top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__op_i;
+#define CNT_OP_C top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__op_c;
+#define CNT_BR_I top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__br_i;
+#define CNT_BR_C top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__br_c;
+#define CNT_SYS_I top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__sys_i;
+#define CNT_SYS_C top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__sys_c;
 
 #include <verilated.h>
 #include "VysyxSoCFull.h"
@@ -403,70 +410,24 @@ extern "C" void LSU_CNT(uint32_t load_en, uint32_t cnt)
         store_c += cnt;
     }
 }
-static uint64_t compute_cnt = 0;
-static uint64_t loadstore_cnt = 0;
-static uint64_t system_cnt = 0;
-static uint64_t branch_cnt = 0;
-static uint64_t jump_cnt = 0;
-extern "C" void INST_CNT(uint32_t type)
+typedef struct
 {
-    curr_type = type;
-    switch (type)
-    {
-    case 0:
-        compute_cnt++;
-        break;
-    case 1:
-        loadstore_cnt++;
-        break;
-    case 2:
-        system_cnt++;
-        break;
-    case 3:
-        branch_cnt++;
-        break;
-    case 4:
-        jump_cnt++;
-        break;
-    default:
-        break;
-    }
-}
+    uint8_t type;
+    uint64_t time;
+} inst_t;
+
+uint64_t ipc_cycle = 0;
+
 static bool initial = true;
 static bool SKIP = 0;
 extern "C" void SKIP_DIFFTEST()
 {
     SKIP = 1;
 }
-static uint64_t compute_cycle = 0;
-static uint64_t loadstore_cycle = 0;
-static uint64_t system_cycle = 0;
-static uint64_t branch_cycle = 0;
-static uint64_t jump_cycle = 0;
-static uint64_t fetch_delay = 0;
-extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t type_cnt, uint32_t ifu_cnt)
-{
-    switch (curr_type)
-    {
-    case 0:
-        compute_cycle += type_cnt;
-        break;
-    case 1:
-        loadstore_cycle += type_cnt;
-        break;
-    case 2:
-        system_cycle += type_cnt;
-        break;
-    case 3:
-        branch_cycle += type_cnt;
-        break;
-    case 4:
-        jump_cycle += type_cnt;
-        break;
-    default:
-        break;
-    }
 
+static uint64_t fetch_delay = 0;
+extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t ifu_cnt)
+{
     uint32_t ist = inst;
     cycle--;
     ipc_inst++;
@@ -505,6 +466,7 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t type_cn
             iringbuf_index = 0;
     }
 }
+
 extern "C" void retirement(uint32_t pc)
 {
     // diff test
@@ -549,9 +511,18 @@ extern "C" void retirement(uint32_t pc)
     wp_exec(); // watchpoint
 }
 
-uint64_t ipc_cycle = 0;
 static void print_ipc()
 {
+
+    uint64_t compute_cnt = CNT_OP_I;
+    uint64_t loadstore_cnt = CNT_LS_I;
+    uint64_t system_cnt = CNT_SYS_I;
+    uint64_t branch_cnt = CNT_BR_I;
+    uint64_t compute_cycle = CNT_OP_C;
+    uint64_t loadstore_cycle = CNT_LS_C;
+    uint64_t system_cycle = CNT_SYS_C;
+    uint64_t branch_cycle = CNT_BR_C;
+
     double num;
 
     printf("\033[1;93m                          inst    cycle     cpi\n\033[0m");
@@ -576,10 +547,10 @@ static void print_ipc()
     num = (double)branch_cycle / (double)branch_cnt;
     printf("%5.3f\n\033[0m", num);
 
-    num = 100 * (double)jump_cnt / (double)ipc_inst;
-    printf("\033[1;33m%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
-    num = (double)jump_cycle / (double)jump_cnt;
-    printf("%5.3f\n\033[0m", num);
+    // num = 100 * (double)jump_cnt / (double)ipc_inst;
+    // printf("\033[1;33m%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
+    // num = (double)jump_cycle / (double)jump_cnt;
+    // printf("%5.3f\n\033[0m", num);
 
     num = (double)load_c / (double)load_i;
     printf("\033[1;93mLOAD_DELAY  = %8ld / %8ld = %6.4f\n\033[0m", load_c, load_i, num);
@@ -1500,7 +1471,7 @@ int main(int argc, char **argv)
             }
         }
         top->eval();
-        if (WAVE)
+        if (WAVE && wave < WAVE_MAX)
             tfp->dump(wave++); // dump wave
     }
 

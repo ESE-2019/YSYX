@@ -5,8 +5,8 @@ SIM_FLAGS ?=
 SIM_MODE ?= -DSOC_MODE=1
 
 VERILATOR_CFLAGS += -MMD --build -cc --exe \
-	-O3 --x-assign fast --x-initial fast --noassert --trace-fst \
-	--timescale "1ns/1ns" --no-timing --autoflush
+	-O3 --x-assign fast --x-initial fast --noassert --trace-fst --trace-threads 2\
+	--timescale-override 1ns/1ns --no-timing --autoflush
 	
 #VERILATOR_CFLAGS += --debug
 

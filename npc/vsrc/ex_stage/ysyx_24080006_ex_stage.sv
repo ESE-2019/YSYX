@@ -4,7 +4,9 @@ module ysyx_24080006_ex_stage
     input logic clock,
     input logic reset,
 
-    input decoder_t decoder,
+    input  decoder_t        decoder,
+    input  logic     [31:0] idu_dbg_inst,
+    output logic     [31:0] exu_dbg_inst,
 
     output logic                 reg_we,
     output logic [REG_WIDTH-1:0] rd_addr,
@@ -173,6 +175,7 @@ module ysyx_24080006_ex_stage
             exu2ifu.branch <= alu_c[0] & decoder.branch;
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
+            exu_dbg_inst <= idu_dbg_inst;
             if (decoder.lsu_set.lsu_enable) begin  // load/store
               exu2lsu_valid <= 1'b1;
               lsu_addr <= alu_c;
@@ -256,7 +259,7 @@ module ysyx_24080006_ex_stage
       decoder.branch: dnpc = idu2exu.pc + decoder.imm;
       decoder.ecall: dnpc = idu2exu.csr_rdata;
       decoder.mret: dnpc = idu2exu.csr_rdata;
-      default: dnpc = idu2exu.csr_rdata;
+      default: dnpc = idu2exu.pc;
     endcase
   end
 

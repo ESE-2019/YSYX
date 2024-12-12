@@ -4,8 +4,9 @@ module ysyx_24080006_ifu
     input logic clock,
     input logic reset,
 
-    input logic fencei,
+    input  logic        fencei,
     output logic [31:0] inst,
+    input  logic [31:0] exu_dbg_inst,
 
     input  logic   idu2ifu_ready,
     output logic   ifu2exu_ready,
@@ -295,29 +296,32 @@ module ysyx_24080006_ifu
     input int inst,
     input int pc,
     input int ft_pc,
-    input int type_cnt,
     input int ifu_cnt
   );
-  logic [31:0] ftrace, type_cnt, ifu_cnt;
+  import "DPI-C" function void INST_START();
+  logic [31:0] ftrace, ifu_cnt;
+  time inst_queue[$];
+
   always_ff @(posedge clock) begin
     if (reset) begin
-      ftrace   <= RST_ADDR;
-      type_cnt <= 1;
-      ifu_cnt  <= 1;
+      ftrace  <= RST_ADDR;
+      ifu_cnt <= 1;
+      inst_queue.delete();
     end else begin
       case (curr)
-        IF_HAZARD, IF_IDLE: begin
-          type_cnt <= type_cnt + 1;
-          ifu_cnt  <= 1;
+        IF_RESET, IF_IDLE, IF_HAZARD: begin
+          if (next == IF_EXEC) begin
+            inst_queue.push_front($time);
+            ifu_cnt <= 1;
+          end
         end
-        IF_RESET, IF_EXEC, IF_WAIT: begin
+        IF_EXEC, IF_WAIT: begin
           ifu_cnt <= ifu_cnt + 1;
           if (ifu2idu.valid && idu2ifu_ready) begin
-            dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), type_cnt, ifu_cnt);
-            type_cnt <= 1;
+            dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), ifu_cnt);
             if (branch_or_jump) ftrace <= exu2ifu.dnpc;
-            else ftrace <= ftrace + 32'h4;
-          end else type_cnt <= type_cnt + 1;
+            else ftrace <= pc_d;
+          end
         end
         default: ;
       endcase
@@ -351,10 +355,33 @@ module ysyx_24080006_ifu
     end
   end
   import "DPI-C" function void retirement(input int pc);
+  import "DPI-C" function void ebreak();
   bit retire = 0;
   bit [31:0] retire_pc;
+  time op_c = 0, br_c = 0, ls_c = 0, sys_c = 0;
+  int op_i = 0, br_i = 0, ls_i = 0, sys_i = 0;
   always_ff @(posedge clock) begin
     if (exu2ifu.valid && ifu2exu_ready) begin
+      case (exu_dbg_inst[6:0])
+        AUIPC, LUI, OP, OP_IMM: begin
+          op_c += ($time - inst_queue.pop_back) / 2;
+          op_i++;
+        end
+        LOAD, STORE: begin
+          ls_c += ($time - inst_queue.pop_back) / 2;
+          ls_i++;
+        end
+        SYSTEM, MISC_MEM: begin
+          sys_c += ($time - inst_queue.pop_back) / 2;
+          sys_i++;
+        end
+        BRANCH, JAL, JALR: begin
+          br_c += ($time - inst_queue.pop_back) / 2;
+          br_i++;
+        end
+        default: ;
+      endcase
+      if (exu_dbg_inst == EBREAK_INST) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
       else retire_pc <= exu2ifu.pc + 32'h4;

@@ -5,6 +5,7 @@ module ysyx_24080006_id_stage
     input logic reset,
 
     input logic [31:0] inst,
+    output logic [31:0] idu_dbg_inst,
     output decoder_t decoder,
     output logic fencei,
 
@@ -160,6 +161,7 @@ module ysyx_24080006_id_stage
             detect_hazard_q <= detect_hazard_d;
             fwd_jalr <= inst[6:0] == JALR;
             fwd_store <= inst[6:0] == STORE;
+            idu_dbg_inst <= inst;
           end
         end
         ID_WAIT: begin
@@ -224,25 +226,12 @@ module ysyx_24080006_id_stage
   end
 
 `ifdef SIM_MODE
-  import "DPI-C" function void ebreak();
-  import "DPI-C" function void INST_CNT(input int type_code);
-  logic [31:0] ftrace, type_cnt, ifu_cnt;
   always_ff @(posedge clock) begin
-    if (idu2exu.valid && exu2idu_ready) begin
-      if (inst == EBREAK_INST) begin
-        ebreak();
-      end else if (illegal_inst) begin
+    if (ifu2idu.valid && idu2ifu_ready) begin
+      if (illegal_inst) begin
         $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, ifu2idu.pc);
         $finish;
       end
-      case (inst[6:0])
-        AUIPC, LUI, OP, OP_IMM: INST_CNT(0);
-        LOAD, STORE: INST_CNT(1);
-        SYSTEM: INST_CNT(2);
-        BRANCH: INST_CNT(3);
-        JAL, JALR: INST_CNT(4);
-        default: ;
-      endcase
     end
   end
 `endif
