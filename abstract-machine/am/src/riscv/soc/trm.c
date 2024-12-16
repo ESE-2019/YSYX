@@ -20,7 +20,13 @@ void __attribute__((section(".klib"))) putch(char ch)
 
 __attribute__((section(".klib"))) void inline halt(int code)
 {
-    __asm__ volatile("mv a0, %0; ebreak" : : "r"(code));
+    uint32_t low, high;
+
+    __asm__ volatile("csrr %0, minstret" : "=r"(low));
+    __asm__ volatile("csrr %0, minstreth" : "=r"(high));
+
+    printf("minstret 0x%08x_%08x\n", high, low);
+    __asm__ volatile("mv a0, %0; wfi" : : "r"(code));
     while (1)
         ;
 }
@@ -57,13 +63,8 @@ static inline void print_ysyx()
     uint32_t marchid;
     char ysyx[5];
 
-    __asm__ volatile(
-        "csrr %0, 0xF11"
-        : "=r"(mvendorid));
-
-    __asm__ volatile(
-        "csrr %0, 0xF12"
-        : "=r"(marchid));
+    __asm__ volatile("csrr %0, mvendorid" : "=r"(mvendorid));
+    __asm__ volatile("csrr %0, marchid" : "=r"(marchid));
 
     for (int i = 0; i < 4; i++)
     {

@@ -267,7 +267,8 @@ module ysyx_24080006_idu
                 idu.ecall = 1'b1;
                 idu.csr_name = mtvec;
               end
-              EBREAK:  ;  // use DPI-C to end sim
+              EBREAK: ;  // use DPI-C to end sim
+              WFI: ;
               MRET: begin
                 idu.mret = 1'b1;
                 idu.csr_name = mepc;
@@ -295,6 +296,8 @@ module ysyx_24080006_idu
             MTVEC: idu.csr_name = mtvec;
             MEPC: idu.csr_name = mepc;
             MCAUSE: idu.csr_name = mcause;
+            MINSTRET: idu.csr_name = minstret;
+            MINSTRETH: idu.csr_name = minstreth;
             MVENDORID: idu.csr_name = mvendorid;
             MARCHID: idu.csr_name = marchid;
             default: inst_err = 1'b1;

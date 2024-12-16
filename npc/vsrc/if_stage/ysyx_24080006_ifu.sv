@@ -381,7 +381,7 @@ module ysyx_24080006_ifu
         end
         default: ;
       endcase
-      if (exu_dbg_inst == EBREAK_INST) ebreak();
+      if (exu_dbg_inst == WFI_INST || exu_dbg_inst == EBREAK_INST) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
       else retire_pc <= exu2ifu.pc + 32'h4;

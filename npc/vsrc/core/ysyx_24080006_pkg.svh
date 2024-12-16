@@ -53,13 +53,16 @@ package ysyx_24080006_pkg;
   typedef enum logic [11:0] {
     ECALL     = 12'h000,
     EBREAK    = 12'h001,
+    WFI       = 12'h105,
     MSTATUS   = 12'h300,
     MRET      = 12'h302,
     MTVEC     = 12'h305,
     MEPC      = 12'h341,
     MCAUSE    = 12'h342,
-    MVENDORID = 12'hf11,
-    MARCHID   = 12'hf12
+    MINSTRET  = 12'hB02,
+    MINSTRETH = 12'hB82,
+    MVENDORID = 12'hF11,
+    MARCHID   = 12'hF12
   } csr_addr_e;
 
   typedef enum logic [2:0] {
@@ -67,6 +70,8 @@ package ysyx_24080006_pkg;
     mtvec,
     mepc,
     mcause,
+    minstret,
+    minstreth,
     mvendorid,
     marchid
   } csr_name_e;
@@ -165,6 +170,7 @@ package ysyx_24080006_pkg;
   } icache_t;
 
   parameter logic [31:0] EBREAK_INST = 32'b0000000_00001_00000_000_00000_11100_11;
+  parameter logic [31:0] WFI_INST = 32'h10500073;
   parameter logic [31:0] NOP = 32'b0000000_00000_00000_000_00000_00100_11;
 
 

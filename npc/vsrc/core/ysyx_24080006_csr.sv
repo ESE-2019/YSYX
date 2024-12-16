@@ -11,13 +11,22 @@ module ysyx_24080006_csr
     input csr_name_e csr_name,
     input logic [31:0] csr_pc,
 
+    input logic instret,
+
     input  logic [31:0] csr_wdata,
     output logic [31:0] csr_rdata
 );
 
   wire [31:0] csr_cause = 32'd11;
   logic [31:0] csr_reg[8];
-  assign csr_rdata = csr_reg[csr_name];
+  logic [31:0] minstret_low_q, minstret_low_d, minstret_high_q, minstret_high_d;
+  always_comb begin
+    case (csr_name)
+      minstret:  csr_rdata = minstret_low_q;
+      minstreth: csr_rdata = minstret_high_q;
+      default:   csr_rdata = csr_reg[csr_name];
+    endcase
+  end
 
   always_ff @(posedge clock) begin
     if (reset) begin
@@ -46,4 +55,22 @@ module ysyx_24080006_csr
       end
     end
   end
+
+  always_comb begin
+    minstret_low_d  = minstret_low_q;
+    minstret_high_d = minstret_high_q;
+    if (instret) begin
+      {minstret_high_d, minstret_low_d} = {minstret_high_q, minstret_low_q} + 64'b1;
+    end
+  end
+  always_ff @(posedge clock) begin
+    if (reset) begin
+      minstret_high_q <= 32'b0;
+      minstret_low_q  <= 32'b0;
+    end else begin
+      minstret_high_q <= minstret_high_d;
+      minstret_low_q  <= minstret_low_d;
+    end
+  end
+
 endmodule

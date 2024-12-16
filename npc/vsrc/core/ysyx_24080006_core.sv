@@ -42,5 +42,8 @@ module ysyx_24080006_core
   ysyx_24080006_id_stage ID (.*);
   ysyx_24080006_ex_stage EX (.*);
   ysyx_24080006_reg REG (.*);
-  ysyx_24080006_csr CS (.*);
+  ysyx_24080006_csr CS (
+      .*,
+      .instret(exu2ifu.valid & ifu2exu_ready)
+  );
 endmodule
