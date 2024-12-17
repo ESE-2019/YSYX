@@ -59,22 +59,13 @@ package ysyx_24080006_pkg;
     MTVEC     = 12'h305,
     MEPC      = 12'h341,
     MCAUSE    = 12'h342,
+    MCYCLE    = 12'hB00,
     MINSTRET  = 12'hB02,
+    MCYCLEH   = 12'hB80,
     MINSTRETH = 12'hB82,
     MVENDORID = 12'hF11,
     MARCHID   = 12'hF12
-  } csr_addr_e;
-
-  typedef enum logic [2:0] {
-    mstatus,
-    mtvec,
-    mepc,
-    mcause,
-    minstret,
-    minstreth,
-    mvendorid,
-    marchid
-  } csr_name_e;
+  } system_e;
 
   typedef enum logic [1:0] {
     READ,
@@ -127,7 +118,7 @@ package ysyx_24080006_pkg;
     csr_set_t csr_set;
     lsu_set_t lsu_set;
     mdu_set_t mdu_set;
-    csr_name_e csr_name;
+    system_e csr_name;
     logic reg_we;
 
     logic jal;

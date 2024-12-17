@@ -16,7 +16,7 @@ module ysyx_24080006_id_stage
     input  logic [         31:0] rs1_data,
     input  logic [         31:0] rs2_data,
 
-    output csr_name_e csr_name,
+    output system_e csr_name,
     output logic [31:0] csr_wdata,
     input logic [31:0] csr_rdata,
 

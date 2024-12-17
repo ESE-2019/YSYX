@@ -23,7 +23,7 @@ module ysyx_24080006_idu
     idu.csr_set  = '0;
     idu.lsu_set  = '0;
     idu.mdu_set  = '0;
-    idu.csr_name = csr_name_e'(0);
+    idu.csr_name = system_e'(0);
     idu.reg_we   = 1'b0;
     idu.jal      = 1'b0;
     idu.jalr     = 1'b0;
@@ -265,13 +265,13 @@ module ysyx_24080006_idu
             unique case (inst[31:20])
               ECALL: begin
                 idu.ecall = 1'b1;
-                idu.csr_name = mtvec;
+                idu.csr_name = MTVEC;
               end
               EBREAK: ;  // use DPI-C to end sim
               WFI: ;
               MRET: begin
                 idu.mret = 1'b1;
-                idu.csr_name = mepc;
+                idu.csr_name = MEPC;
               end
               default: inst_err = 1'b1;
             endcase
@@ -280,6 +280,7 @@ module ysyx_24080006_idu
           end
         end else begin
           idu.csr_set.csr_enable = 1'b1;
+          idu.csr_name = system_e'(inst[31:20]);
           if (inst[14]) begin
             idu.csr_set.csr_uimm = 1'b1;
           end else begin
@@ -289,17 +290,6 @@ module ysyx_24080006_idu
             2'b01:   idu.csr_set.csr_op = WRITE;
             2'b10:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : SET;
             2'b11:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : CLEAR;
-            default: inst_err = 1'b1;
-          endcase
-          unique case (inst[31:20])
-            MSTATUS: idu.csr_name = mstatus;
-            MTVEC: idu.csr_name = mtvec;
-            MEPC: idu.csr_name = mepc;
-            MCAUSE: idu.csr_name = mcause;
-            MINSTRET: idu.csr_name = minstret;
-            MINSTRETH: idu.csr_name = minstreth;
-            MVENDORID: idu.csr_name = mvendorid;
-            MARCHID: idu.csr_name = marchid;
             default: inst_err = 1'b1;
           endcase
         end
