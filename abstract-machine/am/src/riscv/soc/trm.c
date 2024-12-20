@@ -20,12 +20,6 @@ void __attribute__((section(".klib"))) putch(char ch)
 
 __attribute__((section(".klib"))) void inline halt(int code)
 {
-    uint32_t low, high;
-
-    __asm__ volatile("csrr %0, minstret" : "=r"(low));
-    __asm__ volatile("csrr %0, minstreth" : "=r"(high));
-
-    printf("minstret 0x%08x_%08x\n", high, low);
     __asm__ volatile("mv a0, %0; wfi" : : "r"(code));
     while (1)
         ;
@@ -83,6 +77,38 @@ static void __attribute__((section(".klib"), noinline)) _trm_init()
     print_ysyx();
     __asm__ volatile("fence.i");
     int ret = main(mainargs);
+    __asm__ volatile("csrwi mcountinhibit,3");
+
+    uint32_t mcycleh, mcycle;
+    uint32_t minstreth, minstret;
+    __asm__ volatile("csrr %0, mcycleh" : "=r"(mcycleh));
+    __asm__ volatile("csrr %0, mcycle" : "=r"(mcycle));
+    __asm__ volatile("csrr %0, minstreth" : "=r"(minstreth));
+    __asm__ volatile("csrr %0, minstret" : "=r"(minstret));
+
+    uint64_t cycle = ((uint64_t)mcycleh << 32) | mcycle;
+    uint64_t inst = 100000 * (((uint64_t)minstreth << 32) | minstret);
+    uint32_t ipc = inst / cycle;
+
+    printf("minstret=0x%08x%08x\n", minstreth, minstret);
+    printf("  mcycle=0x%08x%08x\n", mcycleh, mcycle);
+    printf("     IPC=0.%05d\n", ipc);
+
+
+    uint32_t hith, hitl;
+    uint32_t missh, missl;
+    __asm__ volatile("csrr %0, mhpmcounter3h" : "=r"(hith));
+    __asm__ volatile("csrr %0, mhpmcounter3" : "=r"(hitl));
+    __asm__ volatile("csrr %0, mhpmcounter4h" : "=r"(missh));
+    __asm__ volatile("csrr %0, mhpmcounter4" : "=r"(missl));
+
+    uint64_t hit = ((uint64_t)hith << 32) | hitl;
+    uint64_t miss = ((uint64_t)missh << 32) | missl;
+    uint64_t total = hit + miss;
+    uint64_t hit_tmp = 100000 * hit;
+    uint32_t icache_hit = hit_tmp / total;
+    printf("      I$=0.%05d\n", icache_hit);
+
     halt(ret);
 }
 

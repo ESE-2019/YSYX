@@ -13,6 +13,10 @@ module ysyx_24080006_ifu
     input  stage_t exu2ifu,
     output stage_t ifu2idu,
 
+    output logic icache_hit,
+    output logic icache_miss,
+    output logic icache_skip,
+
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m
 );

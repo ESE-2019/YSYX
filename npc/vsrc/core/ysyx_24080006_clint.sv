@@ -9,18 +9,10 @@ module ysyx_24080006_clint
     input  axi_r_m2s_t clint_r_m2s,
     output axi_r_s2m_t clint_r_s2m
 );
-  logic [31:0] mtime_low_d, mtime_low_q, mtime_high_d, mtime_high_q;
-  assign {mtime_high_d, mtime_low_d} = {mtime_high_q, mtime_low_q} + 64'd1;
-  logic [31:0] dout;
-  always_ff @(posedge clock) begin
-    if (reset) begin
-      mtime_high_q <= 32'b0;
-      mtime_low_q  <= 32'b0;
-    end else begin
-      mtime_high_q <= mtime_high_d;
-      mtime_low_q  <= mtime_low_d;
-    end
-  end
+  logic [31:0] mtime_high, mtime_low;
+  logic [31:0] axi_rdata;
+  logic illegal_addr;
+
   always_ff @(posedge clock) begin
     if (reset) begin
       // write deleted
@@ -33,7 +25,7 @@ module ysyx_24080006_clint
 
       if (clint_r_m2s.arvalid && clint_r_s2m.arready && !clint_r_s2m.rvalid) begin
         clint_r_s2m.arready <= 1'b0;
-        clint_r_s2m.rdata   <= dout;
+        clint_r_s2m.rdata   <= axi_rdata;
         clint_r_s2m.rvalid  <= 1'b1;
       end else if (clint_r_m2s.rready) begin
         clint_r_s2m.arready <= 1'b1;
@@ -44,12 +36,24 @@ module ysyx_24080006_clint
   end
 
   always_comb begin
-    dout = 32'b0;
+    axi_rdata = mtime_low;
+    illegal_addr = 1'b0;
     unique case (clint_r_m2s.araddr[15:0])
-      16'hBFF8: dout = mtime_low_q;
-      16'hBFFc: dout = mtime_high_q;
-      default:  dout = mtime_low_q;
+      16'hBFF8: axi_rdata = mtime_low;
+      16'hBFFc: axi_rdata = mtime_high;
+      default:  illegal_addr = 1'b1;
     endcase
   end
+
+  ysyx_24080006_counter CLINT_COUNTER (
+      .clock             (clock),
+      .reset             (reset),
+      .counter_incr_en   (1'b1),
+      .counter_high_we   (1'b0),
+      .counter_low_we    (1'b0),
+      .counter_wdata     (32'b0),
+      .counter_high_rdata(mtime_high),
+      .counter_low_rdata (mtime_low)
+  );
 
 endmodule

@@ -13,6 +13,10 @@ module ysyx_24080006_icu
     output logic icu2ifu_ready,
     input  logic fencei,
 
+    output logic icache_hit,
+    output logic icache_miss,
+    output logic icache_skip,
+
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m
 );
@@ -121,6 +125,9 @@ module ysyx_24080006_icu
       burst_offset <= '0;
       icu2ifu_valid <= 1'b0;
       icu2ifu_ready <= 1'b1;
+      icache_hit <= 1'b0;
+      icache_miss <= 1'b0;
+      icache_skip <= 1'b0;
     end else begin
       unique case (curr)
         IC_IDLE: begin
@@ -136,6 +143,9 @@ module ysyx_24080006_icu
               burst_offset <= '0;
               icu2ifu_valid <= 1'b0;
               icu2ifu_ready <= 1'b0;
+              icache_hit <= 1'b0;
+              icache_miss <= 1'b0;
+              icache_skip <= 1'b1;
             end else if (hit) begin
               ifu_r_m2s.arvalid <= 1'b0;
               ifu_r_m2s.rready <= 1'b0;
@@ -144,6 +154,9 @@ module ysyx_24080006_icu
               icu2ifu_valid <= 1'b1;
               icu2ifu_ready <= 1'b1;
               ic_val <= ic_rdata_tmp[pc_offset];
+              icache_hit <= 1'b1;
+              icache_miss <= 1'b0;
+              icache_skip <= 1'b0;
             end else begin
               if (burst_icache) begin  // SDRAM
                 ifu_r_m2s.arvalid <= 1'b1;
@@ -164,6 +177,9 @@ module ysyx_24080006_icu
                 icu2ifu_valid <= 1'b0;
                 icu2ifu_ready <= 1'b0;
               end
+              icache_hit  <= 1'b0;
+              icache_miss <= 1'b1;
+              icache_skip <= 1'b0;
             end
           end else begin  // NOP
             ifu_r_m2s.arvalid <= 1'b0;
@@ -172,6 +188,9 @@ module ysyx_24080006_icu
             burst_offset <= '0;
             icu2ifu_valid <= 1'b0;
             icu2ifu_ready <= 1'b1;
+            icache_hit <= 1'b0;
+            icache_miss <= 1'b0;
+            icache_skip <= 1'b0;
           end
         end
         IC_SKIP: begin
@@ -185,6 +204,9 @@ module ysyx_24080006_icu
             icu2ifu_valid <= 1'b1;
             icu2ifu_ready <= 1'b1;
           end
+          icache_hit  <= 1'b0;
+          icache_miss <= 1'b0;
+          icache_skip <= 1'b0;
         end
         IC_BURST: begin
           if (ifu_r_m2s.arvalid & ifu_r_s2m.arready) begin
@@ -236,6 +258,9 @@ module ysyx_24080006_icu
             ifu_r_m2s.rready <= 1'b0;
             icu2ifu_valid <= 1'b0;
           end
+          icache_hit  <= 1'b0;
+          icache_miss <= 1'b0;
+          icache_skip <= 1'b0;
         end
 
         IC_FLASH_BEGIN: begin
@@ -256,6 +281,9 @@ module ysyx_24080006_icu
           end else begin
             ifu_r_m2s.rready <= 1'b0;
           end
+          icache_hit  <= 1'b0;
+          icache_miss <= 1'b0;
+          icache_skip <= 1'b0;
         end
         IC_FLASH_END: begin
           icu2ifu_valid <= 1'b0;
@@ -270,6 +298,9 @@ module ysyx_24080006_icu
             ifu_r_m2s.arvalid <= 1'b1;
             icu2ifu_ready <= 1'b0;
           end
+          icache_hit  <= 1'b0;
+          icache_miss <= 1'b0;
+          icache_skip <= 1'b0;
         end
         default: begin
           //ifu_r_m2s.arid <= 4'h0;
@@ -286,6 +317,9 @@ module ysyx_24080006_icu
           burst_offset <= '0;
           icu2ifu_valid <= 1'b0;
           icu2ifu_ready <= 1'b1;
+          icache_hit <= 1'b0;
+          icache_miss <= 1'b0;
+          icache_skip <= 1'b0;
         end
       endcase
     end

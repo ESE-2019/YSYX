@@ -16,19 +16,19 @@ module ysyx_24080006_core
   stage_t ifu2idu, idu2exu, exu2ifu;
   logic ifu2exu_ready, exu2idu_ready, idu2ifu_ready;
 
-  logic             fencei;  //todo
-  logic      [31:0] inst;
+  logic            fencei;  //todo
+  logic     [31:0] inst;
 
-  logic             ecall;
-  logic             mret;
-  csr_set_t         csr_set;
-  system_e        csr_name;
-  logic      [31:0] csr_pc;
-  logic      [31:0] csr_wdata;
-  logic      [31:0] csr_rdata;
+  logic            ecall;
+  logic            mret;
+  csr_set_t        csr_set;
+  system_e         csr_name;
+  logic     [31:0] csr_pc;
+  logic     [31:0] csr_wdata;
+  logic     [31:0] csr_rdata;
 
-  decoder_t         decoder;
-  logic             reg_we;
+  decoder_t        decoder;
+  logic            reg_we;
   logic [REG_WIDTH-1:0] rs1_addr, rs2_addr, rd_addr;
   logic [31:0] rs1_data, rs2_data, rd_data;
 
@@ -37,6 +37,10 @@ module ysyx_24080006_core
 
   logic [31:0] idu_dbg_inst;
   logic [31:0] exu_dbg_inst;
+
+  logic        icache_hit;
+  logic        icache_miss;
+  logic        icache_skip;
 
   ysyx_24080006_ifu IFU (.*);
   ysyx_24080006_id_stage ID (.*);
