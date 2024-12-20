@@ -16,6 +16,8 @@ module ysyx_24080006_ifu
     output logic icache_hit,
     output logic icache_miss,
     output logic icache_skip,
+    output logic is_compressed,
+    output logic fetch_cycle,
 
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m
@@ -201,7 +203,6 @@ module ysyx_24080006_ifu
           fetch_addr_q <= fetch_addr_d;
           ifu2icu_valid <= 1'b1;
           fetch_twice <= jal & pc_d[1];
-          //if (jal & pc_d[1]) $display("unsuggested misaligned jump taken at pc 0x%08x", pc_q);
           fetch_twice_terminated <= 1'b0;
         end
         IF_EXEC: begin
@@ -249,7 +250,6 @@ module ysyx_24080006_ifu
               ifu2icu_valid <= 1'b1;
               fetch_twice <= exu2ifu.dnpc[1];
               fetch_twice_terminated <= 1'b0;
-              //if(exu2ifu.dnpc[1]) $display("unsuggested misaligned jump taken at pc 0x%08x", pc_q);// most of these occur when ret
             end else begin
               pc_q <= pc_d;
               fetch_addr_q <= fetch_addr_d;
@@ -259,20 +259,7 @@ module ysyx_24080006_ifu
             end
           end
         end
-        default: begin
-          ifu2icu_valid <= 1'b0;
-          pc_q <= RST_ADDR;
-          fetch_addr_q <= RST_ADDR;
-          ifu2idu.pc <= RST_ADDR;
-          ifu2idu.is_zc <= 1'b0;
-          ifu2idu.flush <= 1'b0;
-          inst_q <= 32'b0;
-          is_zc_q <= 1'b0;
-          fetch_twice <= 1'b0;
-          inst_buf <= 16'b0;
-          detect_hazard_q <= 1'b0;
-          fetch_twice_terminated <= 1'b0;
-        end
+        default: ;
       endcase
     end
   end  // fsm 3 for axi
@@ -293,6 +280,8 @@ module ysyx_24080006_ifu
       .inst (inst_d)
   );
 
+  assign is_compressed = ifu2idu.is_zc & ifu2idu.valid & idu2ifu_ready;
+  assign fetch_cycle   = curr == IF_EXEC;
 
 `ifdef SIM_MODE
   import ysyx_24080006_sim_pkg::*;

@@ -15,6 +15,12 @@ module ysyx_24080006_csr
     input logic icache_hit,
     input logic icache_miss,
     input logic icache_skip,
+    input logic load_num,
+    input logic load_cycle,
+    input logic store_num,
+    input logic store_cycle,
+    input logic is_compressed,
+    input logic fetch_cycle,
 
     input  logic [31:0] csr_wdata,
     output logic [31:0] csr_rdata
@@ -156,10 +162,16 @@ module ysyx_24080006_csr
     counter_incr_en[3] = icache_hit;
     counter_incr_en[4] = icache_miss;
     counter_incr_en[5] = icache_skip;
+    counter_incr_en[6] = load_num;
+    counter_incr_en[7] = load_cycle;
+    counter_incr_en[8] = store_num;
+    counter_incr_en[9] = store_cycle;
+    counter_incr_en[10] = is_compressed;
+    counter_incr_en[11] = fetch_cycle;
   end
 
   for (genvar i = 0; i < 32; i++) begin : gen_counter
-    ysyx_24080006_counter mcounters_variable_i (
+    ysyx_24080006_counter HPM (
         .clock             (clock),
         .reset             (reset),
         .counter_incr_en   (counter_incr_en[i] & ~mcountinhibit_q[i]),

@@ -20,6 +20,11 @@ module ysyx_24080006_ex_stage
     output logic forward_en,
     output logic [31:0] forward_data,
 
+    output logic load_num,
+    output logic load_cycle,
+    output logic store_num,
+    output logic store_cycle,
+
     input  logic   ifu2exu_ready,
     output logic   exu2idu_ready,
     input  stage_t idu2exu,
@@ -164,6 +169,10 @@ module ysyx_24080006_ex_stage
       ecall <= 1'b0;
       mret <= 1'b0;
       csr_set <= '0;
+      load_num <= 1'b0;
+      load_cycle <= 1'b0;
+      store_num <= 1'b0;
+      store_cycle <= 1'b0;
     end else begin
       unique case (curr)
         EX_IDLE: begin
@@ -183,6 +192,10 @@ module ysyx_24080006_ex_stage
               lsu_write <= decoder.lsu_set.lsu_write;
               lsu_sext <= decoder.lsu_set.lsu_sext;
               lsu_wdata <= idu2exu.rs2_data;
+              load_num <= ~decoder.lsu_set.lsu_write;
+              load_cycle <= ~decoder.lsu_set.lsu_write;
+              store_num <= decoder.lsu_set.lsu_write;
+              store_cycle <= decoder.lsu_set.lsu_write;
             end else if (decoder.mdu_set.mdu_enable) begin  // mul/div
               exu2lsu_valid <= 1'b0;
               reg_we <= 1'b0;
@@ -191,7 +204,11 @@ module ysyx_24080006_ex_stage
               mdu_b <= alu_b;
               mdu_set <= decoder.mdu_set;
               mdu_enable <= 1'b1;
-            end else begin  // bypass
+              load_num <= 1'b0;
+              load_cycle <= 1'b0;
+              store_num <= 1'b0;
+              store_cycle <= 1'b0;
+            end else begin  // others
               exu2lsu_valid <= 1'b0;
               reg_we <= decoder.reg_we;
               rd_data <= alu_c;
@@ -199,6 +216,10 @@ module ysyx_24080006_ex_stage
               mret <= decoder.mret;
               csr_pc <= idu2exu.pc;
               csr_set <= decoder.csr_set;
+              load_num <= 1'b0;
+              load_cycle <= 1'b0;
+              store_num <= 1'b0;
+              store_cycle <= 1'b0;
             end
           end else begin
             rd_addr <= '0;
@@ -206,14 +227,22 @@ module ysyx_24080006_ex_stage
             mdu_valid_o <= 1'b0;
             reg_we <= 1'b0;
             csr_set <= '0;
+            load_num <= 1'b0;
+            load_cycle <= 1'b0;
+            store_num <= 1'b0;
+            store_cycle <= 1'b0;
           end
         end
         EX_LSU: begin
           if (exu2lsu_valid & lsu2exu_ready) exu2lsu_valid <= 1'b0;
           if (lsu2exu_valid) begin
             rd_data <= lsu_rdata;
-            reg_we  <= ~lsu_write;
+            reg_we <= ~lsu_write;
+            load_cycle <= 1'b0;
+            store_cycle <= 1'b0;
           end
+          load_num  <= 1'b0;
+          store_num <= 1'b0;
         end
         EX_MDU: begin
           if (mdu_valid_i) begin

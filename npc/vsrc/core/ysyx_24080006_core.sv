@@ -41,6 +41,12 @@ module ysyx_24080006_core
   logic        icache_hit;
   logic        icache_miss;
   logic        icache_skip;
+  logic        load_num;
+  logic        load_cycle;
+  logic        store_num;
+  logic        store_cycle;
+  logic        is_compressed;
+  logic        fetch_cycle;
 
   ysyx_24080006_ifu IFU (.*);
   ysyx_24080006_id_stage ID (.*);
