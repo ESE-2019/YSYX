@@ -12,8 +12,7 @@ module ysyx_24080006_zcu
     zc_err = 1'b0;
     is_zc  = 1'b1;
     unique case (zc_val[1:0])
-      // C0
-      2'b00: begin
+      2'b00: begin  // C0
         unique case (zc_val[15:13])
           3'b000: begin  // c.addi4spn -> addi rd', x2, imm
             inst = {
@@ -126,22 +125,13 @@ module ysyx_24080006_zcu
             };
           end
 
-          3'b001, 3'b011, 3'b101, 3'b111: begin
-            zc_err = 1'b1;
-          end
-
           default: begin
             zc_err = 1'b1;
           end
         endcase
       end
 
-      // C1
-      //
-      // Register address checks for RV32E are performed in the regular instruction decoder.
-      // If this check fails, an illegal instruction exception is triggered and the controller
-      // writes the actual faulting instruction to mtval.
-      2'b01: begin
+      2'b01: begin  // C1
         unique case (zc_val[15:13])
           3'b000: begin
             // c.addi -> addi rd, rd, nzimm
@@ -390,10 +380,6 @@ module ysyx_24080006_zcu
             };
           end
 
-          3'b001, 3'b011, 3'b101, 3'b111: begin
-            zc_err = 1'b1;
-          end
-
           default: begin
             zc_err = 1'b1;
           end
@@ -403,9 +389,7 @@ module ysyx_24080006_zcu
       // not compressed.
       2'b11: is_zc = 1'b0;
 
-      default: begin
-        zc_err = 1'b1;
-      end
+      default: ;
     endcase
   end
 

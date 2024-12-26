@@ -25,7 +25,7 @@
  */
 #define MAX_INST_TO_PRINT 10
 
-CPU_state cpu = {.mstatus=0x1800, .mvendorid=0x79737978, .marchid=24080006};
+CPU_state cpu = {.mstatus = 0x1800, .mvendorid = 0x79737978, .marchid = 24080006};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
@@ -39,15 +39,17 @@ int iringbuf_index = 0;
 #endif
 #endif
 
-void print_iringbuf() {
+void print_iringbuf()
+{
 #ifdef CONFIG_ITRACE
 #ifndef CONFIG_ISA_loongarch32r
   // Log("print_iringbuf begin");
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++)
+  {
     if (i == iringbuf_index)
       Log(ANSI_FMT("^^^^^^^^^^^-^^-^^-^^-^^", ANSI_FG_YELLOW));
     else
-    Log("%s", iringbuf[i]);
+      Log("%s", iringbuf[i]);
   }
   // Log("print_iringbuf end");
 #endif
@@ -56,13 +58,16 @@ void print_iringbuf() {
 
 // iringbuf end
 
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
+static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
+{
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) {
+  if (ITRACE_COND)
+  {
     log_write("%s\n", _this->logbuf);
   }
 #endif
-  if (g_print_step) {
+  if (g_print_step)
+  {
     IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
   }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
@@ -70,7 +75,8 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   IFDEF(CONFIG_WATCHPOINT, wp_exec());
 }
 
-static void exec_once(Decode *s, vaddr_t pc) {
+static void exec_once(Decode *s, vaddr_t pc)
+{
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);
@@ -78,10 +84,11 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
+  int ilen = 4; // s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  for (i = ilen - 1; i >= 0; i--) {
+  for (i = ilen - 1; i >= 0; i--)
+  {
     p += snprintf(p, 4, " %02x", inst[i]);
   }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
@@ -97,22 +104,21 @@ static void exec_once(Decode *s, vaddr_t pc) {
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
               MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc),
               (uint8_t *)&s->isa.inst.val, ilen);
-  // snprintf(iringbuf[iringbuf_index], 128, "0x%08x: 0x%08x %s", pc,
-  // s->isa.inst.val, p);     //iringbuf
-  Log(ANSI_FMT(FMT_WORD, ANSI_BG_WHITE)" %s", cpu.pc, s->logbuf);
+  Log("%s", s->logbuf);
   strcpy(iringbuf[iringbuf_index], s->logbuf);
   if (iringbuf_index++ >= 15)
-    iringbuf_index = 0; // iringbuf
-                        // print_iringbuf();//iringbuf
+    iringbuf_index = 0;
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
 #endif
 }
 
-static void execute(uint64_t n) {
+static void execute(uint64_t n)
+{
   Decode s;
-  for (; n > 0; n--) {
+  for (; n > 0; n--)
+  {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst++;
     trace_and_difftest(&s, cpu.pc);
@@ -122,7 +128,8 @@ static void execute(uint64_t n) {
   }
 }
 
-static void statistic() {
+static void statistic()
+{
   IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
@@ -135,15 +142,18 @@ static void statistic() {
         "frequency");
 }
 
-void assert_fail_msg() {
+void assert_fail_msg()
+{
   isa_reg_display();
   statistic();
 }
 
 /* Simulate how the CPU works. */
-void cpu_exec(uint64_t n) {
+void cpu_exec(uint64_t n)
+{
   g_print_step = (n < MAX_INST_TO_PRINT);
-  switch (nemu_state.state) {
+  switch (nemu_state.state)
+  {
   case NEMU_END:
   case NEMU_ABORT:
     printf("Program execution has ended. To restart the program, exit NEMU and "
@@ -160,7 +170,8 @@ void cpu_exec(uint64_t n) {
   uint64_t timer_end = get_time();
   g_timer += timer_end - timer_start;
 
-  switch (nemu_state.state) {
+  switch (nemu_state.state)
+  {
   case NEMU_RUNNING:
     nemu_state.state = NEMU_STOP;
     break;

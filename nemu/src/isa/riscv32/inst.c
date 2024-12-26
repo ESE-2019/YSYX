@@ -197,7 +197,7 @@ uint32_t CSR_r(uint32_t imm)
   return *addr;
 }
 
-bool CSR_w(uint32_t imm, uint32_t data)
+void CSR_w(uint32_t imm, uint32_t data)
 {
   int csr = imm & 0xFFF;
   vaddr_t *addr;
@@ -205,15 +205,19 @@ bool CSR_w(uint32_t imm, uint32_t data)
   {
   case 0x300:
     addr = &cpu.mstatus;
+    *addr = data;
     break;
   case 0x305:
     addr = &cpu.mtvec;
+    *addr = data & 0xFFFFFFFC;
     break;
   case 0x341:
     addr = &cpu.mepc;
+    *addr = data & 0xFFFFFFFE;
     break;
   case 0x342:
     addr = &cpu.mcause;
+    *addr = data;
     break;
   case 0xf11:
     addr = &cpu.mvendorid;
@@ -225,11 +229,9 @@ bool CSR_w(uint32_t imm, uint32_t data)
     panic();
     break;
   }
-  *addr = data;
 #ifdef CONFIG_ETRACE
   Log(FMT_WORD "CSR_w csr%03X data" FMT_WORD, cpu.pc, imm, *addr);
 #endif
-  return true;
 }
 
 #ifdef CONFIG_FTRACE
@@ -403,12 +405,21 @@ static void print_cachesim()
 }
 
 extern void print_iringbuf();
+void compressed_decoder(uint32_t zc_val, uint32_t *inst, uint32_t *is_zc, uint32_t *zc_err);
+
 static int decode_exec(Decode *s)
 {
   cache_sim(s->pc);
+  uint32_t inst_c, is_zc_c, zc_err_c;
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0, uimm = 0, tmp = 0;
+  compressed_decoder((s)->isa.inst.val, &inst_c, &is_zc_c, &zc_err_c);
+  if (is_zc_c)
+    s->snpc = s->pc + 0x2;
   s->dnpc = s->snpc;
+  (s)->isa.inst.val = inst_c;
+  if (zc_err_c)
+    INV(s->pc);
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */)                \
@@ -474,7 +485,7 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and, R, R(rd) = src1 & src2);
   // fence
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(11, s->pc));
-  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_print(0)); IFDEF(CONFIG_ITRACE, print_iringbuf()); print_cachesim(); NEMUTRAP(s->pc, R(10)));
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, IFDEF(CONFIG_FTRACE, ftrace_print(0)); IFDEF(CONFIG_ITRACE, print_iringbuf()); print_cachesim(); isa_raise_intr(3, s->pc); NEMUTRAP(s->pc, R(10)));
 
   // RV32M Standard Extension
   INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul, R, R(rd) = (int64_t)src1 * (int64_t)src2);
@@ -487,7 +498,7 @@ static int decode_exec(Decode *s)
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R, R(rd) = __remu__(src1, src2));
 
   // others
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, s->dnpc = cpu.mepc; cpu.mstatus = 0x1880; IFDEF(CONFIG_ETRACE, Log("mret")););
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, s->dnpc = cpu.mepc; cpu.mstatus = 0x1880 | (BITS(cpu.mstatus, 7, 7) << 3); IFDEF(CONFIG_ETRACE, Log("mret")););
   INSTPAT("??????? ????? ????? ??? ????? 00011 11", MISC_MEM, N, ;);
 
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
@@ -501,4 +512,528 @@ int isa_exec_once(Decode *s)
 {
   s->isa.inst.val = inst_fetch(&s->snpc, 4);
   return decode_exec(s);
+}
+
+void compressed_decoder(uint32_t zc_val, uint32_t *inst, uint32_t *is_zc, uint32_t *zc_err)
+{
+  *inst = zc_val;
+  *is_zc = 1;
+  *zc_err = 0;
+
+  uint8_t c0 = zc_val & 0x3;
+  uint8_t c1 = (zc_val >> 13) & 0x7;
+
+  switch (c0)
+  {
+  case 0x0:
+  {
+    switch (c1)
+    {
+    case 0x0:
+    {
+      if (((zc_val >> 5) & 0xFF) == 0x0)
+      {
+        *zc_err = 1;
+      }
+      else
+      {
+        *inst = (0 << 30) |
+                ((zc_val >> 7) & 0xF) << 26 |
+                ((zc_val >> 11) & 0x3) << 24 |
+                ((zc_val >> 5) & 0x1) << 23 |
+                ((zc_val >> 6) & 0x1) << 22 |
+                (0 << 20) |
+                (0x2 << 15) |
+                (0 << 12) |
+                (0x1 << 10) |
+                ((zc_val >> 2) & 0x7) << 7 |
+                0x13;
+      }
+    }
+    break;
+
+    case 0x2:
+    {
+      *inst = (0 << 27) |
+              ((zc_val >> 5) & 0x1) << 26 |
+              ((zc_val >> 10) & 0x7) << 23 |
+              ((zc_val >> 6) & 0x1) << 22 |
+              (0 << 20) |
+              (0x1 << 18) |
+              ((zc_val >> 7) & 0x7) << 15 |
+              (0x2 << 12) |
+              (0x1 << 10) |
+              ((zc_val >> 2) & 0x7) << 7 |
+              0x03;
+    }
+    break;
+
+    case 0x4:
+    {
+      uint8_t c2 = (zc_val >> 10) & 0x7;
+      switch (c2)
+      {
+      case 0x0:
+      {
+        *inst = (0 << 22) |
+                ((zc_val >> 5) & 0x1) << 21 |
+                ((zc_val >> 6) & 0x1) << 20 |
+                (0x1 << 18) |
+                ((zc_val >> 7) & 0x7) << 15 |
+                (0x4 << 12) |
+                (0x1 << 10) |
+                ((zc_val >> 2) & 0x7) << 7 |
+                0x03;
+      }
+      break;
+      case 0x1:
+      {
+        if (!((zc_val >> 6) & 0x1))
+        {
+          *inst = (0 << 22) |
+                  ((zc_val >> 5) & 0x1) << 21 |
+                  (0x1 << 18) |
+                  ((zc_val >> 7) & 0x7) << 15 |
+                  (0x5 << 12) |
+                  (0x1 << 10) |
+                  ((zc_val >> 2) & 0x7) << 7 |
+                  0x03;
+        }
+        else
+        {
+          *inst = (0 << 22) |
+                  ((zc_val >> 5) & 0x1) << 21 |
+                  (0x1 << 18) |
+                  ((zc_val >> 7) & 0x7) << 15 |
+                  (0x1 << 12) |
+                  (0x1 << 10) |
+                  ((zc_val >> 2) & 0x7) << 7 |
+                  0x03;
+        }
+      }
+      break;
+      case 0x2:
+      {
+        *inst = (0x0 << 12) |
+                (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                ((zc_val >> 6) & 0x1) << 7 |
+                ((zc_val >> 5) & 0x1) << 8 |
+                0x23;
+      }
+      break;
+      case 0x3:
+      {
+        if (!((zc_val >> 6) & 0x1))
+        {
+          *inst = (0x1 << 12) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  ((zc_val >> 5) & 0x1) << 8 |
+                  0x23;
+        }
+        else
+        {
+          *zc_err = 1;
+        }
+      }
+      break;
+      default:
+      {
+        *zc_err = 1;
+      }
+      break;
+      }
+    }
+    break;
+
+    case 0x6:
+    {
+      *inst = (0x2 << 12) |
+              (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+              (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+              ((zc_val >> 10) & 0x3) << 10 |
+              ((zc_val >> 6) & 0x1) << 9 |
+              ((zc_val >> 5) & 0x1) << 26 |
+              ((zc_val >> 12) & 0x1) << 25 |
+              0x23;
+    }
+    break;
+    default:
+    {
+      *zc_err = 1;
+    }
+    break;
+    }
+  }
+  break;
+  case 0x1:
+  {
+    switch (c1)
+    {
+    case 0x0:
+    {
+      *inst = (0x0 << 12) |
+              ((zc_val >> 7) & 0x1F) << 7 |
+              ((zc_val >> 7) & 0x1F) << 15 |
+              ((zc_val >> 2) & 0x1F) << 20 |
+              ((zc_val >> 12) & 0x1) << 31 |
+              ((zc_val >> 12) & 0x1) << 30 |
+              ((zc_val >> 12) & 0x1) << 29 |
+              ((zc_val >> 12) & 0x1) << 28 |
+              ((zc_val >> 12) & 0x1) << 27 |
+              ((zc_val >> 12) & 0x1) << 26 |
+              ((zc_val >> 12) & 0x1) << 25 |
+              0x13;
+    }
+    break;
+
+    case 0x1:
+    case 0x5:
+    {
+      *inst = ((zc_val >> 12) & 0x1) << 31 |
+              ((zc_val >> 8) & 0x1) << 30 |
+              ((zc_val >> 9) & 0x3) << 28 |
+              ((zc_val >> 6) & 0x1) << 27 |
+              ((zc_val >> 7) & 0x1) << 26 |
+              ((zc_val >> 2) & 0x1) << 25 |
+              ((zc_val >> 11) & 0x1) << 24 |
+              ((zc_val >> 3) & 0x7) << 21 |
+              ((zc_val >> 12) & 0x1) << 20 |
+              ((zc_val >> 12) & 0x1) << 19 |
+              ((zc_val >> 12) & 0x1) << 18 |
+              ((zc_val >> 12) & 0x1) << 17 |
+              ((zc_val >> 12) & 0x1) << 16 |
+              ((zc_val >> 12) & 0x1) << 15 |
+              ((zc_val >> 12) & 0x1) << 14 |
+              ((zc_val >> 12) & 0x1) << 13 |
+              ((zc_val >> 12) & 0x1) << 12 |
+              (~(zc_val >> 15) & 0x1) << 7 |
+              0x6F;
+    }
+    break;
+
+    case 0x2:
+    {
+      *inst = (0x0 << 12) |
+              ((zc_val >> 7) & 0x1F) << 7 |
+              ((zc_val >> 2) & 0x1F) << 20 |
+              ((zc_val >> 12) & 0x1) << 31 |
+              ((zc_val >> 12) & 0x1) << 30 |
+              ((zc_val >> 12) & 0x1) << 29 |
+              ((zc_val >> 12) & 0x1) << 28 |
+              ((zc_val >> 12) & 0x1) << 27 |
+              ((zc_val >> 12) & 0x1) << 26 |
+              ((zc_val >> 12) & 0x1) << 25 |
+              0x13;
+    }
+    break;
+
+    case 0x3:
+    {
+      if (((zc_val >> 7) & 0x1F) != 0x2)
+      {
+        *inst = ((zc_val >> 12) & 0x1) << 31 |
+                ((zc_val >> 12) & 0x1) << 30 |
+                ((zc_val >> 12) & 0x1) << 29 |
+                ((zc_val >> 12) & 0x1) << 28 |
+                ((zc_val >> 12) & 0x1) << 27 |
+                ((zc_val >> 12) & 0x1) << 26 |
+                ((zc_val >> 12) & 0x1) << 25 |
+                ((zc_val >> 12) & 0x1) << 24 |
+                ((zc_val >> 12) & 0x1) << 23 |
+                ((zc_val >> 12) & 0x1) << 22 |
+                ((zc_val >> 12) & 0x1) << 21 |
+                ((zc_val >> 12) & 0x1) << 20 |
+                ((zc_val >> 12) & 0x1) << 19 |
+                ((zc_val >> 12) & 0x1) << 18 |
+                ((zc_val >> 12) & 0x1) << 17 |
+                ((zc_val >> 2) & 0x1F) << 12 |
+                ((zc_val >> 7) & 0x1F) << 7 |
+                0x37;
+      }
+      else
+      {
+        *inst = ((zc_val >> 12) & 0x1) << 31 |
+                ((zc_val >> 12) & 0x1) << 30 |
+                ((zc_val >> 12) & 0x1) << 29 |
+                ((zc_val >> 3) & 0x3) << 27 |
+                ((zc_val >> 5) & 0x1) << 26 |
+                ((zc_val >> 2) & 0x1) << 25 |
+                ((zc_val >> 6) & 0x1) << 24 |
+                0x2 << 15 |
+                0x2 << 7 |
+                0x13;
+      }
+      if (!((zc_val >> 12) & 0x1) && !((zc_val >> 2) & 0x1F))
+      {
+        *zc_err = 1;
+      }
+    }
+    break;
+
+    case 0x4:
+    {
+      uint8_t c2 = (zc_val >> 10) & 0x3;
+      switch (c2)
+      {
+      case 0x0:
+      case 0x1:
+      {
+        *inst = ((zc_val >> 10) & 0x1) << 30 |
+                ((zc_val >> 2) & 0x1F) << 20 |
+                (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                0x5 << 12 |
+                0x13;
+        if ((zc_val >> 12) & 0x1)
+        {
+          *zc_err = 1;
+        }
+      }
+      break;
+      case 0x2:
+      {
+        *inst = (0x7 << 12) |
+                (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                ((zc_val >> 2) & 0x1F) << 20 |
+                ((zc_val >> 12) & 0x1) << 31 |
+                ((zc_val >> 12) & 0x1) << 30 |
+                ((zc_val >> 12) & 0x1) << 29 |
+                ((zc_val >> 12) & 0x1) << 28 |
+                ((zc_val >> 12) & 0x1) << 27 |
+                ((zc_val >> 12) & 0x1) << 26 |
+                ((zc_val >> 12) & 0x1) << 25 |
+                0x13;
+      }
+      break;
+      case 0x3:
+      {
+        uint8_t c3 = ((zc_val >> 12) & 0x1) << 2 | ((zc_val >> 5) & 0x3);
+        switch (c3)
+        {
+        case 0x0:
+        {
+          *inst = (0x1 << 30) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                  0x33;
+        }
+        break;
+        case 0x1:
+        {
+          *inst = (0x4 << 12) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                  0x33;
+        }
+        break;
+        case 0x2:
+        {
+          *inst = (0x6 << 12) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                  0x33;
+        }
+        break;
+        case 0x3:
+        {
+          *inst = (0x7 << 12) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                  0x33;
+        }
+        break;
+        case 0x6:
+        {
+          *inst = (0x1 << 25) |
+                  (0x8 + ((zc_val >> 2) & 0x7)) << 20 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                  (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                  0x33;
+          if (((zc_val >> 10) & 0x3) != 0x3)
+          {
+            *zc_err = 1;
+          }
+        }
+        break;
+        case 0x7:
+        {
+          uint8_t c4 = (zc_val >> 2) & 0x7;
+          switch (c4)
+          {
+          case 0x0:
+          {
+            *inst = (0x0FF << 20) |
+                    (0x7 << 12) |
+                    (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                    (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                    0x13;
+          }
+          break;
+          case 0x5:
+          {
+            *inst = (0xFFF << 20) |
+                    (0x4 << 12) |
+                    (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+                    (0x8 + ((zc_val >> 7) & 0x7)) << 7 |
+                    0x13;
+          }
+          break;
+          default:
+          {
+            *zc_err = 1;
+          }
+          break;
+          }
+        }
+        break;
+        default:
+        {
+          *zc_err = 1;
+        }
+        break;
+        }
+      }
+      break;
+      default:
+      {
+        *zc_err = 1;
+      }
+      break;
+      }
+    }
+    break;
+    case 0x6:
+    case 0x7:
+    {
+      *inst = ((zc_val >> 12) & 0x1) << 31 |
+              ((zc_val >> 12) & 0x1) << 30 |
+              ((zc_val >> 12) & 0x1) << 29 |
+              ((zc_val >> 12) & 0x1) << 28 |
+              ((zc_val >> 5) & 0x3) << 26 |
+              ((zc_val >> 2) & 0x1) << 25 |
+              (0x8 + ((zc_val >> 7) & 0x7)) << 15 |
+              ((zc_val >> 13) & 0x1) << 12 |
+              ((zc_val >> 10) & 0x3) << 10 |
+              ((zc_val >> 3) & 0x3) << 8 |
+              ((zc_val >> 12) & 0x1) << 7 |
+              0x63;
+    }
+    break;
+    default:
+    {
+      *zc_err = 1;
+    }
+    break;
+    }
+  }
+  break;
+  case 0x2:
+  {
+    switch (c1)
+    {
+    case 0x0:
+    {
+      *inst = (0x1 << 12) |
+              ((zc_val >> 7) & 0x1F) << 15 |
+              ((zc_val >> 7) & 0x1F) << 7 |
+              ((zc_val >> 2) & 0x1F) << 20 |
+              0x13;
+      if ((zc_val >> 12) & 0x1)
+      {
+        *zc_err = 1;
+      }
+    }
+    break;
+    case 0x2:
+    {
+      *inst = (0x2 << 12) |
+              (0x2 << 15) |
+              ((zc_val >> 7) & 0x1F) << 7 |
+              ((zc_val >> 4) & 0x7) << 22 |
+              ((zc_val >> 12) & 0x1) << 25 |
+              ((zc_val >> 2) & 0x3) << 26 |
+              0x03;
+      if (((zc_val >> 7) & 0x1F) == 0x0)
+      {
+        *zc_err = 1;
+      }
+    }
+    break;
+    case 0x4:
+    {
+      if (!((zc_val >> 12) & 0x1))
+      {
+        if ((zc_val >> 2) & 0x1F)
+        {
+          *inst = ((zc_val >> 2) & 0x1F) << 20 |
+                  ((zc_val >> 7) & 0x1F) << 7 |
+                  0x33;
+        }
+        else
+        {
+          *inst = ((zc_val >> 7) & 0x1F) << 15 |
+                  0x67;
+          if (((zc_val >> 7) & 0x1F) == 0x0)
+          {
+            *zc_err = 1;
+          }
+        }
+      }
+      else
+      {
+        if ((zc_val >> 2) & 0x1F)
+        {
+          *inst = ((zc_val >> 7) & 0x1F) << 7 |
+                  ((zc_val >> 2) & 0x1F) << 20 |
+                  ((zc_val >> 7) & 0x1F) << 15 |
+                  0x33;
+        }
+        else
+        {
+          if (((zc_val >> 7) & 0x1F) == 0x0)
+          {
+            *inst = 0x00100073;
+          }
+          else
+          {
+            *inst = ((zc_val >> 7) & 0x1F) << 15 |
+                    0x1 << 7 |
+                    0x67;
+          }
+        }
+      }
+    }
+    break;
+    case 0x6:
+    {
+      *inst = (0x2 << 12) |
+              ((zc_val >> 2) & 0x1F) << 20 |
+              ((zc_val >> 7) & 0x3) << 26 |
+              ((zc_val >> 12) & 0x1) << 25 |
+              0x2 << 15 |
+              ((zc_val >> 9) & 0x7) << 9 |
+              0x23;
+    }
+    break;
+    default:
+    {
+      *zc_err = 1;
+    }
+    break;
+    }
+  }
+  break;
+  case 0x3:
+  {
+    *is_zc = 0;
+  }
+  break;
+  }
 }
