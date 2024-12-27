@@ -413,14 +413,15 @@ static int decode_exec(Decode *s)
   uint32_t inst_c, is_zc_c, zc_err_c;
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0, uimm = 0, tmp = 0;
-  compressed_decoder((s)->isa.inst.val, &inst_c, &is_zc_c, &zc_err_c);
+  compressed_decoder(s->isa.inst.val, &inst_c, &is_zc_c, &zc_err_c);
   if (is_zc_c)
     s->snpc = s->pc + 0x2;
   s->dnpc = s->snpc;
-  (s)->isa.inst.val = inst_c;
+  s->isa.inst.val = inst_c;
   if (zc_err_c)
     INV(s->pc);
-
+  if (s->isa.inst.val == 0x10500073) // wfi
+    s->isa.inst.val = 0x00100073;    // for npc difftest
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */)                \
   {                                                                         \

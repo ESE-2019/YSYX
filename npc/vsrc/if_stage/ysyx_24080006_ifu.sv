@@ -377,7 +377,7 @@ module ysyx_24080006_ifu
       if (exu_dbg_inst == WFI_INST || exu_dbg_inst == EBREAK_INST) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
-      else retire_pc <= exu2ifu.pc + 32'h4;
+      else retire_pc <= exu2ifu.pc + (exu2ifu.is_zc ? 32'h2 : 32'h4);
     end else retire <= 1'b0;
     if (retire) begin
       retirement(retire_pc);

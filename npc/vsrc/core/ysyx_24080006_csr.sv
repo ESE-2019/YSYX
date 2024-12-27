@@ -183,4 +183,16 @@ module ysyx_24080006_csr
     );
   end
 
+`ifdef SIM_MODE
+  import "DPI-C" function void SKIP_DIFFTEST();
+  always_ff @(posedge clock) begin
+    if (csr_set.csr_enable)
+      unique case (csr_name)
+        MSTATUS, MTVEC, MEPC, MCAUSE, MVENDORID, MARCHID: ;
+        default: SKIP_DIFFTEST();
+      endcase
+  end
+
+`endif
+
 endmodule

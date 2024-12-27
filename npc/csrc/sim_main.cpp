@@ -71,7 +71,8 @@ VerilatedContext *contextp;
 VysyxSoCFull *top;
 extern "C" void ebreak()
 {
-
+    if (DIFF_EN)
+        difftest_exec(1);
     ebreak_n = false;
     if (0 == NPC_REG[10])
         TRAP = true;
@@ -1368,6 +1369,7 @@ int main(int argc, char **argv)
         }
         if (strcmp(argv[i_argc], "-fast") == 0)
         {
+            printf("[cmd]fast sim\n");
             LOG = 0;
             WAVE = 0;
             SDB = 0;
@@ -1375,6 +1377,11 @@ int main(int argc, char **argv)
             IT_EN = 0;
             FT_EN = 0;
             FLASH_TRACE = 0;
+        }
+        if (strcmp(argv[i_argc], "-difftest") == 0)
+        {
+            printf("[cmd]enable difftest\n");
+            DIFF_EN = 1;
         }
     }
     load_img();

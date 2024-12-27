@@ -7,7 +7,7 @@ ASFLAGS       += $(COMMON_CFLAGS)
 ARCH_H        := arch/riscv.h
 LDSCRIPTS     += $(AM_HOME)/scripts/soc-linker.ld
 LDFLAGS       += -melf32lriscv --gc-sections -e _start
-#SIM_FLAGS     := -fast
+SIM_FLAGS     := -fast -difftest
 
 AM_SRCS += riscv/soc/start.S \
            riscv/soc/trm.c \
@@ -32,6 +32,6 @@ image: image-dep
 	$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	make -C $(NPC_HOME) sim SIM_IMG=$(IMAGE).bin SIM_FLAGS=$(SIM_FLAGS) SIM_MODE="-DSOC_MODE=1"
+	make -C $(NPC_HOME) sim SIM_IMG=$(IMAGE).bin SIM_FLAGS="$(SIM_FLAGS)" SIM_MODE="-DSOC_MODE=1"
 
 .PHONY: insert-arg

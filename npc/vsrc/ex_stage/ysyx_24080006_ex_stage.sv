@@ -177,6 +177,7 @@ module ysyx_24080006_ex_stage
       unique case (curr)
         EX_IDLE: begin
           if (idu2exu.valid) begin
+            exu2ifu.is_zc <= idu2exu.is_zc;
             exu2ifu.pc <= idu2exu.pc;  // for diff test only
             exu2ifu.dnpc <= dnpc;
             exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
