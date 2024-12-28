@@ -38,9 +38,9 @@ module ysyx_24080006_ifu
   assign ifu2icu_ready = 1'b1;
 
   logic detect_hazard_q, detect_hazard_d;
-  logic [31:0] ic_val, zc_val;
-  logic is_zc_d, is_zc_q;
-  logic zc_err;
+  logic [31:0] ic_val, inst_i;
+  logic rv16_d, rv16_q;
+  logic rv16_err;
   logic [31:0] pc_d, pc_q;
   logic [31:0] fetch_addr_d, fetch_addr_q;
   logic [15:0] inst_buf;
@@ -68,7 +68,7 @@ module ysyx_24080006_ifu
         next = IF_EXEC;
       end
       IF_EXEC: begin
-        if (icu2ifu_valid && (!fetch_twice | is_zc_d)) begin
+        if (icu2ifu_valid && (!fetch_twice | rv16_d)) begin
           next = IF_WAIT;
         end else begin
           next = curr;
@@ -111,7 +111,7 @@ module ysyx_24080006_ifu
           ifu2idu.valid <= 1'b0;
         end
         IF_EXEC: begin
-          if (icu2ifu_valid && (!fetch_twice | is_zc_d)) begin
+          if (icu2ifu_valid && (!fetch_twice | rv16_d)) begin
             ifu2exu_ready <= 1'b1;
             ifu2idu.valid <= 1'b1;
           end else begin
@@ -152,7 +152,7 @@ module ysyx_24080006_ifu
       fetch_addr_d = {pc_d[31:2], 2'b00};
     end else begin
       unique case ({
-        pc_q[1], is_zc_q
+        pc_q[1], rv16_q
       })
         2'b00: begin
           pc_d = pc_q + 32'h4;
@@ -185,10 +185,10 @@ module ysyx_24080006_ifu
       pc_q <= RST_ADDR;
       fetch_addr_q <= RST_ADDR;
       ifu2idu.pc <= RST_ADDR;
-      ifu2idu.is_zc <= 1'b0;
+      ifu2idu.rv16 <= 1'b0;
       ifu2idu.flush <= 1'b0;
       inst_q <= 32'b0;
-      is_zc_q <= 1'b0;
+      rv16_q <= 1'b0;
       fetch_twice <= 1'b0;
       inst_buf <= 16'b0;
       detect_hazard_q <= 1'b0;
@@ -212,13 +212,13 @@ module ysyx_24080006_ifu
             if (icu2ifu_valid) begin
               inst_buf <= ic_val[31:16];
               if (fetch_twice) begin
-                if (is_zc_d) begin  // fetch_twice_terminated
-                  is_zc_q <= is_zc_d;
+                if (rv16_d) begin  // fetch_twice_terminated
+                  rv16_q <= rv16_d;
                   ifu2idu.pc <= pc_q;
                   inst_q <= inst_d;
                   detect_hazard_q <= detect_hazard_d;
-                  ifu2idu.is_zc <= is_zc_d;
-                  ifu2idu.zc_err <= zc_err;
+                  ifu2idu.rv16 <= rv16_d;
+                  ifu2idu.rv16_err <= rv16_err;
                   ifu2idu.flush <= detect_hazard_d;
                   fetch_twice_terminated <= 1'b1;
                 end else begin  // fetch_twice
@@ -228,12 +228,12 @@ module ysyx_24080006_ifu
                   fetch_twice_terminated <= 1'b0;
                 end
               end else begin  // common case
-                is_zc_q <= is_zc_d;
+                rv16_q <= rv16_d;
                 ifu2idu.pc <= pc_q;
                 inst_q <= inst_d;
                 detect_hazard_q <= detect_hazard_d;
-                ifu2idu.is_zc <= is_zc_d;
-                ifu2idu.zc_err <= zc_err;
+                ifu2idu.rv16 <= rv16_d;
+                ifu2idu.rv16_err <= rv16_err;
                 ifu2idu.flush <= detect_hazard_d;
               end
             end
@@ -266,21 +266,21 @@ module ysyx_24080006_ifu
 
   always_comb begin
     if (fetch_twice) begin  // fetch_twice occurs in misaligned pc
-      zc_val = {16'b0, ic_val[31:16]};
+      inst_i = {16'b0, ic_val[31:16]};
     end else begin
-      zc_val = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
+      inst_i = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
     end
   end
 
   wire [31:0] fetch_addr = fetch_addr_q;
   ysyx_24080006_icu ICU (.*);
-  ysyx_24080006_zcu ZCU (
+  ysyx_24080006_rv16 RV16 (
       .*,
-      .is_zc(is_zc_d),
-      .inst (inst_d)
+      .rv16(rv16_d),
+      .inst_o (inst_d)
   );
 
-  assign is_compressed = ifu2idu.is_zc & ifu2idu.valid & idu2ifu_ready;
+  assign is_compressed = ifu2idu.rv16 & ifu2idu.valid & idu2ifu_ready;
   assign fetch_cycle   = curr == IF_EXEC;
 
 `ifdef SIM_MODE
@@ -377,7 +377,7 @@ module ysyx_24080006_ifu
       if (exu_dbg_inst == WFI_INST || exu_dbg_inst == EBREAK_INST) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
-      else retire_pc <= exu2ifu.pc + (exu2ifu.is_zc ? 32'h2 : 32'h4);
+      else retire_pc <= exu2ifu.pc + (exu2ifu.rv16 ? 32'h2 : 32'h4);
     end else retire <= 1'b0;
     if (retire) begin
       retirement(retire_pc);

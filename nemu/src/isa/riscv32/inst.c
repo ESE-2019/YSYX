@@ -286,6 +286,7 @@ static void ftrace_print(const uint32_t addr)
 }
 #endif
 
+#ifdef CONFIG_CACHESIM
 #define CACHE_SIZE 2 // index
 #define CACHE_WAY 1
 #define CACHE_LINE 3 // 0-4b 1-8b 2-16b 3-32b
@@ -296,11 +297,26 @@ typedef struct
   uint32_t pc[CACHE_WAY];
   uint8_t del;
 } cachesim_t;
-
 static cachesim_t dummy_cache[CACHE_SIZE];
 static int hit_num = 0, miss_num = 0;
+#define DCACHE_SIZE 1 // index
+#define DCACHE_WAY 1
+#define DCACHE_LINE 0 // 0-4b 1-8b 2-16b 3-32b
+
+typedef struct
+{
+  bool vld[DCACHE_WAY];
+  uint32_t addr[DCACHE_WAY];
+  uint8_t del;
+} Dcachesim_t;
+
+static Dcachesim_t Ddummy_cache[DCACHE_SIZE];
+static int Dhit_num = 0, Dmiss_num = 0;
+static uint32_t b_hit = 0, b_miss = 0;
+#endif
 static void cache_sim(uint32_t pc)
 {
+#ifdef CONFIG_CACHESIM
   if (pc < 0x30000000)
     return;
 
@@ -331,23 +347,12 @@ static void cache_sim(uint32_t pc)
 
   if (dummy_cache[index].del >= CACHE_WAY)
     dummy_cache[index].del = 0;
+#endif
 }
 
-#define DCACHE_SIZE 1 // index
-#define DCACHE_WAY 1
-#define DCACHE_LINE 0 // 0-4b 1-8b 2-16b 3-32b
-
-typedef struct
-{
-  bool vld[DCACHE_WAY];
-  uint32_t addr[DCACHE_WAY];
-  uint8_t del;
-} Dcachesim_t;
-
-static Dcachesim_t Ddummy_cache[DCACHE_SIZE];
-static int Dhit_num = 0, Dmiss_num = 0;
 static void Dcache_sim(uint32_t addr)
 {
+#ifdef CONFIG_CACHESIM
   if (addr < 0xa0000000)
     return;
 
@@ -378,11 +383,12 @@ static void Dcache_sim(uint32_t addr)
 
   if (Ddummy_cache[index].del >= DCACHE_WAY)
     Ddummy_cache[index].del = 0;
+#endif
 }
 
-uint32_t b_hit = 0, b_miss = 0;
 void branch_sim(bool cond, int imm)
 {
+#ifdef CONFIG_CACHESIM
   bool pred = imm < 0;
   if (pred == cond)
   {
@@ -392,25 +398,29 @@ void branch_sim(bool cond, int imm)
   {
     b_miss++;
   }
+#endif
 }
 
 static void print_cachesim()
 {
+#ifdef CONFIG_CACHESIM
   double num = 100 * (double)hit_num / (double)(hit_num + miss_num);
   printf("I$ H/(H+M) = %.3f%% \n", num);
   num = 100 * (double)Dhit_num / (double)(Dhit_num + Dmiss_num);
   printf("D$ H/(H+M) = %.3f%% \n", num);
   num = 100 * (double)b_hit / (double)(b_hit + b_miss);
   printf("BRANCH H/(H+M) = %.3f%% \n", num);
+#endif
 }
 
 extern void print_iringbuf();
-void compressed_decoder(uint32_t zc_val, uint32_t *inst, uint32_t *is_zc, uint32_t *zc_err);
+void compressed_decoder(uint32_t zc_val, uint32_t *inst, bool *is_zc, bool *zc_err);
 
 static int decode_exec(Decode *s)
 {
   cache_sim(s->pc);
-  uint32_t inst_c, is_zc_c, zc_err_c;
+  uint32_t inst_c;
+  bool is_zc_c, zc_err_c;
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0, uimm = 0, tmp = 0;
   compressed_decoder(s->isa.inst.val, &inst_c, &is_zc_c, &zc_err_c);
@@ -515,7 +525,7 @@ int isa_exec_once(Decode *s)
   return decode_exec(s);
 }
 
-void compressed_decoder(uint32_t zc_val, uint32_t *inst, uint32_t *is_zc, uint32_t *zc_err)
+void compressed_decoder(uint32_t zc_val, uint32_t *inst, bool *is_zc, bool *zc_err)
 {
   *inst = zc_val;
   *is_zc = 1;

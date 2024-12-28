@@ -140,7 +140,7 @@ module ysyx_24080006_id_stage
       idu2exu.rs1_data <= 32'b0;
       idu2exu.rs2_data <= 32'b0;
       idu2exu.csr_rdata <= 32'b0;
-      idu2exu.is_zc <= 1'b0;
+      idu2exu.rv16 <= 1'b0;
       idu2exu.flush <= 1'b0;
       csr_wdata <= 32'b0;
       detect_hazard_q <= 2'b0;
@@ -155,7 +155,7 @@ module ysyx_24080006_id_stage
             idu2exu.rs1_data <= rs1_data;  //for jalr
             idu2exu.rs2_data <= rs2_data;  //for store
             idu2exu.csr_rdata <= csr_rdata;
-            idu2exu.is_zc <= ifu2idu.is_zc;
+            idu2exu.rv16 <= ifu2idu.rv16;
             idu2exu.flush <= ifu2idu.flush;
             csr_wdata <= rs1_data;
             detect_hazard_q <= detect_hazard_d;
@@ -184,7 +184,7 @@ module ysyx_24080006_id_stage
           idu2exu.rs1_data <= 32'b0;
           idu2exu.rs2_data <= 32'b0;
           idu2exu.csr_rdata <= 32'b0;
-          idu2exu.is_zc <= 1'b0;
+          idu2exu.rv16 <= 1'b0;
           idu2exu.flush <= 1'b0;
           csr_wdata <= 32'b0;
           detect_hazard_q <= 2'b0;
@@ -195,7 +195,7 @@ module ysyx_24080006_id_stage
 
   logic inst_err;
   ysyx_24080006_idu IDU (.*);
-  wire illegal_inst = inst_err | ifu2idu.zc_err;
+  wire illegal_inst = inst_err | ifu2idu.rv16_err;
 
   assign rs1_addr = idu.rs1_addr;
   assign rs2_addr = idu.rs2_addr;
@@ -211,7 +211,7 @@ module ysyx_24080006_id_stage
     unique case (idu.alu_set.alu_b)
       IMM:     alu_b = idu.imm;
       RS2:     alu_b = rs2_data;
-      PC_INCR: alu_b = ifu2idu.is_zc ? 32'h2 : 32'h4;
+      PC_INCR: alu_b = ifu2idu.rv16 ? 32'h2 : 32'h4;
       CSR:     alu_b = csr_rdata;
       default: alu_b = 32'h4;
     endcase
