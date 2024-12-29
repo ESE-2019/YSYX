@@ -276,8 +276,8 @@ module ysyx_24080006_ifu
   ysyx_24080006_icu ICU (.*);
   ysyx_24080006_rv16 RV16 (
       .*,
-      .rv16(rv16_d),
-      .inst_o (inst_d)
+      .rv16  (rv16_d),
+      .inst_o(inst_d)
   );
 
   assign is_compressed = ifu2idu.rv16 & ifu2idu.valid & idu2ifu_ready;

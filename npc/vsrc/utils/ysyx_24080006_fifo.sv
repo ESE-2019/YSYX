@@ -74,7 +74,7 @@ module ysyx_24080006_fifo #(
       foreach (fifo_ram[i]) fifo_ram[i] <= '0;
     end else begin
       if (fifo_wren && ~fifo_full) begin
-        fifo_ram[wr_ptr_q] = fifo_wdata;
+        fifo_ram[wr_ptr_q] <= fifo_wdata;
       end
     end
   end

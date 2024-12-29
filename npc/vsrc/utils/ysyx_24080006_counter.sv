@@ -1,5 +1,4 @@
-module ysyx_24080006_counter
-(
+module ysyx_24080006_counter (
     input logic clock,
     input logic reset,
 
@@ -22,7 +21,7 @@ module ysyx_24080006_counter
       counter_high_d = counter_high_q;
       counter_low_d  = counter_wdata;
     end else if (counter_incr_en) begin
-      {counter_high_d, counter_low_d} = {counter_high_q, counter_low_q} + 64'b1;
+      {counter_high_d, counter_low_d} = {counter_high_q, counter_low_q} + 64'h1;
     end else begin
       {counter_high_d, counter_low_d} = {counter_high_q, counter_low_q};
     end
