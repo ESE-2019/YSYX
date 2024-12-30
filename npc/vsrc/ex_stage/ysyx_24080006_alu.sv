@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_alu
   import ysyx_24080006_pkg::*;
 (
@@ -104,3 +106,5 @@ module ysyx_24080006_alu
   end
 
 endmodule
+
+`default_nettype wire

@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_ifu
   import ysyx_24080006_pkg::*;
 (
@@ -385,3 +387,5 @@ module ysyx_24080006_ifu
   end
 `endif
 endmodule
+
+`default_nettype wire

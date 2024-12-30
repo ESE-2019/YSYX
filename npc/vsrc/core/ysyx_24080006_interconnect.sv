@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_interconnect
   import ysyx_24080006_pkg::*;
 (
@@ -219,3 +221,5 @@ module ysyx_24080006_interconnect
   assign imd_r_s2m.rlast = imd_r_m2s.araddr >= 32'h0200_ffff ? core_r_s2m.rlast : clint_r_s2m.rlast;
 
 endmodule
+
+`default_nettype wire

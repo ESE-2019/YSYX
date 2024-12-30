@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006 (
     input logic clock,
     input logic reset,
@@ -151,3 +153,5 @@ module ysyx_24080006 (
   //assign core_r_s2m.rid = io_master_rid;
 
 endmodule
+
+`default_nettype wire

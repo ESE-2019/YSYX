@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_ex_stage
   import ysyx_24080006_pkg::*;
 (
@@ -337,3 +339,5 @@ module ysyx_24080006_ex_stage
   end
 `endif
 endmodule
+
+`default_nettype wire

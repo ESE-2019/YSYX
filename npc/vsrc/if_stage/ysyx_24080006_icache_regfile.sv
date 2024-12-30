@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_icache_regfile
   import ysyx_24080006_pkg::*;
 (
@@ -22,3 +24,5 @@ module ysyx_24080006_icache_regfile
   end
   assign ic_rdata = ic_we && (ic_index == ic_waddr) ? ic_wdata : Memory[ic_index];
 endmodule
+
+`default_nettype wire

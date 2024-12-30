@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_reg
   import ysyx_24080006_pkg::*;
 (
@@ -32,3 +34,5 @@ module ysyx_24080006_reg
   assign rs2_data = forward_2 ? rd_data : regfile[rs2_addr];  //forward_2 ? rd_data :
 
 endmodule
+
+`default_nettype wire

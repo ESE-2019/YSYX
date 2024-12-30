@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_rv16
   import ysyx_24080006_pkg::*;
 (
@@ -308,3 +310,5 @@ module ysyx_24080006_rv16
   end
 
 endmodule
+
+`default_nettype wire

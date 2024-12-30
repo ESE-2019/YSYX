@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_core
   import ysyx_24080006_pkg::*;
 (
@@ -57,3 +59,5 @@ module ysyx_24080006_core
       .instret(exu2ifu.valid & ifu2exu_ready)
   );
 endmodule
+
+`default_nettype wire

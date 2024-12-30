@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_pc
   import ysyx_24080006_pkg::*;
 (
@@ -7,3 +9,5 @@ module ysyx_24080006_pc
 
 
 endmodule
+
+`default_nettype wire

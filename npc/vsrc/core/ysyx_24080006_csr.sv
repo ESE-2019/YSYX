@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ysyx_24080006_csr
   import ysyx_24080006_pkg::*;
 (
@@ -196,3 +198,5 @@ module ysyx_24080006_csr
 `endif
 
 endmodule
+
+`default_nettype wire
