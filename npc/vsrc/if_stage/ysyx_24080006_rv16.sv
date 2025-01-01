@@ -9,29 +9,6 @@ module ysyx_24080006_rv16
     output logic        rv16_err
 );
 
-  // Quadrant 0
-  localparam logic [1:0] C0 = 2'b00;
-  localparam logic [2:0] C0ADDI4SPN = 3'b000;
-  localparam logic [2:0] C0LW = 3'b010;
-  localparam logic [2:0] C0ZCB = 3'b100;
-  localparam logic [2:0] C0SW = 3'b110;
-  // Quadrant 1
-  localparam logic [1:0] C1 = 2'b01;
-  localparam logic [2:0] C1ADDI = 3'b000;
-  localparam logic [2:0] C1JAL = 3'b001;
-  localparam logic [2:0] C1LI = 3'b010;
-  localparam logic [2:0] C1LUIADDI16SP = 3'b011;
-  localparam logic [2:0] C1MISCALU = 3'b100;
-  localparam logic [2:0] C1J = 3'b101;
-  localparam logic [2:0] C1BEQZ = 3'b110;
-  localparam logic [2:0] C1BNEZ = 3'b111;
-  // Quadrant 2
-  localparam logic [1:0] C2 = 2'b10;
-  localparam logic [2:0] C2SLLI = 3'b000;
-  localparam logic [2:0] C2LWSP = 3'b010;
-  localparam logic [2:0] C2JALRMVADD = 3'b100;
-  localparam logic [2:0] C2SWSP = 3'b110;
-
   localparam logic [4:0] X0 = 5'h0;
   localparam logic [4:0] RA = 5'h1;
   localparam logic [4:0] SP = 5'h2;
@@ -45,9 +22,10 @@ module ysyx_24080006_rv16
     rv16_err = 1'b0;
     rv16 = 1'b1;
     unique case (inst_i[1:0])
-      C0: begin
+      riscv_instr::C_ADDI4SPN[1:0]: begin
+        // Quadrant 0
         unique case (inst_i[15:13])
-          C0ADDI4SPN: begin
+          riscv_instr::C_ADDI4SPN[15:13]: begin
             // c.addi4spn -> addi rd', x2, imm
             inst_o = {
               {2'b0, inst_i[10:7], inst_i[12:11], inst_i[5], inst_i[6], 2'b0},
@@ -59,7 +37,7 @@ module ysyx_24080006_rv16
             if (inst_i[12:5] == 8'b0) rv16_err = 1'b1;
           end
 
-          C0LW: begin
+          riscv_instr::C_LW[15:13]: begin
             // c.lw -> lw rd', imm(rs1')
             inst_o = {
               {5'b0, inst_i[5], inst_i[12:10], inst_i[6], 2'b0},
@@ -70,14 +48,14 @@ module ysyx_24080006_rv16
             };
           end
 
-          C0ZCB: begin
+          riscv_instr::C_LBU[15:13]: begin
             case (inst_i[12:10])
-              3'b000: begin
+              riscv_instr::C_LBU[12:10]: begin
                 // c.lbu -> lbu rd', uimm(rs1')
                 inst_o = {{10'b0, inst_i[5], inst_i[6]}, r9_7, 3'b100, r4_2, riscv_instr::LB[6:0]};
               end
 
-              3'b001: begin
+              riscv_instr::C_LHU[12:10]: begin
                 // c.lhu -> lhu rd', uimm(rs1')
                 // c.lh -> lh rd', uimm(rs1')
                 inst_o = {
@@ -85,17 +63,19 @@ module ysyx_24080006_rv16
                 };
               end
 
-              3'b010, 3'b011: begin
+              riscv_instr::C_SB[12:10]: begin
                 // c.sb -> sb rs2', uimm(rs1')
+                inst_o = {
+                  7'b0, r4_2, r9_7, 3'b000, {3'b0, inst_i[5], inst_i[6]}, riscv_instr::SB[6:0]
+                };
+              end
+
+              riscv_instr::C_SH[12:10]: begin
                 // c.sh -> sh rs2', uimm(rs1')
                 inst_o = {
-                  7'b0,
-                  r4_2,
-                  r9_7,
-                  {2'b00, inst_i[10]},
-                  {3'b0, inst_i[5], inst_i[6]},
-                  riscv_instr::SB[6:0]
+                  7'b0, r4_2, r9_7, 3'b001, {3'b0, inst_i[5], inst_i[6]}, riscv_instr::SB[6:0]
                 };
+                if (inst_i[6] != 1'b0) rv16_err = 1'b1;
               end
 
               default: begin
@@ -104,7 +84,7 @@ module ysyx_24080006_rv16
             endcase
           end
 
-          C0SW: begin  // c.sw -> sw rs2', imm(rs1')
+          riscv_instr::C_SW[15:13]: begin  // c.sw -> sw rs2', imm(rs1')
             inst_o = {
               {5'b0, inst_i[5], inst_i[12]},
               r4_2,
@@ -121,15 +101,16 @@ module ysyx_24080006_rv16
         endcase
       end
 
-      C1: begin
+      riscv_instr::C_ADDI[1:0]: begin
+        // Quadrant 1
         unique case (inst_i[15:13])
-          C1ADDI: begin
+          riscv_instr::C_ADDI[15:13]: begin
             // c.addi -> addi rd, rd, nzimm
             // c.nop -> addi 0, 0, 0
             inst_o = {{{7{inst_i[12]}}, r6_2}, r11_7, 3'b0, r11_7, riscv_instr::ADDI[6:0]};
           end
 
-          C1JAL, C1J: begin
+          riscv_instr::C_JAL[15:13], riscv_instr::C_J[15:13]: begin
             // c.jal -> jal x1, imm
             // c.j   -> jal x0, imm
             inst_o = {
@@ -149,12 +130,12 @@ module ysyx_24080006_rv16
             };
           end
 
-          C1LI: begin
+          riscv_instr::C_LI[15:13]: begin
             // c.li -> addi rd, x0, nzimm
             inst_o = {{{7{inst_i[12]}}, inst_i[6:2]}, X0, 3'b0, r11_7, riscv_instr::ADDI[6:0]};
           end
 
-          C1LUIADDI16SP: begin
+          riscv_instr::C_LUI[15:13]: begin
             // c.lui -> lui rd, imm
             inst_o = {{{15{inst_i[12]}}, inst_i[6:2]}, r11_7, riscv_instr::LUI[6:0]};
 
@@ -172,9 +153,9 @@ module ysyx_24080006_rv16
             if ({inst_i[12], inst_i[6:2]} == 6'b0) rv16_err = 1'b1;
           end
 
-          C1MISCALU: begin
+          riscv_instr::C_SRLI[15:13]: begin
             unique case (inst_i[11:10])
-              2'b00, 2'b01: begin
+              riscv_instr::C_SRLI[11:10], riscv_instr::C_SRAI[11:10]: begin
                 // c.srli -> srli rd, rd, shamt
                 // c.srai -> srai rd, rd, shamt
                 inst_o = {
@@ -183,7 +164,7 @@ module ysyx_24080006_rv16
                 if (inst_i[12] == 1'b1) rv16_err = 1'b1;
               end
 
-              2'b10: begin
+              riscv_instr::C_ANDI[11:10]: begin
                 // c.andi -> andi rd, rd, imm
                 inst_o = {
                   {{6{inst_i[12]}}, inst_i[12], inst_i[6:2]},
@@ -194,7 +175,7 @@ module ysyx_24080006_rv16
                 };
               end
 
-              2'b11: begin
+              riscv_instr::C_SUB[11:10]: begin
                 unique case ({
                   inst_i[12], inst_i[6:5]
                 })
@@ -254,7 +235,7 @@ module ysyx_24080006_rv16
             endcase
           end
 
-          C1BEQZ, C1BNEZ: begin
+          riscv_instr::C_BEQZ[15:13], riscv_instr::C_BNEZ[15:13]: begin
             // c.beqz -> beq rs1', x0, imm
             // c.bnez -> bne rs1', x0, imm
             inst_o = {
@@ -273,15 +254,16 @@ module ysyx_24080006_rv16
         endcase
       end
 
-      C2: begin
+      riscv_instr::C_SLLI[1:0]: begin
+        // Quadrant 2
         unique case (inst_i[15:13])
-          C2SLLI: begin
+          riscv_instr::C_SLLI[15:13]: begin
             // c.slli -> slli rd, rd, shamt
             inst_o = {7'b0, r6_2, r11_7, 3'b001, r11_7, riscv_instr::ADDI[6:0]};
             if (inst_i[12] == 1'b1) rv16_err = 1'b1;
           end
 
-          C2LWSP: begin
+          riscv_instr::C_LWSP[15:13]: begin
             // c.lwsp -> lw rd, imm(x2)
             inst_o = {
               {4'b0, inst_i[3:2], inst_i[12], inst_i[6:4], 2'b0},
@@ -293,7 +275,7 @@ module ysyx_24080006_rv16
             if (r11_7 == X0) rv16_err = 1'b1;
           end
 
-          C2JALRMVADD: begin
+          riscv_instr::C_MV[15:13]: begin
             if (inst_i[12] == 1'b0) begin
               if (r6_2 != X0) begin
                 // c.mv -> add rd/rs1, x0, rs2
@@ -308,18 +290,17 @@ module ysyx_24080006_rv16
                 // c.add -> add rd, rd, rs2
                 inst_o = {7'b0, r6_2, r11_7, 3'b0, r11_7, riscv_instr::ADD[6:0]};
               end else begin
+                // c.jalr -> jalr x1, rs1, 0
+                inst_o = {12'b0, r11_7, 3'b000, RA, riscv_instr::JALR[6:0]};
                 if (r11_7 == X0) begin
                   // c.ebreak -> ebreak
                   inst_o = riscv_instr::EBREAK;
-                end else begin
-                  // c.jalr -> jalr x1, rs1, 0
-                  inst_o = {12'b0, r11_7, 3'b000, RA, riscv_instr::JALR[6:0]};
                 end
               end
             end
           end
 
-          C2SWSP: begin
+          riscv_instr::C_SWSP[15:13]: begin
             // c.swsp -> sw rs2, imm(x2)
             inst_o = {
               {4'b0, inst_i[8:7], inst_i[12]},
