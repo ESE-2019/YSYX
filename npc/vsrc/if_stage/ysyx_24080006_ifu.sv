@@ -51,9 +51,10 @@ module ysyx_24080006_ifu
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
-  assign detect_hazard_d = inst_d[6:0] inside {OPCODE_JAL, OPCODE_JALR, OPCODE_SYSTEM, OPCODE_BRANCH, OPCODE_MISCMEM};
-  // wire jal = inst[6:0] == OPCODE_JAL;
-  // assign detect_hazard_d = inst_d[6:0] inside {OPCODE_JALR, OPCODE_SYSTEM, OPCODE_BRANCH, OPCODE_MISCMEM};
+  assign detect_hazard_d = inst_d[6:0] inside {riscv_instr::JAL[6:0], riscv_instr::JALR[6:0],
+    riscv_instr::ECALL[6:0], riscv_instr::BEQ[6:0], riscv_instr::FENCE[6:0]};
+  // wire jal = inst[6:0] == riscv_instr::JAL[6:0];
+  // assign detect_hazard_d = inst_d[6:0] inside {riscv_instr::JALR[6:0], riscv_instr::ECALL[6:0], riscv_instr::BEQ[6:0], riscv_instr::FENCE[6:0]};
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -184,9 +185,9 @@ module ysyx_24080006_ifu
   always_ff @(posedge clock) begin  // fsm 3 for icu
     if (reset) begin
       ifu2icu_valid <= 1'b0;
-      pc_q <= RST_ADDR;
-      fetch_addr_q <= RST_ADDR;
-      ifu2idu.pc <= RST_ADDR;
+      pc_q <= RstAddr;
+      fetch_addr_q <= RstAddr;
+      ifu2idu.pc <= RstAddr;
       ifu2idu.rv16 <= 1'b0;
       ifu2idu.flush <= 1'b0;
       inst_q <= 32'b0;
@@ -299,7 +300,7 @@ module ysyx_24080006_ifu
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      ftrace  <= RST_ADDR;
+      ftrace  <= RstAddr;
       ifu_cnt <= 1;
       inst_queue.delete();
     end else begin
@@ -358,19 +359,20 @@ module ysyx_24080006_ifu
   always_ff @(posedge clock) begin
     if (exu2ifu.valid && ifu2exu_ready) begin
       case (exu_dbg_inst[6:0])
-        OPCODE_AUIPC, OPCODE_LUI, OPCODE_OP, OPCODE_OPIMM: begin
+        riscv_instr::AUIPC[6:0], riscv_instr::LUI[6:0],
+        riscv_instr::ADD[6:0], riscv_instr::ADDI[6:0]: begin
           op_c += ($time - inst_queue.pop_back) / 2;
           op_i++;
         end
-        OPCODE_LOAD, OPCODE_STORE: begin
+        riscv_instr::LB[6:0], riscv_instr::SB[6:0]: begin
           ls_c += ($time - inst_queue.pop_back) / 2;
           ls_i++;
         end
-        OPCODE_SYSTEM, OPCODE_MISCMEM: begin
+        riscv_instr::ECALL[6:0], riscv_instr::FENCE[6:0]: begin
           sys_c += ($time - inst_queue.pop_back) / 2;
           sys_i++;
         end
-        OPCODE_BRANCH, OPCODE_JAL, OPCODE_JALR: begin
+        riscv_instr::BEQ[6:0], riscv_instr::JAL[6:0], riscv_instr::JALR[6:0]: begin
           br_c += ($time - inst_queue.pop_back) / 2;
           br_i++;
         end

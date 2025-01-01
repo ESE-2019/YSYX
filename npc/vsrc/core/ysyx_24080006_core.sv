@@ -31,7 +31,7 @@ module ysyx_24080006_core
 
   decoder_t        decoder;
   logic            reg_we;
-  logic [REG_WIDTH-1:0] rs1_addr, rs2_addr, rd_addr;
+  logic [RegWidth-1:0] rs1_addr, rs2_addr, rd_addr;
   logic [31:0] rs1_data, rs2_data, rd_data;
 
   logic        forward_en;

@@ -38,7 +38,7 @@ module ysyx_24080006_idu
     use_rs2      = 1'b0;
     unique case (inst[6:0])
 
-      OPCODE_LUI: begin
+      riscv_instr::LUI[6:0]: begin
         idu.imm    = immU;
         idu.alu_set.alu_a  = ALU_A_0;
         idu.alu_set.alu_b  = ALU_B_IMM;
@@ -46,7 +46,7 @@ module ysyx_24080006_idu
         idu.reg_we = 1'b1;
       end
 
-      OPCODE_AUIPC: begin
+      riscv_instr::AUIPC[6:0]: begin
         idu.imm    = immU;
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_IMM;
@@ -54,7 +54,7 @@ module ysyx_24080006_idu
         idu.reg_we = 1'b1;
       end
 
-      OPCODE_OP: begin
+      riscv_instr::ADD[6:0]: begin
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_RS2;
         idu.reg_we        = 1'b1;
@@ -150,7 +150,7 @@ module ysyx_24080006_idu
         endcase
       end
 
-      OPCODE_OPIMM: begin
+      riscv_instr::ADDI[6:0]: begin
         idu.imm           = immI;
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_IMM;
@@ -182,7 +182,7 @@ module ysyx_24080006_idu
         endcase
       end
 
-      OPCODE_LOAD: begin
+      riscv_instr::LB[6:0]: begin
         idu.imm                = immI;
         idu.alu_set.alu_a      = ALU_A_RS1;
         idu.alu_set.alu_b      = ALU_B_IMM;
@@ -201,7 +201,7 @@ module ysyx_24080006_idu
         endcase
       end
 
-      OPCODE_STORE: begin
+      riscv_instr::SB[6:0]: begin
         idu.imm                = immS;
         idu.alu_set.alu_a      = ALU_A_RS1;
         idu.alu_set.alu_b      = ALU_B_IMM;
@@ -218,7 +218,7 @@ module ysyx_24080006_idu
         endcase
       end
 
-      OPCODE_JAL: begin
+      riscv_instr::JAL[6:0]: begin
         idu.imm    = immJ;
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_PC_INCR;
@@ -227,7 +227,7 @@ module ysyx_24080006_idu
         idu.jal    = 1'b1;
       end
 
-      OPCODE_JALR: begin
+      riscv_instr::JALR[6:0]: begin
         idu.imm    = immI;
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_PC_INCR;
@@ -238,7 +238,7 @@ module ysyx_24080006_idu
         use_rs1 = 1'b1;
       end
 
-      OPCODE_BRANCH: begin
+      riscv_instr::BEQ[6:0]: begin
         idu.imm           = immB;
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_RS2;
@@ -256,7 +256,7 @@ module ysyx_24080006_idu
         endcase
       end
 
-      OPCODE_SYSTEM: begin
+      riscv_instr::ECALL[6:0]: begin
         idu.imm    = uimm;
         idu.alu_set.alu_a  = ALU_A_0;
         idu.alu_set.alu_b  = ALU_B_CSR;
@@ -297,7 +297,7 @@ module ysyx_24080006_idu
         end
       end
 
-      OPCODE_MISCMEM: begin
+      riscv_instr::FENCE[6:0]: begin
         unique case (inst[14:12])
           3'b000: begin
             // NOP
@@ -313,11 +313,11 @@ module ysyx_24080006_idu
 
       default: inst_err = 1'b1;
     endcase
-    idu.rs1_addr = inst[15+:REG_WIDTH] & {REG_WIDTH{use_rs1}};
-    idu.rs2_addr = inst[20+:REG_WIDTH] & {REG_WIDTH{use_rs2}};
-    idu.rd_addr  = inst[7+:REG_WIDTH] & {REG_WIDTH{idu.reg_we}};
+    idu.rs1_addr = inst[15+:RegWidth] & {RegWidth{use_rs1}};
+    idu.rs2_addr = inst[20+:RegWidth] & {RegWidth{use_rs2}};
+    idu.rd_addr  = inst[7+:RegWidth] & {RegWidth{idu.reg_we}};
     if (idu.rd_addr == '0) idu.reg_we = 1'b0;
-    if (REG_WIDTH == 4) begin
+    if (RegWidth == 4) begin
       inst_err = inst_err | (use_rs1 & inst[19]) | (use_rs2 & inst[24]) | (idu.reg_we & inst[11]);
     end
   end

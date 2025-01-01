@@ -59,23 +59,39 @@ module ysyx_24080006_csr
       riscv_instr::CSR_MCOUNTINHIBIT: csr_rdata = mcountinhibit_q;
       riscv_instr::CSR_MEPC: csr_rdata = mepc_q;
       riscv_instr::CSR_MCAUSE: csr_rdata = mcause_q;
-      riscv_instr::CSR_MCYCLE, riscv_instr::CSR_MINSTRET, riscv_instr::CSR_MHPMCOUNTER3,
-      riscv_instr::CSR_MHPMCOUNTER4,  riscv_instr::CSR_MHPMCOUNTER5,  riscv_instr::CSR_MHPMCOUNTER6,  riscv_instr::CSR_MHPMCOUNTER7,
-      riscv_instr::CSR_MHPMCOUNTER8,  riscv_instr::CSR_MHPMCOUNTER9,  riscv_instr::CSR_MHPMCOUNTER10, riscv_instr::CSR_MHPMCOUNTER11,
-      riscv_instr::CSR_MHPMCOUNTER12, riscv_instr::CSR_MHPMCOUNTER13, riscv_instr::CSR_MHPMCOUNTER14, riscv_instr::CSR_MHPMCOUNTER15,
-      riscv_instr::CSR_MHPMCOUNTER16, riscv_instr::CSR_MHPMCOUNTER17, riscv_instr::CSR_MHPMCOUNTER18, riscv_instr::CSR_MHPMCOUNTER19,
-      riscv_instr::CSR_MHPMCOUNTER20, riscv_instr::CSR_MHPMCOUNTER21, riscv_instr::CSR_MHPMCOUNTER22, riscv_instr::CSR_MHPMCOUNTER23,
-      riscv_instr::CSR_MHPMCOUNTER24, riscv_instr::CSR_MHPMCOUNTER25, riscv_instr::CSR_MHPMCOUNTER26, riscv_instr::CSR_MHPMCOUNTER27,
-      riscv_instr::CSR_MHPMCOUNTER28, riscv_instr::CSR_MHPMCOUNTER29, riscv_instr::CSR_MHPMCOUNTER30, riscv_instr::CSR_MHPMCOUNTER31:
+      riscv_instr::CSR_MCYCLE, riscv_instr::CSR_MINSTRET,
+      riscv_instr::CSR_MHPMCOUNTER3,
+      riscv_instr::CSR_MHPMCOUNTER4,  riscv_instr::CSR_MHPMCOUNTER5,
+      riscv_instr::CSR_MHPMCOUNTER6,  riscv_instr::CSR_MHPMCOUNTER7,
+      riscv_instr::CSR_MHPMCOUNTER8,  riscv_instr::CSR_MHPMCOUNTER9,
+      riscv_instr::CSR_MHPMCOUNTER10, riscv_instr::CSR_MHPMCOUNTER11,
+      riscv_instr::CSR_MHPMCOUNTER12, riscv_instr::CSR_MHPMCOUNTER13,
+      riscv_instr::CSR_MHPMCOUNTER14, riscv_instr::CSR_MHPMCOUNTER15,
+      riscv_instr::CSR_MHPMCOUNTER16, riscv_instr::CSR_MHPMCOUNTER17,
+      riscv_instr::CSR_MHPMCOUNTER18, riscv_instr::CSR_MHPMCOUNTER19,
+      riscv_instr::CSR_MHPMCOUNTER20, riscv_instr::CSR_MHPMCOUNTER21,
+      riscv_instr::CSR_MHPMCOUNTER22, riscv_instr::CSR_MHPMCOUNTER23,
+      riscv_instr::CSR_MHPMCOUNTER24, riscv_instr::CSR_MHPMCOUNTER25,
+      riscv_instr::CSR_MHPMCOUNTER26, riscv_instr::CSR_MHPMCOUNTER27,
+      riscv_instr::CSR_MHPMCOUNTER28, riscv_instr::CSR_MHPMCOUNTER29,
+      riscv_instr::CSR_MHPMCOUNTER30, riscv_instr::CSR_MHPMCOUNTER31:
       csr_rdata = counter_low[counter_addr];
-      riscv_instr::CSR_MCYCLEH, riscv_instr::CSR_MINSTRETH, riscv_instr::CSR_MHPMCOUNTER3H,
-      riscv_instr::CSR_MHPMCOUNTER4H,  riscv_instr::CSR_MHPMCOUNTER5H,  riscv_instr::CSR_MHPMCOUNTER6H,  riscv_instr::CSR_MHPMCOUNTER7H,
-      riscv_instr::CSR_MHPMCOUNTER8H,  riscv_instr::CSR_MHPMCOUNTER9H,  riscv_instr::CSR_MHPMCOUNTER10H, riscv_instr::CSR_MHPMCOUNTER11H,
-      riscv_instr::CSR_MHPMCOUNTER12H, riscv_instr::CSR_MHPMCOUNTER13H, riscv_instr::CSR_MHPMCOUNTER14H, riscv_instr::CSR_MHPMCOUNTER15H,
-      riscv_instr::CSR_MHPMCOUNTER16H, riscv_instr::CSR_MHPMCOUNTER17H, riscv_instr::CSR_MHPMCOUNTER18H, riscv_instr::CSR_MHPMCOUNTER19H,
-      riscv_instr::CSR_MHPMCOUNTER20H, riscv_instr::CSR_MHPMCOUNTER21H, riscv_instr::CSR_MHPMCOUNTER22H, riscv_instr::CSR_MHPMCOUNTER23H,
-      riscv_instr::CSR_MHPMCOUNTER24H, riscv_instr::CSR_MHPMCOUNTER25H, riscv_instr::CSR_MHPMCOUNTER26H, riscv_instr::CSR_MHPMCOUNTER27H,
-      riscv_instr::CSR_MHPMCOUNTER28H, riscv_instr::CSR_MHPMCOUNTER29H, riscv_instr::CSR_MHPMCOUNTER30H, riscv_instr::CSR_MHPMCOUNTER31H:
+      riscv_instr::CSR_MCYCLEH, riscv_instr::CSR_MINSTRETH,
+      riscv_instr::CSR_MHPMCOUNTER3H,
+      riscv_instr::CSR_MHPMCOUNTER4H,  riscv_instr::CSR_MHPMCOUNTER5H,
+      riscv_instr::CSR_MHPMCOUNTER6H,  riscv_instr::CSR_MHPMCOUNTER7H,
+      riscv_instr::CSR_MHPMCOUNTER8H,  riscv_instr::CSR_MHPMCOUNTER9H,
+      riscv_instr::CSR_MHPMCOUNTER10H, riscv_instr::CSR_MHPMCOUNTER11H,
+      riscv_instr::CSR_MHPMCOUNTER12H, riscv_instr::CSR_MHPMCOUNTER13H,
+      riscv_instr::CSR_MHPMCOUNTER14H, riscv_instr::CSR_MHPMCOUNTER15H,
+      riscv_instr::CSR_MHPMCOUNTER16H, riscv_instr::CSR_MHPMCOUNTER17H,
+      riscv_instr::CSR_MHPMCOUNTER18H, riscv_instr::CSR_MHPMCOUNTER19H,
+      riscv_instr::CSR_MHPMCOUNTER20H, riscv_instr::CSR_MHPMCOUNTER21H,
+      riscv_instr::CSR_MHPMCOUNTER22H, riscv_instr::CSR_MHPMCOUNTER23H,
+      riscv_instr::CSR_MHPMCOUNTER24H, riscv_instr::CSR_MHPMCOUNTER25H,
+      riscv_instr::CSR_MHPMCOUNTER26H, riscv_instr::CSR_MHPMCOUNTER27H,
+      riscv_instr::CSR_MHPMCOUNTER28H, riscv_instr::CSR_MHPMCOUNTER29H,
+      riscv_instr::CSR_MHPMCOUNTER30H, riscv_instr::CSR_MHPMCOUNTER31H:
       csr_rdata = counter_high[counter_addr];
       riscv_instr::CSR_MVENDORID: csr_rdata = 32'h79737978;
       riscv_instr::CSR_MARCHID: csr_rdata = 32'd24080006;
@@ -191,7 +207,9 @@ module ysyx_24080006_csr
   always_ff @(posedge clock) begin
     if (csr_set.csr_enable)
       unique case (csr_name)
-        riscv_instr::CSR_MSTATUS, riscv_instr::CSR_MTVEC, riscv_instr::CSR_MEPC, riscv_instr::CSR_MCAUSE, riscv_instr::CSR_MVENDORID, riscv_instr::CSR_MARCHID:
+        riscv_instr::CSR_MSTATUS, riscv_instr::CSR_MTVEC,
+        riscv_instr::CSR_MEPC, riscv_instr::CSR_MCAUSE,
+        riscv_instr::CSR_MVENDORID, riscv_instr::CSR_MARCHID:
         ;
         default: SKIP_DIFFTEST();
       endcase

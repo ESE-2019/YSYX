@@ -3,18 +3,18 @@
 module ysyx_24080006_reg
   import ysyx_24080006_pkg::*;
 (
-    input  logic                 clock,
-    input  logic                 reset,
-    input  logic                 reg_we,
-    input  logic [REG_WIDTH-1:0] rs1_addr,
-    input  logic [REG_WIDTH-1:0] rs2_addr,
-    input  logic [REG_WIDTH-1:0] rd_addr,
-    input  logic [         31:0] rd_data,
-    output logic [         31:0] rs1_data,
-    output logic [         31:0] rs2_data
+    input  logic                clock,
+    input  logic                reset,
+    input  logic                reg_we,
+    input  logic [RegWidth-1:0] rs1_addr,
+    input  logic [RegWidth-1:0] rs2_addr,
+    input  logic [RegWidth-1:0] rd_addr,
+    input  logic [        31:0] rd_data,
+    output logic [        31:0] rs1_data,
+    output logic [        31:0] rs2_data
 );
 
-  logic [31:0] regfile[1<<REG_WIDTH];
+  logic [31:0] regfile[1<<RegWidth];
 
   always_ff @(posedge clock) begin
     if (reset) begin

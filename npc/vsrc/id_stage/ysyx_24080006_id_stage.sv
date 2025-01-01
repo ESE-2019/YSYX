@@ -11,16 +11,16 @@ module ysyx_24080006_id_stage
     output decoder_t decoder,
     output logic fencei,
 
-    input  logic                 reg_we,
-    input  logic [REG_WIDTH-1:0] rd_addr,
-    output logic [REG_WIDTH-1:0] rs1_addr,
-    output logic [REG_WIDTH-1:0] rs2_addr,
-    input  logic [         31:0] rs1_data,
-    input  logic [         31:0] rs2_data,
+    input  logic                reg_we,
+    input  logic [RegWidth-1:0] rd_addr,
+    output logic [RegWidth-1:0] rs1_addr,
+    output logic [RegWidth-1:0] rs2_addr,
+    input  logic [        31:0] rs1_data,
+    input  logic [        31:0] rs2_data,
 
-    output logic [11:0]  csr_name,
+    output logic [11:0] csr_name,
     output logic [31:0] csr_wdata,
-    input logic [31:0] csr_rdata,
+    input  logic [31:0] csr_rdata,
 
     input logic forward_en,
     input logic [31:0] forward_data,
@@ -161,8 +161,8 @@ module ysyx_24080006_id_stage
             idu2exu.flush <= ifu2idu.flush;
             csr_wdata <= rs1_data;
             detect_hazard_q <= detect_hazard_d;
-            fwd_jalr <= inst[6:0] == OPCODE_JALR;
-            fwd_store <= inst[6:0] == OPCODE_STORE;
+            fwd_jalr <= inst[6:0] == riscv_instr::JALR[6:0];
+            fwd_store <= inst[6:0] == riscv_instr::SB[6:0];
             idu_dbg_inst <= inst;
           end
         end
@@ -205,17 +205,17 @@ module ysyx_24080006_id_stage
 
   always_comb begin
     unique case (idu.alu_set.alu_a)
-      ALU_A_RS1:     alu_a = rs1_data;
-      ALU_A_PC:      alu_a = ifu2idu.pc;
-      ALU_A_0:  alu_a = 32'b0;
-      default: alu_a = 32'b0;
+      ALU_A_RS1: alu_a = rs1_data;
+      ALU_A_PC:  alu_a = ifu2idu.pc;
+      ALU_A_0:   alu_a = 32'b0;
+      default:   alu_a = 32'b0;
     endcase
     unique case (idu.alu_set.alu_b)
       ALU_B_IMM:     alu_b = idu.imm;
       ALU_B_RS2:     alu_b = rs2_data;
       ALU_B_PC_INCR: alu_b = ifu2idu.rv16 ? 32'h2 : 32'h4;
       ALU_B_CSR:     alu_b = csr_rdata;
-      default: alu_b = 32'h4;
+      default:       alu_b = 32'h4;
     endcase
   end
 

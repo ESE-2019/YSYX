@@ -38,9 +38,9 @@ module ysyx_24080006_icu
   logic [31:0] ic_wdata_tmp[8];
   logic [31:0] ic_rdata_tmp[8];
   logic ic_we;
-  wire [IC_M-3:0] pc_offset = fetch_addr[IC_M-1:2];
-  logic [IC_N-1:0] ic_index, ic_waddr;
-  wire [31-IC_M-IC_N:0] tag = fetch_addr[31:IC_M+IC_N];
+  wire [IcacheLineSize-3:0] pc_offset = fetch_addr[IcacheLineSize-1:2];
+  logic [IcacheLineNum-1:0] ic_index, ic_waddr;
+  wire [31-IcacheLineSize-IcacheLineNum:0] tag = fetch_addr[31:IcacheLineSize+IcacheLineNum];
 `ifdef NPC_MODE
   wire skip_icache = 1'b1;
 `else
@@ -48,9 +48,9 @@ module ysyx_24080006_icu
 `endif
   wire burst_icache = fetch_addr >= 32'ha000_0000;
   wire hit = ic_rdata.valid && (tag == ic_rdata.tag);
-  logic [IC_M-3:0] burst_offset;
-  assign ic_index = fetch_addr[IC_M+IC_N-1:IC_M];
-  wire [IC_M-3:0] addr_offset = ic_addr[IC_M-1:2] + burst_offset;
+  logic [IcacheLineSize-3:0] burst_offset;
+  assign ic_index = fetch_addr[IcacheLineSize+IcacheLineNum-1:IcacheLineSize];
+  wire [IcacheLineSize-3:0] addr_offset = ic_addr[IcacheLineSize-1:2] + burst_offset;
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -290,7 +290,7 @@ module ysyx_24080006_icu
         IC_FLASH_END: begin
           icu2ifu_valid <= 1'b0;
           ifu_r_m2s.rready <= 1'b0;
-          ifu_r_m2s.araddr <= {ic_addr[31:IC_M], addr_offset, 2'b0};
+          ifu_r_m2s.araddr <= {ic_addr[31:IcacheLineSize], addr_offset, 2'b0};
           if (burst_offset == '0) begin
             ifu_r_m2s.arvalid <= 1'b0;
             ic_we <= 1'b1;
@@ -329,7 +329,7 @@ module ysyx_24080006_icu
 
   assign ic_wdata = {
     1'b1,
-    ic_addr[31:IC_M+IC_N],
+    ic_addr[31:IcacheLineSize+IcacheLineNum],
     ic_wdata_tmp[7],
     ic_wdata_tmp[6],
     ic_wdata_tmp[5],

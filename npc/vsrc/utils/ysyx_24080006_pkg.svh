@@ -36,18 +36,6 @@ package ysyx_24080006_pkg;
     alu_op_e alu_op;
   } alu_set_t;
 
-  localparam logic [6:0] OPCODE_LUI = 7'b0110111;
-  localparam logic [6:0] OPCODE_AUIPC = 7'b0010111;
-  localparam logic [6:0] OPCODE_OP = 7'b0110011;
-  localparam logic [6:0] OPCODE_OPIMM = 7'b0010011;
-  localparam logic [6:0] OPCODE_LOAD = 7'b0000011;
-  localparam logic [6:0] OPCODE_STORE = 7'b0100011;
-  localparam logic [6:0] OPCODE_JAL = 7'b1101111;
-  localparam logic [6:0] OPCODE_JALR = 7'b1100111;
-  localparam logic [6:0] OPCODE_BRANCH = 7'b1100011;
-  localparam logic [6:0] OPCODE_SYSTEM = 7'b1110011;
-  localparam logic [6:0] OPCODE_MISCMEM = 7'b0001111;
-
   typedef enum logic [1:0] {
     CSR_READ,
     CSR_WRITE,
@@ -69,9 +57,9 @@ package ysyx_24080006_pkg;
   } lsu_set_t;
 
 `ifdef SIM_MODE
-  localparam int unsigned REG_WIDTH = 5;
+  localparam int unsigned RegWidth = 5;
 `else
-  localparam int unsigned REG_WIDTH = 4;
+  localparam int unsigned RegWidth = 4;
 `endif
 
   typedef enum logic [1:0] {
@@ -89,9 +77,9 @@ package ysyx_24080006_pkg;
   } mdu_set_t;
 
   typedef struct packed {
-    logic [REG_WIDTH-1:0] rs1_addr;
-    logic [REG_WIDTH-1:0] rs2_addr;
-    logic [REG_WIDTH-1:0] rd_addr;
+    logic [RegWidth-1:0] rs1_addr;
+    logic [RegWidth-1:0] rs2_addr;
+    logic [RegWidth-1:0] rd_addr;
 
     logic [31:0] imm;
 
@@ -131,20 +119,19 @@ package ysyx_24080006_pkg;
     logic not_zero;
   } alu2mdu_t;
 
-  localparam int unsigned IC_M = 5;  // 4
-  localparam int unsigned IC_N = 1;  // 1
-  localparam int unsigned IC_2 = 1 << IC_N;  // 2 ^ n
+  localparam int unsigned IcacheLineSize = 5;  // 4
+  localparam int unsigned IcacheLineNum = 1;  // 1
 
   typedef struct packed {
     logic valid;
-    logic [31-IC_M-IC_N:0] tag;
-    logic [(1<<(IC_M+3))-1:0] data;
+    logic [31-IcacheLineSize-IcacheLineNum:0] tag;
+    logic [(1<<(IcacheLineSize+3))-1:0] data;
   } icache_t;
 
 `ifdef SOC_MODE
-  localparam logic [31:0] RST_ADDR = 32'h3000_0000;
+  localparam logic [31:0] RstAddr = 32'h3000_0000;
 `else
-  localparam logic [31:0] RST_ADDR = 32'h8000_0000;
+  localparam logic [31:0] RstAddr = 32'h8000_0000;
 `endif
 
   typedef struct packed {

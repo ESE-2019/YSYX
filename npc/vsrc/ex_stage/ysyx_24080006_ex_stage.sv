@@ -10,9 +10,9 @@ module ysyx_24080006_ex_stage
     input  logic     [31:0] idu_dbg_inst,
     output logic     [31:0] exu_dbg_inst,
 
-    output logic                 reg_we,
-    output logic [REG_WIDTH-1:0] rd_addr,
-    output logic [         31:0] rd_data,
+    output logic                reg_we,
+    output logic [RegWidth-1:0] rd_addr,
+    output logic [        31:0] rd_data,
 
     output logic ecall,
     output logic mret,

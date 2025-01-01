@@ -3,16 +3,16 @@
 module ysyx_24080006_icache_regfile
   import ysyx_24080006_pkg::*;
 (
-    input  logic               clock,
-    input  logic               reset,
-    input  logic               fencei,
-    input  logic    [IC_N-1:0] ic_index,
-    output icache_t            ic_rdata,
-    input  logic               ic_we,
-    input  logic    [IC_N-1:0] ic_waddr,
-    input  icache_t            ic_wdata
+    input  logic                        clock,
+    input  logic                        reset,
+    input  logic                        fencei,
+    input  logic    [IcacheLineNum-1:0] ic_index,
+    output icache_t                     ic_rdata,
+    input  logic                        ic_we,
+    input  logic    [IcacheLineNum-1:0] ic_waddr,
+    input  icache_t                     ic_wdata
 );
-  icache_t Memory[IC_2];
+  icache_t Memory[2 ** IcacheLineNum];
   always @(posedge clock) begin
     if (reset) begin
       foreach (Memory[i]) Memory[i] <= '0;

@@ -85,7 +85,7 @@ module ysyx_24080006_alu
   always_comb begin
     case (alu_op)
       ALU_AND: bit_res = alu_a & alu_b;
-      ALU_OR: bit_res = alu_a | alu_b;
+      ALU_OR:  bit_res = alu_a | alu_b;
       ALU_XOR: bit_res = alu_a ^ alu_b;
       default: bit_res = alu_a & alu_b;
     endcase
