@@ -24,7 +24,7 @@ module ysyx_24080006_core
   logic            ecall;
   logic            mret;
   csr_set_t        csr_set;
-  system_e         csr_name;
+  logic     [11:0] csr_name;
   logic     [31:0] csr_pc;
   logic     [31:0] csr_wdata;
   logic     [31:0] csr_rdata;

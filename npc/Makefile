@@ -31,11 +31,13 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # project source
+VSRCS += /home/ubuntu/ysyx-workbench/npc/vsrc/utils/inst.sverilog
 VSRCS += $(shell find $(abspath ./vsrc) -name "*.svh")
 VSRCS += $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS += $(shell find $(SOC_PATH)/perip -name "*.v")
 
 FMT_VSRCS += $(shell find $(abspath ./vsrc) -name "*.sv")
+FMT_VSRCS += ./vsrc/utils/inst.sverilog
 SYN_VSRCS += $(shell find $(abspath ./vsrc) -name "*.sv")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")

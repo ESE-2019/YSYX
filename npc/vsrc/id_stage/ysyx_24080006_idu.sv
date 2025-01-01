@@ -25,7 +25,7 @@ module ysyx_24080006_idu
     idu.csr_set  = '0;
     idu.lsu_set  = '0;
     idu.mdu_set  = '0;
-    idu.csr_name = system_e'(0);
+    idu.csr_name = 12'h0;
     idu.reg_we   = 1'b0;
     idu.jal      = 1'b0;
     idu.jalr     = 1'b0;
@@ -38,155 +38,155 @@ module ysyx_24080006_idu
     use_rs2      = 1'b0;
     unique case (inst[6:0])
 
-      LUI: begin
+      OPCODE_LUI: begin
         idu.imm    = immU;
-        idu.alu_set.alu_a  = CONST0;
-        idu.alu_set.alu_b  = IMM;
-        idu.alu_set.alu_op = ADD;
+        idu.alu_set.alu_a  = ALU_A_0;
+        idu.alu_set.alu_b  = ALU_B_IMM;
+        idu.alu_set.alu_op = ALU_ADD;
         idu.reg_we = 1'b1;
       end
 
-      AUIPC: begin
+      OPCODE_AUIPC: begin
         idu.imm    = immU;
-        idu.alu_set.alu_a  = PC;
-        idu.alu_set.alu_b  = IMM;
-        idu.alu_set.alu_op = ADD;
+        idu.alu_set.alu_a  = ALU_A_PC;
+        idu.alu_set.alu_b  = ALU_B_IMM;
+        idu.alu_set.alu_op = ALU_ADD;
         idu.reg_we = 1'b1;
       end
 
-      OP: begin
-        idu.alu_set.alu_a = RS1;
-        idu.alu_set.alu_b = RS2;
+      OPCODE_OP: begin
+        idu.alu_set.alu_a = ALU_A_RS1;
+        idu.alu_set.alu_b = ALU_B_RS2;
         idu.reg_we        = 1'b1;
         use_rs1           = 1'b1;
         use_rs2           = 1'b1;
         unique case ({
           inst[31:25], inst[14:12]
         })
-          {7'b0000000, 3'b000} : idu.alu_set.alu_op = ADD;
-          {7'b0100000, 3'b000} : idu.alu_set.alu_op = SUB;
-          {7'b0000000, 3'b001} : idu.alu_set.alu_op = SLL;
-          {7'b0000000, 3'b010} : idu.alu_set.alu_op = LT;
-          {7'b0000000, 3'b011} : idu.alu_set.alu_op = LTU;
-          {7'b0000000, 3'b100} : idu.alu_set.alu_op = XOR;
-          {7'b0000000, 3'b101} : idu.alu_set.alu_op = SRL;
-          {7'b0100000, 3'b101} : idu.alu_set.alu_op = SRA;
-          {7'b0000000, 3'b110} : idu.alu_set.alu_op = OR;
-          {7'b0000000, 3'b111} : idu.alu_set.alu_op = AND;
+          {7'b0000000, 3'b000} : idu.alu_set.alu_op = ALU_ADD;
+          {7'b0100000, 3'b000} : idu.alu_set.alu_op = ALU_SUB;
+          {7'b0000000, 3'b001} : idu.alu_set.alu_op = ALU_SLL;
+          {7'b0000000, 3'b010} : idu.alu_set.alu_op = ALU_LT;
+          {7'b0000000, 3'b011} : idu.alu_set.alu_op = ALU_LTU;
+          {7'b0000000, 3'b100} : idu.alu_set.alu_op = ALU_XOR;
+          {7'b0000000, 3'b101} : idu.alu_set.alu_op = ALU_SRL;
+          {7'b0100000, 3'b101} : idu.alu_set.alu_op = ALU_SRA;
+          {7'b0000000, 3'b110} : idu.alu_set.alu_op = ALU_OR;
+          {7'b0000000, 3'b111} : idu.alu_set.alu_op = ALU_AND;
           {
             7'b0000001, 3'b000
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b0;
             idu.mdu_set.signed_b = 1'b0;
-            idu.mdu_set.mdu_op = MULL;
+            idu.mdu_set.mdu_op = ALU_MULL;
           end
           {
             7'b0000001, 3'b001
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b1;
             idu.mdu_set.signed_b = 1'b1;
-            idu.mdu_set.mdu_op = MULH;
+            idu.mdu_set.mdu_op = ALU_MULH;
           end
           {
             7'b0000001, 3'b010
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b1;
             idu.mdu_set.signed_b = 1'b0;
-            idu.mdu_set.mdu_op = MULH;
+            idu.mdu_set.mdu_op = ALU_MULH;
           end
           {
             7'b0000001, 3'b011
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b0;
             idu.mdu_set.signed_b = 1'b0;
-            idu.mdu_set.mdu_op = MULH;
+            idu.mdu_set.mdu_op = ALU_MULH;
           end
           {
             7'b0000001, 3'b100
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b1;
             idu.mdu_set.signed_b = 1'b1;
-            idu.mdu_set.mdu_op = DIV;
+            idu.mdu_set.mdu_op = ALU_DIV;
           end
           {
             7'b0000001, 3'b101
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b0;
             idu.mdu_set.signed_b = 1'b0;
-            idu.mdu_set.mdu_op = DIV;
+            idu.mdu_set.mdu_op = ALU_DIV;
           end
           {
             7'b0000001, 3'b110
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b1;
             idu.mdu_set.signed_b = 1'b1;
-            idu.mdu_set.mdu_op = REM;
+            idu.mdu_set.mdu_op = ALU_REM;
           end
           {
             7'b0000001, 3'b111
           } : begin
-            idu.alu_set.alu_op = ADD;
+            idu.alu_set.alu_op = ALU_ADD;
             idu.mdu_set.mdu_enable = 1'b1;
             idu.mdu_set.signed_a = 1'b0;
             idu.mdu_set.signed_b = 1'b0;
-            idu.mdu_set.mdu_op = REM;
+            idu.mdu_set.mdu_op = ALU_REM;
           end
 
           default: inst_err = 1'b1;
         endcase
       end
 
-      OP_IMM: begin
+      OPCODE_OPIMM: begin
         idu.imm           = immI;
-        idu.alu_set.alu_a = RS1;
-        idu.alu_set.alu_b = IMM;
+        idu.alu_set.alu_a = ALU_A_RS1;
+        idu.alu_set.alu_b = ALU_B_IMM;
         idu.reg_we        = 1'b1;
         use_rs1           = 1'b1;
         unique case (inst[14:12])
-          3'b000: idu.alu_set.alu_op = ADD;
+          3'b000: idu.alu_set.alu_op = ALU_ADD;
 
           3'b001:
           unique case (inst[31:25])
-            7'b0000000: idu.alu_set.alu_op = SLL;
+            7'b0000000: idu.alu_set.alu_op = ALU_SLL;
             default: inst_err = 1'b1;
           endcase
 
-          3'b010: idu.alu_set.alu_op = LT;
-          3'b011: idu.alu_set.alu_op = LTU;
-          3'b100: idu.alu_set.alu_op = XOR;
+          3'b010: idu.alu_set.alu_op = ALU_LT;
+          3'b011: idu.alu_set.alu_op = ALU_LTU;
+          3'b100: idu.alu_set.alu_op = ALU_XOR;
 
           3'b101:
           unique case (inst[31:25])
-            7'b0000000: idu.alu_set.alu_op = SRL;
-            7'b0100000: idu.alu_set.alu_op = SRA;
+            7'b0000000: idu.alu_set.alu_op = ALU_SRL;
+            7'b0100000: idu.alu_set.alu_op = ALU_SRA;
             default: inst_err = 1'b1;
           endcase
 
-          3'b110:  idu.alu_set.alu_op = OR;
-          3'b111:  idu.alu_set.alu_op = AND;
+          3'b110:  idu.alu_set.alu_op = ALU_OR;
+          3'b111:  idu.alu_set.alu_op = ALU_AND;
           default: inst_err = 1'b1;
         endcase
       end
 
-      LOAD: begin
+      OPCODE_LOAD: begin
         idu.imm                = immI;
-        idu.alu_set.alu_a      = RS1;
-        idu.alu_set.alu_b      = IMM;
-        idu.alu_set.alu_op     = ADD;
+        idu.alu_set.alu_a      = ALU_A_RS1;
+        idu.alu_set.alu_b      = ALU_B_IMM;
+        idu.alu_set.alu_op     = ALU_ADD;
         idu.lsu_set.lsu_enable = 1'b1;
         idu.lsu_set.lsu_write  = 1'b0;
         idu.reg_we             = 1'b1;
@@ -201,11 +201,11 @@ module ysyx_24080006_idu
         endcase
       end
 
-      STORE: begin
+      OPCODE_STORE: begin
         idu.imm                = immS;
-        idu.alu_set.alu_a      = RS1;
-        idu.alu_set.alu_b      = IMM;
-        idu.alu_set.alu_op     = ADD;
+        idu.alu_set.alu_a      = ALU_A_RS1;
+        idu.alu_set.alu_b      = ALU_B_IMM;
+        idu.alu_set.alu_op     = ALU_ADD;
         idu.lsu_set.lsu_enable = 1'b1;
         idu.lsu_set.lsu_write  = 1'b1;
         use_rs1                = 1'b1;
@@ -218,62 +218,62 @@ module ysyx_24080006_idu
         endcase
       end
 
-      JAL: begin
+      OPCODE_JAL: begin
         idu.imm    = immJ;
-        idu.alu_set.alu_a  = PC;
-        idu.alu_set.alu_b  = PC_INCR;
-        idu.alu_set.alu_op = ADD;
+        idu.alu_set.alu_a  = ALU_A_PC;
+        idu.alu_set.alu_b  = ALU_B_PC_INCR;
+        idu.alu_set.alu_op = ALU_ADD;
         idu.reg_we = 1'b1;
         idu.jal    = 1'b1;
       end
 
-      JALR: begin
+      OPCODE_JALR: begin
         idu.imm    = immI;
-        idu.alu_set.alu_a  = PC;
-        idu.alu_set.alu_b  = PC_INCR;
-        idu.alu_set.alu_op = ADD;
+        idu.alu_set.alu_a  = ALU_A_PC;
+        idu.alu_set.alu_b  = ALU_B_PC_INCR;
+        idu.alu_set.alu_op = ALU_ADD;
         idu.reg_we = 1'b1;
         idu.jalr   = 1'b1;
         if (inst[14:12] != 3'b000) inst_err = 1'b1;
         use_rs1 = 1'b1;
       end
 
-      BRANCH: begin
+      OPCODE_BRANCH: begin
         idu.imm           = immB;
-        idu.alu_set.alu_a = RS1;
-        idu.alu_set.alu_b = RS2;
+        idu.alu_set.alu_a = ALU_A_RS1;
+        idu.alu_set.alu_b = ALU_B_RS2;
         idu.branch        = 1'b1;
         use_rs1           = 1'b1;
         use_rs2           = 1'b1;
         unique case (inst[14:12])
-          3'b000:  idu.alu_set.alu_op = EQ;
-          3'b001:  idu.alu_set.alu_op = NE;
-          3'b100:  idu.alu_set.alu_op = LT;
-          3'b101:  idu.alu_set.alu_op = GE;
-          3'b110:  idu.alu_set.alu_op = LTU;
-          3'b111:  idu.alu_set.alu_op = GEU;
+          3'b000:  idu.alu_set.alu_op = ALU_EQ;
+          3'b001:  idu.alu_set.alu_op = ALU_NE;
+          3'b100:  idu.alu_set.alu_op = ALU_LT;
+          3'b101:  idu.alu_set.alu_op = ALU_GE;
+          3'b110:  idu.alu_set.alu_op = ALU_LTU;
+          3'b111:  idu.alu_set.alu_op = ALU_GEU;
           default: inst_err = 1'b1;
         endcase
       end
 
-      SYSTEM: begin
+      OPCODE_SYSTEM: begin
         idu.imm    = uimm;
-        idu.alu_set.alu_a  = CONST0;
-        idu.alu_set.alu_b  = CSR;
-        idu.alu_set.alu_op = ADD;
+        idu.alu_set.alu_a  = ALU_A_0;
+        idu.alu_set.alu_b  = ALU_B_CSR;
+        idu.alu_set.alu_op = ALU_ADD;
         idu.reg_we = 1'b1;
         if (inst[14:12] == 3'b000) begin
           if ({inst[19:15], inst[11:7]} == '0) begin
             unique case (inst[31:20])
-              ECALL: begin
+              riscv_instr::ECALL[31:20]: begin
                 idu.ecall = 1'b1;
-                idu.csr_name = MTVEC;
+                idu.csr_name = riscv_instr::CSR_MTVEC;
               end
-              EBREAK: ;  // use DPI-C to end sim
-              WFI: ;
-              MRET: begin
+              riscv_instr::EBREAK[31:20]: ;  // use DPI-C to end sim
+              riscv_instr::WFI[31:20]: ;
+              riscv_instr::MRET[31:20]: begin
                 idu.mret = 1'b1;
-                idu.csr_name = MEPC;
+                idu.csr_name = riscv_instr::CSR_MEPC;
               end
               default: inst_err = 1'b1;
             endcase
@@ -282,22 +282,22 @@ module ysyx_24080006_idu
           end
         end else begin
           idu.csr_set.csr_enable = 1'b1;
-          idu.csr_name = system_e'(inst[31:20]);
+          idu.csr_name = inst[31:20];
           if (inst[14]) begin
             idu.csr_set.csr_uimm = 1'b1;
           end else begin
             use_rs1 = 1'b1;
           end
           unique case (inst[13:12])
-            2'b01:   idu.csr_set.csr_op = WRITE;
-            2'b10:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : SET;
-            2'b11:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? READ : CLEAR;
+            2'b01:   idu.csr_set.csr_op = CSR_WRITE;
+            2'b10:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? CSR_READ : CSR_SET;
+            2'b11:   idu.csr_set.csr_op = inst[19:15] == 5'b0 ? CSR_READ : CSR_CLEAR;
             default: inst_err = 1'b1;
           endcase
         end
       end
 
-      MISC_MEM: begin
+      OPCODE_MISCMEM: begin
         unique case (inst[14:12])
           3'b000: begin
             // NOP

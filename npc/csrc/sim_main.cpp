@@ -723,10 +723,10 @@ enum
     DEC = 'd',
     REG = 'r',
     HEX = 'h',
-    EQ = 'e',
+    ALU_EQ = 'e',
     NOTEQ = 'n',
-    OR = 'o',
-    AND = 'a',
+    ALU_OR = 'o',
+    ALU_AND = 'a',
     LEQ = 'l',
     DEREF = 'D'
 };
@@ -744,10 +744,10 @@ static struct rule
              {"\\/", '/'},
              {"\\(", '('},
              {"\\)", ')'},
-             {"\\=\\=", EQ},
+             {"\\=\\=", ALU_EQ},
              {"\\!\\=", NOTEQ},
-             {"\\|\\|", OR},
-             {"\\&\\&", AND},
+             {"\\|\\|", ALU_OR},
+             {"\\&\\&", ALU_AND},
              {"<=", LEQ},
              {"\\!", '!'}, // must be != hou mian
              {"\\&", '&'}, // must be && hou mian
@@ -809,12 +809,12 @@ static uint32_t eval(int p, int q)
                 }
             }
             // priority of 14
-            if (pri <= 12 && tokens[i].type == OR)
+            if (pri <= 12 && tokens[i].type == ALU_OR)
             {
                 pri = 12;
                 op = max(op, i);
             }
-            if (pri <= 11 && tokens[i].type == AND)
+            if (pri <= 11 && tokens[i].type == ALU_AND)
             {
                 pri = 11;
                 op = max(op, i);
@@ -834,7 +834,7 @@ static uint32_t eval(int p, int q)
                 pri = 8;
                 op = max(op, i);
             }
-            if (pri <= 7 && (tokens[i].type == EQ || tokens[i].type == NOTEQ))
+            if (pri <= 7 && (tokens[i].type == ALU_EQ || tokens[i].type == NOTEQ))
             {
                 pri = 7;
                 op = max(op, i);
@@ -880,13 +880,13 @@ static uint32_t eval(int p, int q)
             return eval_l | eval_r;
         case LEQ:
             return eval_l <= eval_r;
-        case EQ:
+        case ALU_EQ:
             return eval_l == eval_r;
         case NOTEQ:
             return eval_l != eval_r;
-        case OR:
+        case ALU_OR:
             return eval_l || eval_r;
-        case AND:
+        case ALU_AND:
             return eval_l && eval_r;
         default:
             printf("NOTYPE? %c %d\nl=%d\tr=%d\n", tokens[op].type, tokens[op].type,
@@ -984,8 +984,8 @@ static bool make_token(char *e)
                     strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
                     nr_token++;
                     break;
-                case EQ:
-                    tokens[nr_token].type = EQ;
+                case ALU_EQ:
+                    tokens[nr_token].type = ALU_EQ;
                     strcpy(tokens[nr_token].str, "==");
                     nr_token++;
                     break;
@@ -994,13 +994,13 @@ static bool make_token(char *e)
                     strcpy(tokens[nr_token].str, "!=");
                     nr_token++;
                     break;
-                case OR:
-                    tokens[nr_token].type = OR;
+                case ALU_OR:
+                    tokens[nr_token].type = ALU_OR;
                     strcpy(tokens[nr_token].str, "||");
                     nr_token++;
                     break;
-                case AND:
-                    tokens[nr_token].type = AND;
+                case ALU_AND:
+                    tokens[nr_token].type = ALU_AND;
                     strcpy(tokens[nr_token].str, "&&");
                     nr_token++;
                     break;

@@ -41,11 +41,11 @@ module ysyx_24080006_mdu
   wire ge = accum_window_q[31] == shift_b_q[31] ? ~alu2mdu.res_34[32] : accum_window_q[31];
   wire [32:0] next_quotient = ge ? shift_a_q | (33'h1 << count_q) : shift_a_q;
   wire [31:0] next_remainder = ge ? alu2mdu.res_34[32:1] : accum_window_q[31:0];
-  wire change_sign = mdu_set.mdu_op == DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // DIV : REM
+  wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // ALU_DIV : ALU_REM
 
-  assign valid_o = ((mdu_set.mdu_op inside {MULL, MULH}) && (curr == MD_LAST))
+  assign valid_o = ((mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) && (curr == MD_LAST))
                     ||  (curr == MD_FINISH);
-  assign mdu_c = (mdu_set.mdu_op inside {MULL, MULH}) ? alu2mdu.res_34[31:0] : accum_window_q[31:0];
+  assign mdu_c = (mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) ? alu2mdu.res_34[31:0] : accum_window_q[31:0];
 
   always_ff @(posedge clock) begin
     if (reset) begin
@@ -79,24 +79,24 @@ module ysyx_24080006_mdu
       unique case (curr)
         MD_IDLE: begin
           unique case (mdu_set.mdu_op)
-            MULL: begin
+            ALU_MULL: begin
               shift_a_d      = {sign_a, mdu_a} << 1;
               accum_window_d = {~(sign_a & mdu_b[0]), mdu_a & {32{mdu_b[0]}}};
               shift_b_d      = {sign_b, mdu_b} >> 1;
               next           = (({sign_b, mdu_b} >> 1) == 0) ? MD_LAST : MD_COMP;
             end
-            MULH: begin
+            ALU_MULH: begin
               shift_a_d = {sign_a, mdu_a};
               accum_window_d = {1'b1, ~(sign_a & mdu_b[0]), mdu_a[31:1] & {31{mdu_b[0]}}};
               shift_b_d = {sign_b, mdu_b} >> 1;
               next = MD_COMP;
             end
-            DIV: begin
+            ALU_DIV: begin
               accum_window_d = {33{1'b1}};
               next           = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
               div0_d         = ~alu2mdu.not_zero;
             end
-            REM: begin
+            ALU_REM: begin
               accum_window_d = {sign_a, mdu_a};
               next           = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
             end
@@ -120,19 +120,19 @@ module ysyx_24080006_mdu
         MD_COMP: begin
           count_d = count_q - 5'h1;
           unique case (mdu_set.mdu_op)
-            MULL: begin
+            ALU_MULL: begin
               accum_window_d = alu2mdu.res_34[32:0];
               shift_a_d = shift_a_q << 1;
               shift_b_d = shift_b_q >> 1;
               next = ((shift_b_d == 0) || (count_q == 5'd1)) ? MD_LAST : MD_COMP;
             end
-            MULH: begin
+            ALU_MULH: begin
               accum_window_d = alu2mdu.res_34[33:1];
               shift_a_d      = shift_a_q;
               shift_b_d      = shift_b_q >> 1;
               next           = (count_q == 5'd1) ? MD_LAST : MD_COMP;
             end
-            DIV, REM: begin
+            ALU_DIV, ALU_REM: begin
               accum_window_d = {next_remainder, op_numerator_q[count_d]};
               shift_a_d      = next_quotient;
               next           = (count_q == 5'd1) ? MD_LAST : MD_COMP;
@@ -143,15 +143,15 @@ module ysyx_24080006_mdu
 
         MD_LAST: begin
           unique case (mdu_set.mdu_op)
-            MULL, MULH: begin
+            ALU_MULL, ALU_MULH: begin
               accum_window_d = alu2mdu.res_34[32:0];
               next           = MD_IDLE;
             end
-            DIV: begin
+            ALU_DIV: begin
               accum_window_d = next_quotient;
               next           = MD_SIGN;
             end
-            REM: begin
+            ALU_REM: begin
               accum_window_d = {1'b0, next_remainder};
               next           = MD_SIGN;
             end
@@ -174,24 +174,24 @@ module ysyx_24080006_mdu
   end
 
   always_comb begin
-    mdu2alu.a = {accum_window_q[31:0], 1'b1};  // DIV
+    mdu2alu.a = {accum_window_q[31:0], 1'b1};  // ALU_DIV
     mdu2alu.b = {~shift_b_q[31:0], 1'b1};
 
     unique case (mdu_set.mdu_op)
 
-      MULL: begin
+      ALU_MULL: begin
         mdu2alu.a = accum_window_q;
         mdu2alu.b = {~(shift_a_q[32] & shift_b_q[0]), (shift_a_q[31:0] & {32{shift_b_q[0]}})};
       end
 
-      MULH: begin
+      ALU_MULH: begin
         mdu2alu.a = accum_window_q;
         mdu2alu.b = curr == MD_LAST ?
           { (shift_a_q[32] & shift_b_q[0]), ~(shift_a_q[31:0] & {32{shift_b_q[0]}})} :
           {~(shift_a_q[32] & shift_b_q[0]),  (shift_a_q[31:0] & {32{shift_b_q[0]}})};
       end
 
-      DIV, REM: begin
+      ALU_DIV, ALU_REM: begin
         unique case (curr)
           MD_IDLE, MD_ABS_B: begin
             mdu2alu.a = 33'h1;

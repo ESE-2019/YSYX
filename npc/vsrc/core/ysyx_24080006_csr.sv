@@ -10,7 +10,7 @@ module ysyx_24080006_csr
     input logic mret,
 
     input csr_set_t csr_set,
-    input system_e csr_name,
+    input logic [11:0] csr_name,
     input logic [31:0] csr_pc,
 
     input logic instret,
@@ -54,31 +54,31 @@ module ysyx_24080006_csr
     csr_rdata   = 32'b0;
     illegal_csr = 1'b0;
     unique case (csr_name)
-      MSTATUS: csr_rdata = mstatus_q;
-      MTVEC: csr_rdata = mtvec_q;
-      MCOUNTINHIBIT: csr_rdata = mcountinhibit_q;
-      MEPC: csr_rdata = mepc_q;
-      MCAUSE: csr_rdata = mcause_q;
-      MCYCLE, MINSTRET, MHPMCOUNTER3,
-      MHPMCOUNTER4,  MHPMCOUNTER5,  MHPMCOUNTER6,  MHPMCOUNTER7,
-      MHPMCOUNTER8,  MHPMCOUNTER9,  MHPMCOUNTER10, MHPMCOUNTER11,
-      MHPMCOUNTER12, MHPMCOUNTER13, MHPMCOUNTER14, MHPMCOUNTER15,
-      MHPMCOUNTER16, MHPMCOUNTER17, MHPMCOUNTER18, MHPMCOUNTER19,
-      MHPMCOUNTER20, MHPMCOUNTER21, MHPMCOUNTER22, MHPMCOUNTER23,
-      MHPMCOUNTER24, MHPMCOUNTER25, MHPMCOUNTER26, MHPMCOUNTER27,
-      MHPMCOUNTER28, MHPMCOUNTER29, MHPMCOUNTER30, MHPMCOUNTER31:
+      riscv_instr::CSR_MSTATUS: csr_rdata = mstatus_q;
+      riscv_instr::CSR_MTVEC: csr_rdata = mtvec_q;
+      riscv_instr::CSR_MCOUNTINHIBIT: csr_rdata = mcountinhibit_q;
+      riscv_instr::CSR_MEPC: csr_rdata = mepc_q;
+      riscv_instr::CSR_MCAUSE: csr_rdata = mcause_q;
+      riscv_instr::CSR_MCYCLE, riscv_instr::CSR_MINSTRET, riscv_instr::CSR_MHPMCOUNTER3,
+      riscv_instr::CSR_MHPMCOUNTER4,  riscv_instr::CSR_MHPMCOUNTER5,  riscv_instr::CSR_MHPMCOUNTER6,  riscv_instr::CSR_MHPMCOUNTER7,
+      riscv_instr::CSR_MHPMCOUNTER8,  riscv_instr::CSR_MHPMCOUNTER9,  riscv_instr::CSR_MHPMCOUNTER10, riscv_instr::CSR_MHPMCOUNTER11,
+      riscv_instr::CSR_MHPMCOUNTER12, riscv_instr::CSR_MHPMCOUNTER13, riscv_instr::CSR_MHPMCOUNTER14, riscv_instr::CSR_MHPMCOUNTER15,
+      riscv_instr::CSR_MHPMCOUNTER16, riscv_instr::CSR_MHPMCOUNTER17, riscv_instr::CSR_MHPMCOUNTER18, riscv_instr::CSR_MHPMCOUNTER19,
+      riscv_instr::CSR_MHPMCOUNTER20, riscv_instr::CSR_MHPMCOUNTER21, riscv_instr::CSR_MHPMCOUNTER22, riscv_instr::CSR_MHPMCOUNTER23,
+      riscv_instr::CSR_MHPMCOUNTER24, riscv_instr::CSR_MHPMCOUNTER25, riscv_instr::CSR_MHPMCOUNTER26, riscv_instr::CSR_MHPMCOUNTER27,
+      riscv_instr::CSR_MHPMCOUNTER28, riscv_instr::CSR_MHPMCOUNTER29, riscv_instr::CSR_MHPMCOUNTER30, riscv_instr::CSR_MHPMCOUNTER31:
       csr_rdata = counter_low[counter_addr];
-      MCYCLEH, MINSTRETH, MHPMCOUNTER3H,
-      MHPMCOUNTER4H,  MHPMCOUNTER5H,  MHPMCOUNTER6H,  MHPMCOUNTER7H,
-      MHPMCOUNTER8H,  MHPMCOUNTER9H,  MHPMCOUNTER10H, MHPMCOUNTER11H,
-      MHPMCOUNTER12H, MHPMCOUNTER13H, MHPMCOUNTER14H, MHPMCOUNTER15H,
-      MHPMCOUNTER16H, MHPMCOUNTER17H, MHPMCOUNTER18H, MHPMCOUNTER19H,
-      MHPMCOUNTER20H, MHPMCOUNTER21H, MHPMCOUNTER22H, MHPMCOUNTER23H,
-      MHPMCOUNTER24H, MHPMCOUNTER25H, MHPMCOUNTER26H, MHPMCOUNTER27H,
-      MHPMCOUNTER28H, MHPMCOUNTER29H, MHPMCOUNTER30H, MHPMCOUNTER31H:
+      riscv_instr::CSR_MCYCLEH, riscv_instr::CSR_MINSTRETH, riscv_instr::CSR_MHPMCOUNTER3H,
+      riscv_instr::CSR_MHPMCOUNTER4H,  riscv_instr::CSR_MHPMCOUNTER5H,  riscv_instr::CSR_MHPMCOUNTER6H,  riscv_instr::CSR_MHPMCOUNTER7H,
+      riscv_instr::CSR_MHPMCOUNTER8H,  riscv_instr::CSR_MHPMCOUNTER9H,  riscv_instr::CSR_MHPMCOUNTER10H, riscv_instr::CSR_MHPMCOUNTER11H,
+      riscv_instr::CSR_MHPMCOUNTER12H, riscv_instr::CSR_MHPMCOUNTER13H, riscv_instr::CSR_MHPMCOUNTER14H, riscv_instr::CSR_MHPMCOUNTER15H,
+      riscv_instr::CSR_MHPMCOUNTER16H, riscv_instr::CSR_MHPMCOUNTER17H, riscv_instr::CSR_MHPMCOUNTER18H, riscv_instr::CSR_MHPMCOUNTER19H,
+      riscv_instr::CSR_MHPMCOUNTER20H, riscv_instr::CSR_MHPMCOUNTER21H, riscv_instr::CSR_MHPMCOUNTER22H, riscv_instr::CSR_MHPMCOUNTER23H,
+      riscv_instr::CSR_MHPMCOUNTER24H, riscv_instr::CSR_MHPMCOUNTER25H, riscv_instr::CSR_MHPMCOUNTER26H, riscv_instr::CSR_MHPMCOUNTER27H,
+      riscv_instr::CSR_MHPMCOUNTER28H, riscv_instr::CSR_MHPMCOUNTER29H, riscv_instr::CSR_MHPMCOUNTER30H, riscv_instr::CSR_MHPMCOUNTER31H:
       csr_rdata = counter_high[counter_addr];
-      MVENDORID: csr_rdata = 32'h79737978;
-      MARCHID: csr_rdata = 32'd24080006;
+      riscv_instr::CSR_MVENDORID: csr_rdata = 32'h79737978;
+      riscv_instr::CSR_MARCHID: csr_rdata = 32'd24080006;
       default: illegal_csr = 1'b1;
     endcase
   end
@@ -86,15 +86,15 @@ module ysyx_24080006_csr
 
   always_comb begin
     unique case (csr_set.csr_op)
-      READ:    csr_wdata_masked = csr_wdata;
-      WRITE:   csr_wdata_masked = csr_wdata;
-      SET:     csr_wdata_masked = csr_wdata | csr_rdata;
-      CLEAR:   csr_wdata_masked = ~csr_wdata & csr_rdata;
-      default: csr_wdata_masked = csr_wdata;
+      CSR_READ:  csr_wdata_masked = csr_wdata;
+      CSR_WRITE: csr_wdata_masked = csr_wdata;
+      CSR_SET:   csr_wdata_masked = csr_wdata | csr_rdata;
+      CSR_CLEAR: csr_wdata_masked = ~csr_wdata & csr_rdata;
+      default:   csr_wdata_masked = csr_wdata;
     endcase
   end
 
-  wire csr_we = csr_set.csr_enable & ~illegal_csr & csr_set.csr_op inside {WRITE, SET, CLEAR};
+  wire csr_we = csr_set.csr_enable & ~illegal_csr & csr_set.csr_op inside {CSR_WRITE, CSR_SET, CSR_CLEAR};
 
   always_comb begin
     mstatus_d = mstatus_q;
@@ -102,18 +102,19 @@ module ysyx_24080006_csr
     mcountinhibit_d = mcountinhibit_q;
     mepc_d = mepc_q;
     mcause_d = mcause_q;
-    if (csr_we) begin
+    if (csr_we) begin  // TODO add more csr
       unique case (csr_name)
-        MSTATUS: begin
+        riscv_instr::CSR_MSTATUS: begin
           mstatus_d = 32'b0;
           mstatus_d[MSTATUS_MPP_HIGH:MSTATUS_MPP_LOW] = csr_wdata_masked[MSTATUS_MPP_HIGH:MSTATUS_MPP_LOW];
           mstatus_d[MSTATUS_MPIE] = csr_wdata_masked[MSTATUS_MPIE];
           mstatus_d[MSTATUS_MIE] = csr_wdata_masked[MSTATUS_MIE];
         end
-        MTVEC: mtvec_d = {csr_wdata_masked[31:2], 2'b00};
-        MCOUNTINHIBIT: mcountinhibit_d = {csr_wdata_masked[31:2], 1'b0, csr_wdata_masked[0]};
-        MEPC: mepc_d = {csr_wdata_masked[31:1], 1'b0};
-        MCAUSE: mcause_d = csr_wdata_masked;
+        riscv_instr::CSR_MTVEC: mtvec_d = {csr_wdata_masked[31:2], 2'b00};
+        riscv_instr::CSR_MCOUNTINHIBIT:
+        mcountinhibit_d = {csr_wdata_masked[31:2], 1'b0, csr_wdata_masked[0]};
+        riscv_instr::CSR_MEPC: mepc_d = {csr_wdata_masked[31:1], 1'b0};
+        riscv_instr::CSR_MCAUSE: mcause_d = csr_wdata_masked;
         default: ;
       endcase
     end
@@ -190,7 +191,8 @@ module ysyx_24080006_csr
   always_ff @(posedge clock) begin
     if (csr_set.csr_enable)
       unique case (csr_name)
-        MSTATUS, MTVEC, MEPC, MCAUSE, MVENDORID, MARCHID: ;
+        riscv_instr::CSR_MSTATUS, riscv_instr::CSR_MTVEC, riscv_instr::CSR_MEPC, riscv_instr::CSR_MCAUSE, riscv_instr::CSR_MVENDORID, riscv_instr::CSR_MARCHID:
+        ;
         default: SKIP_DIFFTEST();
       endcase
   end

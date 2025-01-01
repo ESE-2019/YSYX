@@ -51,9 +51,9 @@ module ysyx_24080006_ifu
   wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
-  assign detect_hazard_d = inst_d[6:0] inside {JAL, JALR, SYSTEM, BRANCH, MISC_MEM};
-  // wire jal = inst[6:0] == JAL;
-  // assign detect_hazard_d = inst_d[6:0] inside {JALR, SYSTEM, BRANCH, MISC_MEM};
+  assign detect_hazard_d = inst_d[6:0] inside {OPCODE_JAL, OPCODE_JALR, OPCODE_SYSTEM, OPCODE_BRANCH, OPCODE_MISCMEM};
+  // wire jal = inst[6:0] == OPCODE_JAL;
+  // assign detect_hazard_d = inst_d[6:0] inside {OPCODE_JALR, OPCODE_SYSTEM, OPCODE_BRANCH, OPCODE_MISCMEM};
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -358,25 +358,25 @@ module ysyx_24080006_ifu
   always_ff @(posedge clock) begin
     if (exu2ifu.valid && ifu2exu_ready) begin
       case (exu_dbg_inst[6:0])
-        AUIPC, LUI, OP, OP_IMM: begin
+        OPCODE_AUIPC, OPCODE_LUI, OPCODE_OP, OPCODE_OPIMM: begin
           op_c += ($time - inst_queue.pop_back) / 2;
           op_i++;
         end
-        LOAD, STORE: begin
+        OPCODE_LOAD, OPCODE_STORE: begin
           ls_c += ($time - inst_queue.pop_back) / 2;
           ls_i++;
         end
-        SYSTEM, MISC_MEM: begin
+        OPCODE_SYSTEM, OPCODE_MISCMEM: begin
           sys_c += ($time - inst_queue.pop_back) / 2;
           sys_i++;
         end
-        BRANCH, JAL, JALR: begin
+        OPCODE_BRANCH, OPCODE_JAL, OPCODE_JALR: begin
           br_c += ($time - inst_queue.pop_back) / 2;
           br_i++;
         end
         default: ;
       endcase
-      if (exu_dbg_inst == WFI_INST || exu_dbg_inst == EBREAK_INST) ebreak();
+      if (exu_dbg_inst == riscv_instr::WFI || exu_dbg_inst == riscv_instr::EBREAK) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
       else retire_pc <= exu2ifu.pc + (exu2ifu.rv16 ? 32'h2 : 32'h4);
