@@ -38,7 +38,7 @@ module ysyx_24080006_ex_stage
     input  axi_r_s2m_t lsu_r_s2m
 );
 
-  logic mdu_valid_o, mdu_valid_i;
+  logic mdu_valid, mdu_ready;
   mdu2alu_t mdu2alu;
   alu2mdu_t alu2mdu;
   logic exu2lsu_valid;
@@ -81,7 +81,7 @@ module ysyx_24080006_ex_stage
         else next = EX_LSU;
       end
       EX_MDU: begin
-        if (mdu_valid_i) next = EX_IDLE;
+        if (mdu_ready) next = EX_IDLE;
         else next = EX_MDU;
       end
       default: next = EX_IDLE;
@@ -121,7 +121,7 @@ module ysyx_24080006_ex_stage
           end
         end
         EX_MDU: begin
-          if (mdu_valid_i) begin
+          if (mdu_ready) begin
             exu2idu_ready <= 1'b1;
             exu2ifu.valid <= 1'b1;
           end else begin
@@ -137,7 +137,7 @@ module ysyx_24080006_ex_stage
     end
   end
 
-  logic [31:0] alu_a, alu_b, alu_c, mdu_c;
+  logic [31:0] alu_a, alu_b, alu_o, mdu_o;
   logic [31:0] dnpc, lsu_addr;
   logic [1:0] lsu_size;
   logic lsu_sext;
@@ -146,7 +146,6 @@ module ysyx_24080006_ex_stage
   logic [31:0] lsu_rdata;
   logic [31:0] mdu_a, mdu_b;
   mdu_set_t mdu_set;
-  logic mdu_enable;
 
   assign forward_en   = curr == EX_LSU ? lsu2exu_valid : reg_we;
   assign forward_data = curr == EX_LSU ? lsu_rdata : rd_data;
@@ -159,7 +158,7 @@ module ysyx_24080006_ex_stage
       exu2ifu.dnpc <= 32'b0;
       exu2ifu.jump <= 1'b0;
       exu2ifu.branch <= 1'b0;
-      mdu_valid_o <= 1'b0;
+      mdu_valid <= 1'b0;
       lsu_addr <= 32'b0;
       lsu_sext <= 1'b0;
       lsu_size <= 2'b0;
@@ -184,13 +183,13 @@ module ysyx_24080006_ex_stage
             exu2ifu.dnpc <= dnpc;
             exu2ifu.jump <= decoder.jal | decoder.jalr | decoder.ecall | decoder.mret;
             // exu2ifu.jump <= decoder.jalr | decoder.ecall | decoder.mret;
-            exu2ifu.branch <= alu_c[0] & decoder.branch;
+            exu2ifu.branch <= alu_o[0] & decoder.branch;
             exu2ifu.flush <= idu2exu.flush;
             rd_addr <= decoder.rd_addr;
             exu_dbg_inst <= idu_dbg_inst;
             if (decoder.lsu_set.lsu_enable) begin  // load/store
               exu2lsu_valid <= 1'b1;
-              lsu_addr <= alu_c;
+              lsu_addr <= alu_o;
               lsu_size <= decoder.lsu_set.lsu_size;
               lsu_write <= decoder.lsu_set.lsu_write;
               lsu_sext <= decoder.lsu_set.lsu_sext;
@@ -202,11 +201,10 @@ module ysyx_24080006_ex_stage
             end else if (decoder.mdu_set.mdu_enable) begin  // mul/div
               exu2lsu_valid <= 1'b0;
               reg_we <= 1'b0;
-              mdu_valid_o <= 1'b1;
+              mdu_valid <= 1'b1;
               mdu_a <= alu_a;
               mdu_b <= alu_b;
               mdu_set <= decoder.mdu_set;
-              mdu_enable <= 1'b1;
               load_num <= 1'b0;
               load_cycle <= 1'b0;
               store_num <= 1'b0;
@@ -214,7 +212,7 @@ module ysyx_24080006_ex_stage
             end else begin  // others
               exu2lsu_valid <= 1'b0;
               reg_we <= decoder.reg_we;
-              rd_data <= alu_c;
+              rd_data <= alu_o;
               ecall <= decoder.ecall;
               mret <= decoder.mret;
               csr_pc <= idu2exu.pc;
@@ -227,7 +225,7 @@ module ysyx_24080006_ex_stage
           end else begin
             rd_addr <= '0;
             exu2lsu_valid <= 1'b0;
-            mdu_valid_o <= 1'b0;
+            mdu_valid <= 1'b0;
             reg_we <= 1'b0;
             csr_set <= '0;
             load_num <= 1'b0;
@@ -248,14 +246,13 @@ module ysyx_24080006_ex_stage
           store_num <= 1'b0;
         end
         EX_MDU: begin
-          if (mdu_valid_i) begin
+          if (mdu_ready) begin
             reg_we <= 1'b1;
-            rd_data <= mdu_c;
-            mdu_valid_o <= 1'b0;
-            mdu_enable <= 1'b0;
+            rd_data <= mdu_o;
+            mdu_valid <= 1'b0;
           end else begin
             reg_we <= 1'b0;
-            mdu_valid_o <= 1'b1;
+            mdu_valid <= 1'b1;
           end
         end
         default: begin
@@ -265,7 +262,7 @@ module ysyx_24080006_ex_stage
           exu2ifu.dnpc <= 32'b0;
           exu2ifu.jump <= 1'b0;
           exu2ifu.branch <= 1'b0;
-          mdu_valid_o <= 1'b0;
+          mdu_valid <= 1'b0;
           lsu_addr <= 32'b0;
           lsu_sext <= 1'b0;
           lsu_size <= 2'b0;
@@ -300,11 +297,7 @@ module ysyx_24080006_ex_stage
       .*,
       .alu_op(decoder.alu_set.alu_op)
   );
-  ysyx_24080006_mdu MDU (
-      .*,
-      .valid_i(mdu_valid_o),
-      .valid_o(mdu_valid_i)
-  );
+  ysyx_24080006_mdu MDU (.*);
 
 
 `ifdef SIM_MODE

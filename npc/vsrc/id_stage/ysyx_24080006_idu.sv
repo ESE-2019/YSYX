@@ -16,50 +16,35 @@ module ysyx_24080006_idu
   wire [31:0] immB = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
 
-  logic use_rs1;
-  logic use_rs2;
-
   always_comb begin
-    idu.imm      = immI;
-    idu.alu_set  = '0;
-    idu.csr_set  = '0;
-    idu.lsu_set  = '0;
-    idu.mdu_set  = '0;
-    idu.csr_name = 12'h0;
-    idu.reg_we   = 1'b0;
-    idu.jal      = 1'b0;
-    idu.jalr     = 1'b0;
-    idu.branch   = 1'b0;
-    idu.ecall    = 1'b0;
-    idu.mret     = 1'b0;
-    inst_err     = 1'b0;
-    fencei       = 1'b0;
-    use_rs1      = 1'b0;
-    use_rs2      = 1'b0;
+    idu      = '0;
+    idu.imm  = immI;
+    inst_err = 1'b0;
+    fencei   = 1'b0;
     unique case (inst[6:0])
 
       riscv_instr::LUI[6:0]: begin
-        idu.imm    = immU;
+        idu.imm            = immU;
         idu.alu_set.alu_a  = ALU_A_0;
         idu.alu_set.alu_b  = ALU_B_IMM;
         idu.alu_set.alu_op = ALU_ADD;
-        idu.reg_we = 1'b1;
+        idu.rd_addr        = inst[7+:RegWidth];
       end
 
       riscv_instr::AUIPC[6:0]: begin
-        idu.imm    = immU;
+        idu.imm            = immU;
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_IMM;
         idu.alu_set.alu_op = ALU_ADD;
-        idu.reg_we = 1'b1;
+        idu.rd_addr        = inst[7+:RegWidth];
       end
 
       riscv_instr::ADD[6:0]: begin
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_RS2;
-        idu.reg_we        = 1'b1;
-        use_rs1           = 1'b1;
-        use_rs2           = 1'b1;
+        idu.rs1_addr      = inst[15+:RegWidth];
+        idu.rs2_addr      = inst[20+:RegWidth];
+        idu.rd_addr       = inst[7+:RegWidth];
         unique case ({
           inst[31:25], inst[14:12]
         })
@@ -211,8 +196,8 @@ module ysyx_24080006_idu
         idu.imm           = immI;
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_IMM;
-        idu.reg_we        = 1'b1;
-        use_rs1           = 1'b1;
+        idu.rs1_addr      = inst[15+:RegWidth];
+        idu.rd_addr       = inst[7+:RegWidth];
         unique case (inst[14:12])
           {
             riscv_instr::ADDI[14:12]
@@ -295,8 +280,8 @@ module ysyx_24080006_idu
         idu.alu_set.alu_op     = ALU_ADD;
         idu.lsu_set.lsu_enable = 1'b1;
         idu.lsu_set.lsu_write  = 1'b0;
-        idu.reg_we             = 1'b1;
-        use_rs1                = 1'b1;
+        idu.rs1_addr           = inst[15+:RegWidth];
+        idu.rd_addr            = inst[7+:RegWidth];
         unique case (inst[14:12])
           {
             riscv_instr::LB[14:12]
@@ -339,8 +324,8 @@ module ysyx_24080006_idu
         idu.alu_set.alu_op     = ALU_ADD;
         idu.lsu_set.lsu_enable = 1'b1;
         idu.lsu_set.lsu_write  = 1'b1;
-        use_rs1                = 1'b1;
-        use_rs2                = 1'b1;
+        idu.rs1_addr           = inst[15+:RegWidth];
+        idu.rs2_addr           = inst[20+:RegWidth];
         unique case (inst[14:12])
           {
             riscv_instr::SB[14:12]
@@ -369,8 +354,8 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_PC_INCR;
         idu.alu_set.alu_op = ALU_ADD;
-        idu.reg_we = 1'b1;
         idu.jal    = 1'b1;
+        idu.rd_addr = inst[7+:RegWidth];
       end
 
       riscv_instr::JALR[6:0]: begin
@@ -378,10 +363,10 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = ALU_A_PC;
         idu.alu_set.alu_b  = ALU_B_PC_INCR;
         idu.alu_set.alu_op = ALU_ADD;
-        idu.reg_we = 1'b1;
         idu.jalr   = 1'b1;
+        idu.rs1_addr = inst[15+:RegWidth];
+        idu.rd_addr = inst[7+:RegWidth];
         if (inst[14:12] != riscv_instr::JALR[14:12]) inst_err = 1'b1;
-        use_rs1 = 1'b1;
       end
 
       riscv_instr::BEQ[6:0]: begin
@@ -389,8 +374,8 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a = ALU_A_RS1;
         idu.alu_set.alu_b = ALU_B_RS2;
         idu.branch        = 1'b1;
-        use_rs1           = 1'b1;
-        use_rs2           = 1'b1;
+        idu.rs1_addr      = inst[15+:RegWidth];
+        idu.rs2_addr      = inst[20+:RegWidth];
         unique case (inst[14:12])
           {
             riscv_instr::BEQ[14:12]
@@ -437,7 +422,7 @@ module ysyx_24080006_idu
         idu.alu_set.alu_a  = ALU_A_0;
         idu.alu_set.alu_b  = ALU_B_CSR;
         idu.alu_set.alu_op = ALU_ADD;
-        idu.reg_we = 1'b1;
+        idu.rd_addr = inst[7+:RegWidth];
         if (inst[14:12] == 3'b000) begin
           if ({inst[19:15], inst[11:7]} == '0) begin
             unique case (inst[31:20])
@@ -462,7 +447,7 @@ module ysyx_24080006_idu
           if (inst[14]) begin
             idu.csr_set.csr_uimm = 1'b1;
           end else begin
-            use_rs1 = 1'b1;
+            idu.rs1_addr = inst[15+:RegWidth];
           end
           unique case (inst[13:12])
             {
@@ -510,13 +495,7 @@ module ysyx_24080006_idu
 
       default: inst_err = 1'b1;
     endcase
-    idu.rs1_addr = inst[15+:RegWidth] & {RegWidth{use_rs1}};
-    idu.rs2_addr = inst[20+:RegWidth] & {RegWidth{use_rs2}};
-    idu.rd_addr  = inst[7+:RegWidth] & {RegWidth{idu.reg_we}};
-    if (idu.rd_addr == '0) idu.reg_we = 1'b0;
-    if (RegWidth == 4) begin
-      inst_err = inst_err | (use_rs1 & inst[19]) | (use_rs2 & inst[24]) | (idu.reg_we & inst[11]);
-    end
+    idu.reg_we = |idu.rd_addr;
   end
 
 endmodule

@@ -114,8 +114,7 @@ package ysyx_24080006_pkg;
   } mdu2alu_t;
 
   typedef struct packed {
-    logic [33:0] res_34;
-    logic [31:0] res_32;
+    logic [33:0] res;
     logic not_zero;
   } alu2mdu_t;
 

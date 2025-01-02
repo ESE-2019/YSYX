@@ -12,10 +12,10 @@ module ysyx_24080006_mdu
     input logic [31:0] mdu_a,
     input logic [31:0] mdu_b,
     input mdu_set_t mdu_set,
-    output logic [31:0] mdu_c,
+    output logic [31:0] mdu_o,
 
-    input  logic valid_i,
-    output logic valid_o
+    input  logic mdu_valid,
+    output logic mdu_ready
 );
 
   typedef enum logic [2:0] {
@@ -33,72 +33,72 @@ module ysyx_24080006_mdu
   logic [4:0] count_q, count_d;
   logic [32:0] shift_a_q, shift_a_d;
   logic [32:0] shift_b_q, shift_b_d;
-  logic [31:0] op_numerator_q, op_numerator_d;
-  logic [32:0] accum_window_q, accum_window_d;
+  logic [31:0] dividend_q, dividend_d;
+  logic [32:0] accumulator_q, accumulator_d;
 
   wire sign_a = mdu_a[31] & mdu_set.signed_a;
   wire sign_b = mdu_b[31] & mdu_set.signed_b;
-  wire ge = accum_window_q[31] == shift_b_q[31] ? ~alu2mdu.res_34[32] : accum_window_q[31];
-  wire [32:0] next_quotient = ge ? shift_a_q | (33'h1 << count_q) : shift_a_q;
-  wire [31:0] next_remainder = ge ? alu2mdu.res_34[32:1] : accum_window_q[31:0];
-  wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // ALU_DIV : ALU_REM
+  wire ge = accumulator_q[31] == shift_b_q[31] ? ~alu2mdu.res[32] : accumulator_q[31];
+  wire [32:0] quotient = ge ? shift_a_q | (33'h1 << count_q) : shift_a_q;
+  wire [31:0] remainder = ge ? alu2mdu.res[32:1] : accumulator_q[31:0];
+  wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // DIV REM
 
-  assign valid_o = ((mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) && (curr == MD_LAST))
-                    ||  (curr == MD_FINISH);
-  assign mdu_c = (mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) ? alu2mdu.res_34[31:0] : accum_window_q[31:0];
+  assign mdu_ready = curr == MD_FINISH;
+  assign mdu_o = (mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) ? alu2mdu.res[31:0]
+                 : accumulator_q[31:0];
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      curr           <= MD_IDLE;
-      div0_q         <= 1'b0;
-      count_q        <= 5'h0;
-      shift_a_q      <= 33'h0;
-      shift_b_q      <= 33'h0;
-      op_numerator_q <= 32'h0;
-      accum_window_q <= 33'h0;
+      curr          <= MD_IDLE;
+      div0_q        <= 1'b0;
+      count_q       <= 5'h0;
+      shift_a_q     <= 33'h0;
+      shift_b_q     <= 33'h0;
+      dividend_q    <= 32'h0;
+      accumulator_q <= 33'h0;
     end else begin
-      curr           <= next;
-      div0_q         <= div0_d;
-      count_q        <= count_d;
-      shift_a_q      <= shift_a_d;
-      shift_b_q      <= shift_b_d;
-      op_numerator_q <= op_numerator_d;
-      accum_window_q <= accum_window_d;
+      curr          <= next;
+      div0_q        <= div0_d;
+      count_q       <= count_d;
+      shift_a_q     <= shift_a_d;
+      shift_b_q     <= shift_b_d;
+      dividend_q    <= dividend_d;
+      accumulator_q <= accumulator_d;
     end
   end
 
   always_comb begin
-    next           = curr;
-    div0_d         = div0_q;
-    count_d        = count_q;
-    shift_a_d      = shift_a_q;
-    shift_b_d      = shift_b_q;
-    op_numerator_d = op_numerator_q;
-    accum_window_d = accum_window_q;
-    if (valid_i) begin
+    next          = curr;
+    div0_d        = div0_q;
+    count_d       = count_q;
+    shift_a_d     = shift_a_q;
+    shift_b_d     = shift_b_q;
+    dividend_d    = dividend_q;
+    accumulator_d = accumulator_q;
+    if (mdu_valid) begin
       unique case (curr)
         MD_IDLE: begin
           unique case (mdu_set.mdu_op)
             ALU_MULL: begin
-              shift_a_d      = {sign_a, mdu_a} << 1;
-              accum_window_d = {~(sign_a & mdu_b[0]), mdu_a & {32{mdu_b[0]}}};
-              shift_b_d      = {sign_b, mdu_b} >> 1;
-              next           = (({sign_b, mdu_b} >> 1) == 0) ? MD_LAST : MD_COMP;
+              shift_a_d     = {sign_a, mdu_a} << 1;
+              accumulator_d = {~(sign_a & mdu_b[0]), mdu_a & {32{mdu_b[0]}}};
+              shift_b_d     = {sign_b, mdu_b} >> 1;
+              next          = MD_COMP;  // (({sign_b, mdu_b} >> 1) == 0) ? MD_LAST : MD_COMP;
             end
             ALU_MULH: begin
               shift_a_d = {sign_a, mdu_a};
-              accum_window_d = {1'b1, ~(sign_a & mdu_b[0]), mdu_a[31:1] & {31{mdu_b[0]}}};
+              accumulator_d = {1'b1, ~(sign_a & mdu_b[0]), mdu_a[31:1] & {31{mdu_b[0]}}};
               shift_b_d = {sign_b, mdu_b} >> 1;
               next = MD_COMP;
             end
             ALU_DIV: begin
-              accum_window_d = {33{1'b1}};
-              next           = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
-              div0_d         = ~alu2mdu.not_zero;
+              accumulator_d = 33'h1;
+              next          = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
+              div0_d        = ~alu2mdu.not_zero;
             end
             ALU_REM: begin
-              accum_window_d = {sign_a, mdu_a};
-              next           = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
+              accumulator_d = {sign_a, mdu_a};
+              next          = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
             end
             default: ;
           endcase
@@ -106,62 +106,49 @@ module ysyx_24080006_mdu
         end
 
         MD_ABS_A: begin
-          shift_a_d      = 33'h0;
-          op_numerator_d = sign_a ? alu2mdu.res_32 : mdu_a;
-          next           = MD_ABS_B;
+          shift_a_d  = 33'h0;
+          dividend_d = sign_a ? alu2mdu.res[32:1] : mdu_a;
+          next       = MD_ABS_B;
         end
 
         MD_ABS_B: begin
-          accum_window_d = {32'h0, op_numerator_q[31]};
-          shift_b_d      = sign_b ? {1'b0, alu2mdu.res_32} : {1'b0, mdu_b};
-          next           = MD_COMP;
+          accumulator_d = {32'h0, dividend_q[31]};
+          shift_b_d     = sign_b ? {1'b0, alu2mdu.res[32:1]} : {1'b0, mdu_b};
+          next          = MD_COMP;
         end
 
         MD_COMP: begin
           count_d = count_q - 5'h1;
           unique case (mdu_set.mdu_op)
             ALU_MULL: begin
-              accum_window_d = alu2mdu.res_34[32:0];
+              accumulator_d = alu2mdu.res[32:0];
               shift_a_d = shift_a_q << 1;
               shift_b_d = shift_b_q >> 1;
-              next = ((shift_b_d == 0) || (count_q == 5'd1)) ? MD_LAST : MD_COMP;
+              next = ((shift_b_d == 0) || (count_q == 5'd1)) ? MD_FINISH : MD_COMP;
             end
             ALU_MULH: begin
-              accum_window_d = alu2mdu.res_34[33:1];
-              shift_a_d      = shift_a_q;
-              shift_b_d      = shift_b_q >> 1;
-              next           = (count_q == 5'd1) ? MD_LAST : MD_COMP;
+              accumulator_d = alu2mdu.res[33:1];
+              shift_a_d     = shift_a_q;
+              shift_b_d     = shift_b_q >> 1;
+              next          = (count_q == 5'd1) ? MD_FINISH : MD_COMP;
             end
             ALU_DIV, ALU_REM: begin
-              accum_window_d = {next_remainder, op_numerator_q[count_d]};
-              shift_a_d      = next_quotient;
-              next           = (count_q == 5'd1) ? MD_LAST : MD_COMP;
+              accumulator_d = {remainder, dividend_q[count_d]};
+              shift_a_d     = quotient;
+              next          = (count_q == 5'd1) ? MD_LAST : MD_COMP;
             end
             default: ;
           endcase
         end
 
         MD_LAST: begin
-          unique case (mdu_set.mdu_op)
-            ALU_MULL, ALU_MULH: begin
-              accum_window_d = alu2mdu.res_34[32:0];
-              next           = MD_IDLE;
-            end
-            ALU_DIV: begin
-              accum_window_d = next_quotient;
-              next           = MD_SIGN;
-            end
-            ALU_REM: begin
-              accum_window_d = {1'b0, next_remainder};
-              next           = MD_SIGN;
-            end
-            default: ;
-          endcase
+          accumulator_d = mdu_set.mdu_op == ALU_DIV ? quotient : {1'b0, remainder};
+          next          = MD_SIGN;
         end
 
         MD_SIGN: begin
           next = MD_FINISH;
-          accum_window_d = change_sign ? {1'b0, alu2mdu.res_32} : accum_window_q;
+          accumulator_d = change_sign ? {1'b0, alu2mdu.res[32:1]} : accumulator_q;
         end
 
         MD_FINISH: begin
@@ -174,19 +161,19 @@ module ysyx_24080006_mdu
   end
 
   always_comb begin
-    mdu2alu.a = {accum_window_q[31:0], 1'b1};  // ALU_DIV
+    mdu2alu.a = {accumulator_q[31:0], 1'b1};  // ALU_DIV
     mdu2alu.b = {~shift_b_q[31:0], 1'b1};
 
     unique case (mdu_set.mdu_op)
 
       ALU_MULL: begin
-        mdu2alu.a = accum_window_q;
+        mdu2alu.a = accumulator_q;
         mdu2alu.b = {~(shift_a_q[32] & shift_b_q[0]), (shift_a_q[31:0] & {32{shift_b_q[0]}})};
       end
 
       ALU_MULH: begin
-        mdu2alu.a = accum_window_q;
-        mdu2alu.b = curr == MD_LAST ?
+        mdu2alu.a = accumulator_q;
+        mdu2alu.b = curr == MD_FINISH ?
           { (shift_a_q[32] & shift_b_q[0]), ~(shift_a_q[31:0] & {32{shift_b_q[0]}})} :
           {~(shift_a_q[32] & shift_b_q[0]),  (shift_a_q[31:0] & {32{shift_b_q[0]}})};
       end
@@ -203,7 +190,7 @@ module ysyx_24080006_mdu
           end
           MD_SIGN: begin
             mdu2alu.a = 33'h1;
-            mdu2alu.b = {~accum_window_q[31:0], 1'b1};
+            mdu2alu.b = {~accumulator_q[31:0], 1'b1};
           end
           default: ;
         endcase
