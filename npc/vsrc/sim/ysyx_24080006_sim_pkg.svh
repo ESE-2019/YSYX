@@ -1,6 +1,6 @@
 package ysyx_24080006_sim_pkg;
 
-  parameter real DELAYER = 6;
+  parameter real DELAYER = 1;
 
   function automatic logic INSIDE(input logic [31:0] addr, input logic [31:0] left, input logic [31:0] right);
     INSIDE = addr >= left && addr <= right;

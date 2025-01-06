@@ -39,8 +39,6 @@ module ysyx_24080006_mdu
   wire sign_a = mdu_a[31] & mdu_set.signed_a;
   wire sign_b = mdu_b[31] & mdu_set.signed_b;
   wire ge = accumulator_q[31] == shift_b_q[31] ? ~alu2mdu.res[32] : accumulator_q[31];
-  wire [32:0] quotient = ge ? shift_a_q | (33'h1 << count_q) : shift_a_q;
-  wire [31:0] remainder = ge ? alu2mdu.res[32:1] : accumulator_q[31:0];
   wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // DIV REM
 
   assign mdu_ready = curr == MD_FINISH;
@@ -91,14 +89,10 @@ module ysyx_24080006_mdu
               shift_b_d = {sign_b, mdu_b} >> 1;
               next = MD_COMP;
             end
-            ALU_DIV: begin
-              accumulator_d = 33'h1;
+            ALU_DIV, ALU_REM: begin
+              accumulator_d = mdu_set.mdu_op == ALU_DIV ? 33'h1 : {sign_a, mdu_a};
               next          = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
               div0_d        = ~alu2mdu.not_zero;
-            end
-            ALU_REM: begin
-              accumulator_d = {sign_a, mdu_a};
-              next          = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
             end
             default: ;
           endcase
@@ -133,8 +127,8 @@ module ysyx_24080006_mdu
               next          = (count_q == 5'd1) ? MD_FINISH : MD_COMP;
             end
             ALU_DIV, ALU_REM: begin
-              accumulator_d = {remainder, dividend_q[count_d]};
-              shift_a_d     = quotient;
+              accumulator_d = {ge ? alu2mdu.res[32:1] : accumulator_q[31:0], dividend_q[count_d]};
+              shift_a_d     = ge ? shift_a_q | (33'h1 << count_q) : shift_a_q;
               next          = (count_q == 5'd1) ? MD_LAST : MD_COMP;
             end
             default: ;
@@ -142,8 +136,10 @@ module ysyx_24080006_mdu
         end
 
         MD_LAST: begin
-          accumulator_d = mdu_set.mdu_op == ALU_DIV ? quotient : {1'b0, remainder};
-          next          = MD_SIGN;
+          accumulator_d = mdu_set.mdu_op == ALU_DIV ?
+                          (ge ? shift_a_q | (33'h1 << count_q) : shift_a_q) :
+                          {1'b0, ge ? alu2mdu.res[32:1] : accumulator_q[31:0]};
+          next = MD_SIGN;
         end
 
         MD_SIGN: begin

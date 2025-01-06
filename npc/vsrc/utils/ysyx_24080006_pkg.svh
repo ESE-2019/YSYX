@@ -119,7 +119,7 @@ package ysyx_24080006_pkg;
   } alu2mdu_t;
 
   localparam int unsigned IcacheLineSize = 5;  // 4
-  localparam int unsigned IcacheLineNum = 1;  // 1
+  localparam int unsigned IcacheLineNum = 11;  // 1
 
   typedef struct packed {
     logic valid;
