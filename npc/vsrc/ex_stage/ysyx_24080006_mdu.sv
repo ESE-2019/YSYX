@@ -29,7 +29,6 @@ module ysyx_24080006_mdu
   } mdu_fsm_e;
   mdu_fsm_e curr, next;
 
-  logic div0_d, div0_q;
   logic [4:0] count_q, count_d;
   logic [32:0] shift_a_q, shift_a_d;
   logic [32:0] shift_b_q, shift_b_d;
@@ -39,7 +38,7 @@ module ysyx_24080006_mdu
   wire sign_a = mdu_a[31] & mdu_set.signed_a;
   wire sign_b = mdu_b[31] & mdu_set.signed_b;
   wire ge = accumulator_q[31] == shift_b_q[31] ? ~alu2mdu.res[32] : accumulator_q[31];
-  wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) & ~div0_q : sign_a;  // DIV REM
+  wire change_sign = mdu_set.mdu_op == ALU_DIV ? (sign_a ^ sign_b) : sign_a;
 
   assign mdu_ready = curr == MD_FINISH;
   assign mdu_o = (mdu_set.mdu_op inside {ALU_MULL, ALU_MULH}) ? alu2mdu.res[31:0]
@@ -48,7 +47,6 @@ module ysyx_24080006_mdu
   always_ff @(posedge clock) begin
     if (reset) begin
       curr          <= MD_IDLE;
-      div0_q        <= 1'b0;
       count_q       <= 5'h0;
       shift_a_q     <= 33'h0;
       shift_b_q     <= 33'h0;
@@ -56,7 +54,6 @@ module ysyx_24080006_mdu
       accumulator_q <= 33'h0;
     end else begin
       curr          <= next;
-      div0_q        <= div0_d;
       count_q       <= count_d;
       shift_a_q     <= shift_a_d;
       shift_b_q     <= shift_b_d;
@@ -67,7 +64,6 @@ module ysyx_24080006_mdu
 
   always_comb begin
     next          = curr;
-    div0_d        = div0_q;
     count_d       = count_q;
     shift_a_d     = shift_a_q;
     shift_b_d     = shift_b_q;
@@ -81,7 +77,7 @@ module ysyx_24080006_mdu
               shift_a_d     = {sign_a, mdu_a} << 1;
               accumulator_d = {~(sign_a & mdu_b[0]), mdu_a & {32{mdu_b[0]}}};
               shift_b_d     = {sign_b, mdu_b} >> 1;
-              next          = MD_COMP;  // (({sign_b, mdu_b} >> 1) == 0) ? MD_LAST : MD_COMP;
+              next          = MD_COMP;
             end
             ALU_MULH: begin
               shift_a_d = {sign_a, mdu_a};
@@ -90,9 +86,8 @@ module ysyx_24080006_mdu
               next = MD_COMP;
             end
             ALU_DIV, ALU_REM: begin
-              accumulator_d = mdu_set.mdu_op == ALU_DIV ? 33'h1 : {sign_a, mdu_a};
-              next          = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
-              div0_d        = ~alu2mdu.not_zero;
+              accumulator_d = mdu_set.mdu_op == ALU_DIV ? 33'hffff_ffff : {sign_a, mdu_a};
+              next = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
             end
             default: ;
           endcase
