@@ -41,9 +41,6 @@ static uint32_t __attribute__((section(".klib"))) cast_color(uint32_t input)
 void __attribute__((section(".klib"))) __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl)
 {
   int x = ctl->x, y = ctl->y, w = ctl->w, h = ctl->h;
-  if (w == 0 || h == 0 || x + w > 640 || y + h > 480) //! ctl->sync ||
-    return;
-
   uint32_t *pixels = ctl->pixels;
   uint32_t addr, value;
   for (int j = 0; j < h; j = j + 3)
