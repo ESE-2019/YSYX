@@ -7,7 +7,8 @@
 #define NR_REGS 32
 #endif
 
-struct Context {
+struct Context
+{
   uintptr_t gpr[NR_REGS], mcause, mstatus, mepc;
   void *pdir;
 };

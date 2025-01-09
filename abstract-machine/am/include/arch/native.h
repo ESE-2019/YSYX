@@ -7,7 +7,8 @@
 
 #include <ucontext.h>
 
-struct Context {
+struct Context
+{
   uintptr_t ksp;
   void *vm_head;
   ucontext_t uc;

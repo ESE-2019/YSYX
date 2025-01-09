@@ -33,17 +33,13 @@ void device_update();
 
 // iringbuf begin
 #ifdef CONFIG_ITRACE
-#ifndef CONFIG_ISA_loongarch32r
 static char iringbuf[16][128];
 int iringbuf_index = 0;
-#endif
 #endif
 
 void print_iringbuf()
 {
 #ifdef CONFIG_ITRACE
-#ifndef CONFIG_ISA_loongarch32r
-  // Log("print_iringbuf begin");
   for (int i = 0; i < 16; i++)
   {
     if (i == iringbuf_index)
@@ -51,8 +47,6 @@ void print_iringbuf()
     else
       Log("%s", iringbuf[i]);
   }
-  // Log("print_iringbuf end");
-#endif
 #endif
 }
 
@@ -98,8 +92,6 @@ static void exec_once(Decode *s, vaddr_t pc)
   space_len = space_len * 3 + 1;
   memset(p, ' ', space_len);
   p += space_len;
-
-#ifndef CONFIG_ISA_loongarch32r
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
               MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc),
@@ -108,9 +100,6 @@ static void exec_once(Decode *s, vaddr_t pc)
   strcpy(iringbuf[iringbuf_index], s->logbuf);
   if (iringbuf_index++ >= 15)
     iringbuf_index = 0;
-#else
-  p[0] = '\0'; // the upstream llvm does not support loongarch32r
-#endif
 #endif
 }
 

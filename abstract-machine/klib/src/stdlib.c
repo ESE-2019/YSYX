@@ -32,14 +32,14 @@ int __attribute__((section(".klib"))) atoi(const char *nptr)
 }
 
 static void *heap_ = NULL;
-void __attribute__((section(".klib"))) *malloc(size_t size)
+void __attribute__((section(".klib"))) * malloc(size_t size)
 {
   if (heap_ == NULL)
   {
     heap_ = heap.start;
   }
 
-  heap_ = (void *)(((uintptr_t)heap_+3) & ~0x3u);
+  heap_ = (void *)(((uintptr_t)heap_ + 3) & ~0x3u);
 
   if (heap_ + size > heap.end)
   {
