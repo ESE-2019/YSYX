@@ -86,7 +86,7 @@ module ysyx_24080006_mdu
               next = MD_COMP;
             end
             ALU_DIV, ALU_REM: begin
-              accumulator_d = mdu_set.mdu_op == ALU_DIV ? 33'hffff_ffff : {sign_a, mdu_a};
+              accumulator_d[31:0] = mdu_set.mdu_op == ALU_DIV ? 32'hFFFF_FFFF : mdu_a;
               next = ~alu2mdu.not_zero ? MD_FINISH : MD_ABS_A;
             end
             default: ;
