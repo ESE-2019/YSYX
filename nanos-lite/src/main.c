@@ -7,9 +7,25 @@ void init_irq(void);
 void init_fs(void);
 void init_proc(void);
 
-int main() {
+void print_logo()
+{
   extern const char logo[];
-  printf("%s", logo);
+  size_t len = strlen(logo);
+  size_t printed = 0;
+  while (printed < len)
+  {
+    size_t chunk_size = (len - printed > 99) ? 99 : len - printed;
+    char buffer[100];
+    strncpy(buffer, logo + printed, chunk_size);
+    buffer[chunk_size] = '\0';
+    printf("%s", buffer);
+    printed += chunk_size;
+  }
+}
+
+int main()
+{
+  print_logo();
   Log("'Hello World!' from Nanos-lite");
   Log("Build time: %s, %s", __TIME__, __DATE__);
 
@@ -19,9 +35,7 @@ int main() {
 
   init_ramdisk();
 
-#ifdef HAS_CTE
   init_irq();
-#endif
 
   init_fs();
 
@@ -29,9 +43,7 @@ int main() {
 
   Log("Finish initialization");
 
-#ifdef HAS_CTE
   yield();
-#endif
 
   panic("Should not reach here");
 }

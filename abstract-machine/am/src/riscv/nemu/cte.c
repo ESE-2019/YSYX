@@ -12,7 +12,10 @@ Context *__am_irq_handle(Context *c)
     switch (c->mcause)
     {
     case 11:
-      ev.event = EVENT_YIELD;
+      if (c->GPR1 == -1)
+        ev.event = EVENT_YIELD;
+      else
+        ev.event = EVENT_SYSCALL;
       c->mepc += 4;
       break;
     default:
@@ -47,9 +50,9 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
 void yield()
 {
 #ifdef __riscv_e
-  asm volatile("li a5, 11; ecall");
+  asm volatile("li a5, -1; ecall");
 #else
-  asm volatile("li a7, 11; ecall");
+  asm volatile("li a7, -1; ecall");
 #endif
 }
 

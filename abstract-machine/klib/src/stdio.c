@@ -134,6 +134,14 @@ int __attribute__((section(".klib"))) vsnprintf(char *str, size_t n, const char 
                 *str++ = 'l';
                 count += 2;
                 break;
+            case 'p':
+            {
+                zero_pad = 1;
+                width = 8;
+                strncpy(str, "0x", 2);
+                str += 2;
+                count += 2;
+            }
             case 'x':
             case 'X':
             {
@@ -253,10 +261,10 @@ int __attribute__((section(".klib"))) sprintf(char *str, const char *fmt, ...)
 
 int __attribute__((section(".klib"))) printf(const char *fmt, ...)
 {
-    char buffer[128];
+    char buffer[512];
     va_list ap;
     va_start(ap, fmt);
-    int result = vsnprintf(buffer, 128, fmt, ap);
+    int result = vsnprintf(buffer, 512, fmt, ap);
     va_end(ap);
     putstr(buffer);
     return result;
