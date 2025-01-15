@@ -28,7 +28,7 @@ void init_proc()
 
   Log("Initializing processes...");
 
-  naive_uload(current, "\0");
+  naive_uload(current, "/bin/hello");
 }
 
 Context *schedule(Context *prev)

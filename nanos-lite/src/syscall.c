@@ -3,12 +3,33 @@
 
 static uintptr_t a[4];
 
-#ifdef STRACE
 static void strace(uintptr_t code)
 {
+#ifdef STRACE
+  const char *SyscallNames[] = {
+      "SYS_exit",
+      "SYS_yield",
+      "SYS_open",
+      "SYS_read",
+      "SYS_write",
+      "SYS_kill",
+      "SYS_getpid",
+      "SYS_close",
+      "SYS_lseek",
+      "SYS_brk",
+      "SYS_fstat",
+      "SYS_time",
+      "SYS_signal",
+      "SYS_execve",
+      "SYS_fork",
+      "SYS_link",
+      "SYS_unlink",
+      "SYS_wait",
+      "SYS_times",
+      "SYS_gettimeofday"};
   Log("%p = %s(%p, %p, %p)", code, SyscallNames[a[0]], a[1], a[2], a[3]);
-}
 #endif
+}
 
 void do_syscall(Context *c)
 {
@@ -57,7 +78,5 @@ void do_syscall(Context *c)
     panic("Unhandled syscall ID = %d", a[0]);
   }
 
-#ifdef STRACE
   strace(c->GPRx);
-#endif
 }
