@@ -35,91 +35,114 @@ size_t invalid_write(const void *buf, size_t offset, size_t len)
 
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
-    [FD_STDIN] = {"stdin", 0, 0, invalid_read, invalid_write},
-    [FD_STDOUT] = {"stdout", 0, 0, invalid_read, invalid_write},
-    [FD_STDERR] = {"stderr", 0, 0, invalid_read, invalid_write},
-    // file path, file size, offset in disk
-    {"/bin/hello", 37792, 0},
-    {"/bin/dummy", 37528, 37792},
-    {"/share/music/little-star.ogg", 140946, 75320},
-    {"/share/music/rhythm/Do.ogg", 6473, 216266},
-    {"/share/music/rhythm/Mi.ogg", 6611, 222739},
-    {"/share/music/rhythm/empty.ogg", 4071, 229350},
-    {"/share/music/rhythm/La.ogg", 6542, 233421},
-    {"/share/music/rhythm/Re.ogg", 6503, 239963},
-    {"/share/music/rhythm/Fa.ogg", 6625, 246466},
-    {"/share/music/rhythm/Si.ogg", 6647, 253091},
-    {"/share/music/rhythm/So.ogg", 6538, 259738},
-    {"/share/fonts/Courier-8.bdf", 20114, 266276},
-    {"/share/fonts/Courier-12.bdf", 24339, 286390},
-    {"/share/fonts/Courier-9.bdf", 20488, 310729},
-    {"/share/fonts/Courier-7.bdf", 19567, 331217},
-    {"/share/fonts/Courier-13.bdf", 25677, 350784},
-    {"/share/fonts/Courier-10.bdf", 21440, 376461},
-    {"/share/fonts/Courier-11.bdf", 23272, 397901},
-    {"/share/pictures/projectn.bmp", 49290, 421173},
-    {"/share/files/num", 5000, 470463},
-    {"总计", 475463, 475463},
+    [FD_STDIN] = {"stdin", -1, 0, invalid_read, invalid_write},
+    [FD_STDOUT] = {"stdout", -1, 0, invalid_read, serial_write},
+    [FD_STDERR] = {"stderr", -1, 0, invalid_read, serial_write},
+    [FD_FB] = {"/dev/fb", -1, 0, invalid_read, fb_write},
+    {"/proc/dispinfo", -1, 0, dispinfo_read, invalid_write},
+    {"/dev/events", -1, 0, events_read, invalid_write},
+#include "files.h"
 };
 
 static int file_table_len;
+int screen_w, screen_h;
 void init_fs()
 {
   file_table_len = sizeof(file_table) / sizeof(file_table[0]);
-  // TODO: initialize the size of /dev/fb
+  for (int i = 0; i < file_table_len; i++)
+  {
+    Finfo *f = &file_table[i];
+    f->lseek = 0;
+    if (f->read == NULL)
+      f->read = ramdisk_read;
+    if (f->write == NULL)
+      f->write = ramdisk_write;
+  }
+  screen_w = io_read(AM_GPU_CONFIG).width;
+  screen_h = io_read(AM_GPU_CONFIG).height;
+  file_table[FD_FB].size = screen_w * screen_h * 4;
 }
 
 int fs_open(const char *pathname, int flags, int mode)
 {
   for (int i = 0; i < file_table_len; i++)
   {
-    if (strcmp(pathname, file_table[i].name) == 0)
+    Finfo *f = &file_table[i];
+    if (strcmp(pathname, f->name) == 0)
     {
-      file_table[i].lseek = 0;
+#ifdef STRACE
+      Log("%s\n", f->name);
+#endif
       return i;
     }
   }
-  panic("should not reach here");
+  panic("[%s] can not open", pathname);
   return -1;
 }
 
 size_t fs_read(int fd, void *buf, size_t len)
 {
-  assert(fd >= 0 && fd < file_table_len);
-  len = (file_table[fd].lseek + len - 1) > file_table[fd].size ? file_table[fd].size - file_table[fd].lseek + 1 : len;
-  return ramdisk_read(buf, file_table[fd].disk_offset + file_table[fd].lseek, len);
+  if (fd < 0 || fd >= file_table_len)
+    panic("illegal fd %d", fd);
+  Finfo *f = &file_table[fd];
+#ifdef STRACE
+  Log("%s\n", f->name);
+#endif
+  len = (f->lseek + len - 1) > f->size ? f->size - f->lseek + 1 : len;
+  size_t ret = f->read(buf, f->disk_offset + f->lseek, len);
+  f->lseek += ret;
+  return ret;
 }
 
 size_t fs_write(int fd, const void *buf, size_t len)
 {
-  assert(fd >= 0 && fd < file_table_len);
-  return 0;
+  if (fd < 0 || fd >= file_table_len)
+    panic("illeagal fd %d", fd);
+  Finfo *f = &file_table[fd];
+#ifdef STRACE
+  Log("%s\n", f->name);
+#endif
+  len = (f->lseek + len - 1) > f->size ? f->size - f->lseek + 1 : len;
+  size_t ret = f->write(buf, f->disk_offset + f->lseek, len);
+  f->lseek += ret;
+  return ret;
 }
 
 size_t fs_lseek(int fd, size_t offset, int whence)
 {
-  assert(fd >= 0 && fd < file_table_len);
+  if (fd < 0 || fd >= file_table_len)
+    panic("illeagal fd %d", fd);
+  Finfo *f = &file_table[fd];
+#ifdef STRACE
+  Log("%s\n", f->name);
+#endif
   switch (whence)
   {
   case SEEK_SET:
-    file_table[fd].lseek = offset;
+    f->lseek = offset;
     break;
   case SEEK_CUR:
-    file_table[fd].lseek += offset;
+    f->lseek += offset;
     break;
   case SEEK_END:
-    file_table[fd].lseek = file_table[fd].size + offset;
+    f->lseek = f->size + offset;
     break;
   default:
     panic("should not reach here");
   }
-  assert(file_table[fd].lseek >= 0);
-  assert(file_table[fd].lseek <= file_table[fd].size);
-  return file_table[fd].lseek;
+  if (f->lseek < 0)
+    return -1;
+  return f->lseek;
 }
 
 int fs_close(int fd)
 {
-  assert(fd >= 0 && fd < file_table_len);
+  if (fd < 0 || fd >= file_table_len)
+    panic("illeagal fd %d", fd);
+  Finfo *f = &file_table[fd];
+#ifdef STRACE
+  Log("%s\n", f->name);
+#endif
+  f->lseek = 0;
   return 0;
 }
