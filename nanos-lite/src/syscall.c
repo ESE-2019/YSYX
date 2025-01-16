@@ -1,5 +1,6 @@
 #include <common.h>
 #include <fs.h>
+#include <proc.h>
 #include <sys/time.h>
 #include "syscall.h"
 
@@ -44,7 +45,15 @@ void do_syscall(Context *c)
   {
   case SYS_exit:
   {
-    halt(a[1]);
+    if (a[1] == 0)
+    {
+      naive_uload(current, "/bin/menu");
+    }
+    else
+    {
+      Log("exit_code = %d", a[1]);
+      halt(1);
+    }
     break;
   }
 
@@ -88,6 +97,13 @@ void do_syscall(Context *c)
   case SYS_brk:
   {
     c->GPRx = 0;
+    break;
+  }
+
+  case SYS_execve:
+  {
+    c->GPRx = -1;
+    naive_uload(current, (const char *)a[1]);
     break;
   }
 

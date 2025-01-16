@@ -28,7 +28,7 @@ void init_proc()
 
   Log("Initializing processes...");
 
-  naive_uload(current, "/bin/bmp-test");
+  naive_uload(current, "/bin/menu");
 }
 
 Context *schedule(Context *prev)

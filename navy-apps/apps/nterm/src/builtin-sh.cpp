@@ -5,7 +5,8 @@
 
 char handle_key(SDL_Event *ev);
 
-static void sh_printf(const char *format, ...) {
+static void sh_printf(const char *format, ...)
+{
   static char buf[256] = {};
   va_list ap;
   va_start(ap, format);
@@ -14,28 +15,41 @@ static void sh_printf(const char *format, ...) {
   term->write(buf, len);
 }
 
-static void sh_banner() {
+static void sh_banner()
+{
   sh_printf("Built-in Shell in NTerm (NJU Terminal)\n\n");
 }
 
-static void sh_prompt() {
+static void sh_prompt()
+{
   sh_printf("sh> ");
 }
 
-static void sh_handle_cmd(const char *cmd) {
+static bool exit_nterm = false;
+static void sh_handle_cmd(const char *cmd)
+{
+  if (strncmp(cmd, "exit", sizeof("exit") - 1) == 0)
+    exit_nterm = true;
 }
 
-void builtin_sh_run() {
+void builtin_sh_run()
+{
   sh_banner();
   sh_prompt();
 
-  while (1) {
+  while (1)
+  {
     SDL_Event ev;
-    if (SDL_PollEvent(&ev)) {
-      if (ev.type == SDL_KEYUP || ev.type == SDL_KEYDOWN) {
+    if (SDL_PollEvent(&ev))
+    {
+      if (ev.type == SDL_KEYUP || ev.type == SDL_KEYDOWN)
+      {
         const char *res = term->keypress(handle_key(&ev));
-        if (res) {
+        if (res)
+        {
           sh_handle_cmd(res);
+          if (exit_nterm)
+           return;
           sh_prompt();
         }
       }

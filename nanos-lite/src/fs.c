@@ -73,6 +73,7 @@ int fs_open(const char *pathname, int flags, int mode)
 #ifdef STRACE
       Log("%s\n", f->name);
 #endif
+      f->lseek = 0;
       return i;
     }
   }
@@ -143,6 +144,5 @@ int fs_close(int fd)
 #ifdef STRACE
   Log("%s\n", f->name);
 #endif
-  f->lseek = 0;
   return 0;
 }

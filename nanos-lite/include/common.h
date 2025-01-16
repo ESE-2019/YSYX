@@ -11,7 +11,7 @@
 #include <klib-macros.h>
 #include <debug.h>
 
-#define STRACE
+//#define STRACE
 
 void do_syscall(Context *c);
 size_t ramdisk_read(void *buf, size_t offset, size_t len);

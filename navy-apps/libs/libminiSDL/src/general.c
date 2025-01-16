@@ -1,24 +1,36 @@
 #include <NDL.h>
+#include <assert.h>
 
-int SDL_Init(uint32_t flags) {
-  return NDL_Init(flags);
+uint32_t ticks;
+int SDL_Init(uint32_t flags)
+{
+  int ret = NDL_Init(flags);
+  ticks = NDL_GetTicks();
+  return ret;
 }
 
-void SDL_Quit() {
+void SDL_Quit()
+{
   NDL_Quit();
 }
 
-char *SDL_GetError() {
+char *SDL_GetError()
+{
   return "Navy does not support SDL_GetError()";
 }
 
-int SDL_SetError(const char* fmt, ...) {
+int SDL_SetError(const char *fmt, ...)
+{
   return -1;
 }
 
-int SDL_ShowCursor(int toggle) {
+int SDL_ShowCursor(int toggle)
+{
+  assert(0);
   return 0;
 }
 
-void SDL_WM_SetCaption(const char *title, const char *icon) {
+void SDL_WM_SetCaption(const char *title, const char *icon)
+{
+  assert(0);
 }
