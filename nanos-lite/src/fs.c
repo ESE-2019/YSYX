@@ -140,8 +140,8 @@ int fs_close(int fd)
 {
   if (fd < 0 || fd >= file_table_len)
     panic("illeagal fd %d", fd);
-  Finfo *f = &file_table[fd];
 #ifdef STRACE
+  Finfo *f = &file_table[fd];
   Log("%s\n", f->name);
 #endif
   return 0;

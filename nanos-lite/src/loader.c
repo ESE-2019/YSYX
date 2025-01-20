@@ -43,3 +43,57 @@ void naive_uload(PCB *pcb, const char *filename)
   Log("Jump to entry = %p", entry);
   ((void (*)())entry)();
 }
+
+void context_kload(PCB *pcb, void (*entry)(void *), void *arg)
+{
+  pcb->cp = kcontext((Area){pcb->stack, pcb + 1}, entry, arg);
+}
+
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[])
+{
+  uintptr_t entry = loader(pcb, filename);
+  pcb->cp = ucontext(NULL, (Area){pcb->stack, pcb + 1}, (void *)entry);
+  Log("context_uload %s %p", filename, entry);
+  uintptr_t ustack = (uintptr_t)(new_page(1) + PGSIZE);
+
+  int argc = 0, envp_count = 0;
+  int len = 0;
+  assert(argv != NULL);
+  while (argv[argc] != NULL)
+  {
+    Log("argv[%d] = [%s]", argc, argv[argc]);
+    len += strlen(argv[argc]) + 1;    
+    argc++;
+  }
+  
+  while (envp[envp_count] != NULL)
+  {
+    Log("envp[%d] = [%s]", envp_count, envp[envp_count]);
+    len += strlen(envp[envp_count]) + 1;
+    envp_count++;
+  }
+
+  uintptr_t string_area = (ustack - len) & ~(sizeof(uintptr_t) - 1);
+  ustack = string_area - sizeof(uintptr_t);
+  *(uintptr_t *)ustack = 0;
+  for (int i = envp_count - 1; i >= 0; i--)
+  {
+    ustack -= sizeof(uintptr_t);
+    *(uintptr_t *)ustack = string_area;
+    strcpy((char *)string_area, envp[i]);
+    string_area += strlen(envp[i]) + 1;
+  }
+  ustack -= sizeof(uintptr_t);
+  *(uintptr_t *)ustack = 0;
+  for (int i = argc - 1; i >= 0; i--)
+  {
+    ustack -= sizeof(uintptr_t);
+    *(uintptr_t *)ustack = string_area;
+    strcpy((char *)string_area, argv[i]);
+    string_area += strlen(argv[i]) + 1;
+  }
+  ustack -= sizeof(uintptr_t);
+  *(int *)ustack = argc;
+  pcb->cp->GPRx = ustack;
+  Log("argc = %d sp = %p", *(int *)ustack, ustack);
+}

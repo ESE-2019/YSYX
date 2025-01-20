@@ -12,7 +12,8 @@
 #include <debug.h>
 
 //#define STRACE
-
+void switch_boot_pcb();
+Context *schedule(Context *prev);
 void do_syscall(Context *c);
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t ramdisk_write(const void *buf, size_t offset, size_t len);

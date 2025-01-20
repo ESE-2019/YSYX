@@ -103,7 +103,10 @@ void do_syscall(Context *c)
   case SYS_execve:
   {
     c->GPRx = -1;
-    naive_uload(current, (const char *)a[1]);
+    Log("SYS_execve(%p, %p, %p)", a[1], a[2], a[3]);
+    context_uload(current, (const char *)a[1], (const void *)a[2], (char *const[]){NULL}); // todo fix envp
+    switch_boot_pcb();
+    yield();
     break;
   }
 
