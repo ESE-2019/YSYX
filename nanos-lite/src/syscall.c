@@ -47,7 +47,9 @@ void do_syscall(Context *c)
   {
     if (a[1] == 0)
     {
-      naive_uload(current, "/bin/menu");
+      Log("exit");
+      char *argv[] = {"/bin/nterm", NULL};
+      context_uload(current, argv[0], argv, (char *[]){NULL});
     }
     else
     {
@@ -102,8 +104,10 @@ void do_syscall(Context *c)
 
   case SYS_execve:
   {
-    c->GPRx = -1;
+    c->GPRx = -2;
     Log("SYS_execve(%p, %p, %p)", a[1], a[2], a[3]);
+    if (fs_open((char *)a[1], 0, 0) == -1)
+      break;
     context_uload(current, (const char *)a[1], (const void *)a[2], (char *const[]){NULL}); // todo fix envp
     switch_boot_pcb();
     yield();

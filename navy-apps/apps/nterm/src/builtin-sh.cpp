@@ -25,11 +25,69 @@ static void sh_prompt()
   sh_printf("sh> ");
 }
 
-static bool exit_nterm = false;
+static inline char **parse_cmd_to_argv(const char *cmd)
+{
+  char **argv = (char **)malloc(64 * sizeof(char *));
+  char *cmd_copy = strdup(cmd); // 复制命令行字符串
+
+  if (!cmd_copy)
+    return NULL;
+  else if (cmd_copy[0] == '\n')
+    return NULL;
+
+  for (int i = 1; i < strlen(cmd_copy); i++)
+  {
+    if (cmd_copy[i] == '\n')
+      cmd_copy[i] = ' ';
+  }
+
+  int argc = 0;                        // 参数计数
+  char *token = strtok(cmd_copy, " "); // 以空格分割字符串
+  while (token)
+  {
+    printf("nterm-token[%d] = [%s]\n", argc, token);
+    argv[argc++] = token;
+    if (argc >= 63)
+      break; // 防止溢出
+    token = strtok(NULL, " ");
+  }
+  argv[argc] = NULL; // 以 NULL 结尾
+
+  return argv;
+}
+
 static void sh_handle_cmd(const char *cmd)
 {
+
+  char command[64];
+  strcpy(command, cmd);
+  command[strlen(command) - 1] = '\0';
+
+  if (strcmp(command, "quit") == 0 || strcmp(command, "q") == 0) {
+    exit(0);
+  } 
+  int argc = 0;
+  const char *argvv[16];
+  char *p = strtok(command, " ");
+  while (p) {
+    argvv[argc++] = p;
+    p[strlen(p)] = '\0';
+    p = strtok(NULL, " ");
+  }
+  argvv[argc] = NULL;
+  setenv("PATH", "/usr/bin:/bin", false);
+  execvp(command, (char**)argvv);
+
+
   if (strncmp(cmd, "exit", sizeof("exit") - 1) == 0)
-    exit_nterm = true;
+  {
+    exit(0);
+  }
+  char **argv = parse_cmd_to_argv(cmd);
+  if (argv != NULL)
+    execvp(argv[0], argv);
+
+  sh_printf("nterm error\n");
 }
 
 void builtin_sh_run()
@@ -48,8 +106,6 @@ void builtin_sh_run()
         if (res)
         {
           sh_handle_cmd(res);
-          if (exit_nterm)
-           return;
           sh_prompt();
         }
       }

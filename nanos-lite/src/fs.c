@@ -77,7 +77,7 @@ int fs_open(const char *pathname, int flags, int mode)
       return i;
     }
   }
-  panic("[%s] can not open", pathname);
+  Log("[%s] can not open", pathname);
   return -1;
 }
 

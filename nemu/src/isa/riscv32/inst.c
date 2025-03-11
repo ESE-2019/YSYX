@@ -244,24 +244,6 @@ char ftrace_buf[16 * 65536] = "";
 // jump to addr, curr pc, store to reg
 static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t reg)
 {
-  for (int i = 0; FT_addr[i] != 0; i++) // add
-  {
-    if (FT_addr[i] == addr)
-    {
-      FT_ret[FT_index] = reg;
-      FT_local[FT_index++] = i;
-      char tmp[4096] = "";
-      for (int j = 0; j < FT_index - 1; j++)
-      {
-        strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
-      }
-      char tmp2[1024];
-      snprintf(tmp2, 1024, FMT_WORD ": call [%s@" FMT_WORD "]\n", pc, FT_name[i], FT_addr[i]);
-      strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
-      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
-      return;
-    }
-  }
   for (int i = FT_index - 1; i >= 0; i--)
   {
     if (FT_ret[i] == addr)
@@ -273,11 +255,49 @@ static void ftrace_jump(const uint32_t addr, const uint32_t pc, const uint32_t r
         strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
       }
       char tmp2[1024];
-      snprintf(tmp2, 1024, FMT_WORD ": ret [%s]\n", pc, FT_name[FT_local[i]]);
+      if (FT_local[i] == 0)
+        snprintf(tmp2, 1024, FMT_WORD ": ret  [%s]\n", pc, "UNKNOWN");
+      else
+        snprintf(tmp2, 1024, FMT_WORD ": ret  [%s]\n", pc, FT_name[FT_local[i] - 1]);
       strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
       strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
+      printf("\033[1;33m%s\033[0m", tmp);
       return;
     }
+  }
+  for (int i = 0; FT_addr[i] != 0; i++) // add
+  {
+    if (FT_addr[i] == addr)
+    {
+      FT_ret[FT_index] = reg;
+      FT_local[FT_index++] = i + 1;
+      char tmp[4096] = "";
+      for (int j = 0; j < FT_index - 1; j++)
+      {
+        strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
+      }
+      char tmp2[1024];
+      snprintf(tmp2, 1024, FMT_WORD ": call [%s@" FMT_WORD "]\n", pc, FT_name[i], FT_addr[i]);
+      strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
+      strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
+      printf("\033[1;33m%s\033[0m", tmp);
+      return;
+    }
+  }
+  {
+    FT_ret[FT_index] = reg;
+    FT_local[FT_index++] = 0;
+    char tmp[4096] = "";
+    for (int j = 0; j < FT_index - 1; j++)
+    {
+      strncat(tmp, "| ", sizeof(tmp) - strlen(tmp) - 1);
+    }
+    char tmp2[1024];
+    snprintf(tmp2, 1024, FMT_WORD ": call [%s]\n", pc, "UNKNOWN");
+    strncat(tmp, tmp2, sizeof(tmp) - strlen(tmp) - 1);
+    strncat(ftrace_buf, tmp, sizeof(ftrace_buf) - strlen(ftrace_buf) - 1);
+    printf("\033[1;33m%s\033[0m", tmp);
+    return;
   }
 }
 static void ftrace_print(const uint32_t addr)

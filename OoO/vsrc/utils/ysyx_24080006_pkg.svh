@@ -1,5 +1,19 @@
 package ysyx_24080006_pkg;
 
+  localparam int unsigned ScoreboardDepth = 4;
+  localparam int unsigned ScoreboardIndex = 2;
+  localparam int unsigned WriteBackPorts = 2;
+
+  typedef enum logic [3:0] {
+    FU_NONE,       // 0
+    FU_LOAD,       // 1
+    FU_STORE,      // 2
+    FU_ALU,        // 3
+    FU_CTRL_FLOW,  // 4
+    FU_MULT,       // 5
+    FU_CSR         // 6
+  } fu_t;
+
   typedef enum logic [1:0] {
     ALU_A_RS1,
     ALU_A_PC,

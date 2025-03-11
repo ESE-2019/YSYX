@@ -15,7 +15,7 @@ static const char *keyname[256] __attribute__((used)) = {
 
 size_t serial_write(const void *buf, size_t offset, size_t len)
 {
-  yield();
+  //yield();
   size_t ret = 0;
   char *str = (char *)buf;
   for (int i = 0; i < len; i++)
@@ -28,7 +28,7 @@ size_t serial_write(const void *buf, size_t offset, size_t len)
 
 size_t events_read(void *buf, size_t offset, size_t len)
 {
-  yield();
+  //yield();
   AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
   if (ev.keycode != 0)
   {
@@ -44,7 +44,7 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len)
 
 size_t fb_write(const void *buf, size_t offset, size_t len)
 {
-  yield();
+  //yield();
   io_write(AM_GPU_FBDRAW, offset % screen_w, offset / screen_w, (void *)buf, len, 1, true);
   return 0;
 }

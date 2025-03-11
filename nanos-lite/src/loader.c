@@ -13,6 +13,7 @@
 static uintptr_t loader(PCB *pcb, const char *filename)
 {
   int fd = fs_open(filename, 0, 0);
+  assert(fd >= 0);
   Elf_Ehdr ehdr;
   fs_read(fd, &ehdr, sizeof(Elf_Ehdr));
   assert(memcmp(ehdr.e_ident, ELFMAG, SELFMAG) == 0);
@@ -54,25 +55,27 @@ void context_uload(PCB *pcb, const char *filename, char *const argv[], char *con
   uintptr_t entry = loader(pcb, filename);
   pcb->cp = ucontext(NULL, (Area){pcb->stack, pcb + 1}, (void *)entry);
   Log("context_uload %s %p", filename, entry);
-  uintptr_t ustack = (uintptr_t)(new_page(1) + PGSIZE);
+  Log("%p argv = %p, envp = %p", argv[0], argv, envp);
+  uintptr_t ustack = (uintptr_t)(new_page(8) + 8 * PGSIZE);
 
   int argc = 0, envp_count = 0;
   int len = 0;
   assert(argv != NULL);
+  Log("alive");
   while (argv[argc] != NULL)
   {
     Log("argv[%d] = [%s]", argc, argv[argc]);
-    len += strlen(argv[argc]) + 1;    
+    len += strlen(argv[argc]) + 1;
     argc++;
   }
-  
+  Log("alive");
   while (envp[envp_count] != NULL)
   {
     Log("envp[%d] = [%s]", envp_count, envp[envp_count]);
     len += strlen(envp[envp_count]) + 1;
     envp_count++;
   }
-
+  Log("alive");
   uintptr_t string_area = (ustack - len) & ~(sizeof(uintptr_t) - 1);
   ustack = string_area - sizeof(uintptr_t);
   *(uintptr_t *)ustack = 0;
@@ -83,6 +86,7 @@ void context_uload(PCB *pcb, const char *filename, char *const argv[], char *con
     strcpy((char *)string_area, envp[i]);
     string_area += strlen(envp[i]) + 1;
   }
+  Log("alive");
   ustack -= sizeof(uintptr_t);
   *(uintptr_t *)ustack = 0;
   for (int i = argc - 1; i >= 0; i--)
