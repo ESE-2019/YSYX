@@ -1,5 +1,5 @@
 module commit
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     input decoder_t commit_instr,
     output logic commit_valid,

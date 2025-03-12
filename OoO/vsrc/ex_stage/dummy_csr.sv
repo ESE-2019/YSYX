@@ -1,5 +1,5 @@
 module dummy_csr
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     // Subsystem Clock - SUBSYSTEM
     input logic clock,
@@ -10,9 +10,9 @@ module dummy_csr
     // FU data needed to execute instruction - ISSUE_STAGE
     input fu_data_t fu_data_i,
     // CSR FU is ready - ISSUE_STAGE
-    output logic csr_ready_o,
+    output logic csr_ready,
     // CSR instruction is valid - ISSUE_STAGE
-    input logic csr_valid_i,
+    input logic csr_valid,
     // CSR buffer result - ISSUE_STAGE
     output logic [CVA6Cfg.XLEN-1:0] csr_result_o,
     // commit the pending CSR OP - TO_BE_COMPLETED
@@ -36,17 +36,17 @@ module dummy_csr
   always_comb begin
     dummy_csr_n   = dummy_csr_q;
     // by default we are ready
-    csr_ready_o = 1'b1;
+    csr_ready = 1'b1;
     // if we have a valid uncomiited csr req or are just getting one WITHOUT a commit in, we are not ready
-    if ((dummy_csr_q.valid || csr_valid_i) && ~commit_csr) csr_ready_o = 1'b0;
+    if ((dummy_csr_q.valid || csr_valid) && ~commit_csr) csr_ready = 1'b0;
     // if we got a valid from the scoreboard
     // store the CSR address
-    if (csr_valid_i) begin
+    if (csr_valid) begin
       dummy_csr_n.addr = fu_data_i.operand_b[11:0];
       dummy_csr_n.valid       = 1'b1;
     end
     // if we get a commit and no new valid instruction -> clear the valid bit
-    if (commit_csr && ~csr_valid_i) begin
+    if (commit_csr && ~csr_valid) begin
       dummy_csr_n.valid = 1'b0;
     end
     // clear the buffer if we flushed

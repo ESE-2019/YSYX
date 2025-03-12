@@ -38,7 +38,7 @@ module top  // use for syn
     input  logic [ 3:0] io_master_rid
 );
 
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 
   axi_r_m2s_t ifu_r_m2s;
   axi_r_s2m_t ifu_r_s2m;

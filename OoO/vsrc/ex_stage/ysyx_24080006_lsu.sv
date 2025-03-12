@@ -1,7 +1,7 @@
 `default_nettype none
 
 module ysyx_24080006_lsu
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     input logic clock,
     input logic reset,
@@ -12,6 +12,9 @@ module ysyx_24080006_lsu
     input logic lsu_write,
     input logic [31:0] lsu_wdata,
     output logic [31:0] lsu_rdata,
+
+    input  logic [ScoreboardDepth-1:0] lsu_trans_id_i,
+    output logic [ScoreboardDepth-1:0] lsu_trans_id_o,
 
     input  logic exu2lsu_valid,
     output logic lsu2exu_ready,
@@ -88,10 +91,12 @@ module ysyx_24080006_lsu
     if (reset) begin
       lsu2exu_valid <= 1'b0;
       lsu2exu_ready <= 1'b1;
+      lsu_trans_id_o <= '0;
     end else begin
       unique case (curr)
         LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
+            lsu_trans_id_o <= lsu_trans_id_i;
             if (lsu_write) begin
               lsu2exu_valid <= 1'b1;
               lsu2exu_ready <= 1'b0;

@@ -1,7 +1,7 @@
 `default_nettype none
 
 module ysyx_24080006_ex_stage
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     input logic clock,
     input logic reset,
@@ -285,16 +285,6 @@ module ysyx_24080006_ex_stage
 
   assign alu_a = idu2exu.alu_a;
   assign alu_b = idu2exu.alu_b;
-  always_comb begin
-    unique case (1'b1)
-      decoder.jal: dnpc = idu2exu.pc + decoder.imm;
-      decoder.jalr: dnpc = (idu2exu.rs1_data + decoder.imm) & 32'hffff_fffe;
-      decoder.branch: dnpc = idu2exu.pc + decoder.imm;
-      decoder.ecall: dnpc = idu2exu.csr_rdata;
-      decoder.mret: dnpc = idu2exu.csr_rdata;
-      default: dnpc = idu2exu.pc;
-    endcase
-  end
 
   ysyx_24080006_lsu LSU (.*);
   ysyx_24080006_alu ALU (

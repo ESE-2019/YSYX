@@ -1,5 +1,5 @@
 module crossbar
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     // Subsystem Clock - SUBSYSTEM
     input logic clock,
@@ -34,7 +34,7 @@ module crossbar
     // Load store unit FU is valid - EX_STAGE
     output logic lsu_valid_o,
     // Mult FU is valid - EX_STAGE
-    output logic mult_valid_o,
+    output logic mdu_valid,
     // ALU2 FU is valid - EX_STAGE
     output logic alu2_valid_o,
     // FU_CSR is valid - EX_STAGE
@@ -90,7 +90,7 @@ module crossbar
   assign branch_valid_o = branch_valid_q;
   assign lsu_valid_o = lsu_valid_q;
   assign csr_valid_o = csr_valid_q;
-  assign mult_valid_o = mult_valid_q;
+  assign mdu_valid = mult_valid_q;
   assign stall_issue_o = stall_raw;
 
   logic [31:0] gpr_rdata_1, gpr_rdata_2;

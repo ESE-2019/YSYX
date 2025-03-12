@@ -1,7 +1,7 @@
 `default_nettype none
 
 module ysyx_24080006_rv16
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     input  logic [31:0] inst_i,
     output logic [31:0] inst_o,

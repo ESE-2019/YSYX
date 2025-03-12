@@ -1,7 +1,7 @@
 `default_nettype none
 
 module ysyx_24080006_interconnect
-  import ysyx_24080006_pkg::*;
+  import OoO_pkg::*;
 (
     input clock,
     input reset,
