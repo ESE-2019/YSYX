@@ -88,10 +88,10 @@ package OoO_pkg;
   } fu_op_e;
 
   typedef struct packed {
-    logic valid;  // wb data is valid
-    logic [31:0] data;  //wb data
-    logic ex_valid;  // exception from WB
-    logic [ScoreboardDepth-1:0] trans_id;  //transaction ID
+    logic valid;
+    logic [31:0] data;
+    logic ex_valid;
+    logic [ScoreboardDepth-1:0] idx;
   } writeback_t;
 
   typedef struct packed {
@@ -114,7 +114,7 @@ package OoO_pkg;
   typedef struct packed {
     cf_e         cf;               // type of control flow prediction
     logic [31:0] predict_address;  // target address at which to jump, or not
-  } bpu_t;
+  } bp_t;
 
   typedef struct packed {
     logic        valid;           // prediction with all its values is valid
@@ -138,8 +138,8 @@ package OoO_pkg;
     logic use_imm;  // operand b
     logic use_zimm;  // operand a
     logic use_pc;  // operand a
-    exception_t ex;  // exception has occurred
-    bpu_t bp;  // branch predict scoreboard data structure
+    //exception_t ex;  // exception has occurred
+    bp_t bp;  // branch predict scoreboard data structure
     logic is_rv16;
   } decoder_t;
 

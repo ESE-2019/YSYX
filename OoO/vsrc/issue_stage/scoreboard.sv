@@ -6,11 +6,11 @@ module scoreboard
     output decoder_t                                              issue_instr,
     output decoder_t                                              commit_instr,
     input  logic                                                  commit_valid,
-    input  decoder_t                                              decoded_instr,
-    input  logic                                                  decoded_instr_valid_i,
-    output logic                                                  decoded_instr_ack_o,
-    output logic                                                  issue_instr_valid_o,
-    input  logic                                                  issue_valid_i,
+    input  decoder_t                                              idu2isu_instr,
+    input  logic                                                  idu2isu_valid,
+    output logic                                                  isu2idu_ready,
+    output logic                                                  issue_valid,
+    input  logic                                                  issue_ready,
     output forwarding_t                                           fwd,
     input  logic        [WriteBackPorts-1:0][ScoreboardIndex-1:0] wb_idx,
     input  logic        [WriteBackPorts-1:0][               31:0] wb_data,
@@ -23,7 +23,7 @@ module scoreboard
   } scoreboard_t;
   scoreboard_t [ScoreboardDepth-1:0] mem_q, mem_n;
 
-  logic issue_valid;
+  logic issue_ready;
   logic [ScoreboardIndex-1:0] issue_pointer_n, issue_pointer_q;
   logic [ScoreboardIndex-1:0] commit_pointer_n, commit_pointer_q;
 
@@ -41,19 +41,19 @@ module scoreboard
   assign commit_instr = mem_q[commit_pointer_q[i]].instr;
 
   always_comb begin
-    issue_instr = decoded_instr;
+    issue_instr = idu2isu_instr;
     issue_instr.trans_id = issue_pointer_q;
-    issue_instr_valid_o = decoded_instr_valid_i & ~issue_full;
-    decoded_instr_ack_o = issue_valid_i & ~issue_full;
+    issue_valid = idu2isu_valid & ~issue_full;
+    isu2idu_ready = issue_ready & ~issue_full;
   end
 
   always_comb begin
     mem_n       = mem_q;
-    issue_valid = 1'b0;
+    issue_ready = 1'b0;
 
-    if (decoded_instr_valid_i && decoded_instr_ack_o) begin
-      issue_valid = 1'b1;
-      mem_n[issue_pointer_q] = '{issued: 1'b1, instr: decoded_instr};
+    if (idu2isu_valid && isu2idu_ready) begin
+      issue_ready = 1'b1;
+      mem_n[issue_pointer_q] = '{issued: 1'b1, instr: idu2isu_instr};
     end
 
     // ------------
@@ -81,7 +81,7 @@ module scoreboard
 
   // FIFO counter updates
   assign commit_pointer_n = commit_pointer_q + commit_valid;
-  assign issue_pointer_n  = issue_pointer_q + issue_valid;
+  assign issue_pointer_n  = issue_pointer_q + issue_ready;
 
   // Forwarding logic
   writeback_t [WriteBackPorts-1:0] wb;

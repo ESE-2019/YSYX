@@ -6,29 +6,34 @@ module issue_stage
     input logic clock,
     input logic reset,
 
-    input logic [31:0] inst,
-    output logic [31:0] idu_dbg_inst,
-    output decoder_t decoder,
-    output logic fencei,
-
-    input  logic                reg_we,
-    input  logic [RegWidth-1:0] rd_addr,
-    output logic [RegWidth-1:0] rs1_addr,
-    output logic [RegWidth-1:0] rs2_addr,
-    input  logic [        31:0] rs1_data,
-    input  logic [        31:0] rs2_data,
-
-    output logic [11:0] csr_name,
-    output logic [31:0] csr_wdata,
-    input  logic [31:0] csr_rdata,
-
-    input logic forward_en,
-    input logic [31:0] forward_data,
-
     input  logic   exu2idu_ready,
     output logic   idu2ifu_ready,
     input  stage_t ifu2idu,
-    output stage_t idu2exu
+    output stage_t idu2exu,
+
+    output decoder_t issue_instr,
+    output decoder_t commit_instr,
+    input  logic     commit_valid,
+    input  decoder_t idu2isu_instr,
+    input  logic     idu2isu_valid,
+    output logic     isu2idu_ready,
+
+    output fu_data_t                  fu_data,
+    output logic               [31:0] pc_o,
+    output logic                      is_rv16,
+    input  logic                      flu_ready_i,
+    output logic                      alu_valid_o,
+    output logic                      branch_valid_o,
+    output branchpredict_sbe_t        branch_predict_o,
+    input  logic                      lsu_ready_i,
+    output logic                      lsu_valid_o,
+    output logic                      mdu_valid,
+    output logic                      csr_valid_o,
+
+    input writeback_t [WriteBackPorts-1:0]                      wb,
+    input logic       [WriteBackPorts-1:0][ScoreboardIndex-1:0] wb_idx,
+    input logic       [WriteBackPorts-1:0][               31:0] wb_data,
+    input logic       [WriteBackPorts-1:0]                      wb_valid
 );
 
   typedef enum logic [1:0] {
@@ -151,14 +156,11 @@ module issue_stage
         ID_IDLE: begin
           if (ifu2idu.valid) begin
             decoder <= idu;
-            idu2exu.pc <= ifu2idu.pc;
             idu2exu.alu_a <= alu_a;
             idu2exu.alu_b <= alu_b;
             idu2exu.rs1_data <= rs1_data;  //for jalr
             idu2exu.rs2_data <= rs2_data;  //for store
             idu2exu.csr_rdata <= csr_rdata;
-            idu2exu.rv16 <= ifu2idu.rv16;
-            idu2exu.flush <= ifu2idu.flush;
             csr_wdata <= rs1_data;
             detect_hazard_q <= detect_hazard_d;
             fwd_jalr <= inst[6:0] == riscv_instr::JALR[6:0];
@@ -195,33 +197,7 @@ module issue_stage
     end
   end
 
-  assign rs1_addr = idu.rs1_addr;
-  assign rs2_addr = idu.rs2_addr;
-  assign csr_name = idu.csr_name;
 
-  always_comb begin
-    unique case (idu.alu_set.alu_a)
-      ALU_A_RS1: alu_a = rs1_data;
-      ALU_A_PC:  alu_a = ifu2idu.pc;
-      ALU_A_0:   alu_a = 32'b0;
-      default:   alu_a = 32'b0;
-    endcase
-    unique case (idu.alu_set.alu_b)
-      ALU_B_IMM:     alu_b = idu.imm;
-      ALU_B_RS2:     alu_b = rs2_data;
-      ALU_B_PC_INCR: alu_b = ifu2idu.rv16 ? 32'h2 : 32'h4;
-      ALU_B_CSR:     alu_b = csr_rdata;
-      default:       alu_b = 32'h4;
-    endcase
-  end
-
-  always_comb begin
-    detect_hazard_d = 2'b0;
-    if (rd_addr != '0 && !forward_en) begin
-      detect_hazard_d[0] = rd_addr == rs1_addr;
-      detect_hazard_d[1] = rd_addr == rs2_addr;
-    end
-  end
 
 endmodule
 

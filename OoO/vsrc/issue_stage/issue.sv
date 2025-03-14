@@ -1,55 +1,32 @@
-module crossbar
+module issue
   import OoO_pkg::*;
 (
-    // Subsystem Clock - SUBSYSTEM
     input logic clock,
-    // Asynchronous reset active low - SUBSYSTEM
     input logic reset,
-    // Prevent from issuing - CONTROLLER
     input logic flush_i,
-    // Entry about the instruction to issue - SCOREBOARD
     input decoder_t issue_instr,
-    // Is there an instruction to issue - SCOREBOARD
-    input logic issue_instr_valid_i,
-    // Issue stage acknowledge - SCOREBOARD
-    output logic issue_ack,
-    // Forwarding - SCOREBOARD
+    input logic issue_valid,
+    output logic issue_ready,
     input forwarding_t fwd,
-    // FU data useful to execute instruction - EX_STAGE
     output fu_data_t fu_data,
-    // Program Counter - EX_STAGE
     output logic [31:0] pc_o,
-    // Is compressed instruction - EX_STAGE
-    output logic is_compressed_instr_o,
-    // Fixed Latency Unit is ready - EX_STAGE
+    output logic is_rv16,
     input logic flu_ready_i,
-    // FU_ALU output is valid - EX_STAGE
     output logic alu_valid_o,
-    // Branch unit is valid - EX_STAGE
     output logic branch_valid_o,
-    // Information of branch prediction - EX_STAGE
     output branchpredict_sbe_t branch_predict_o,
-    // Load store unit FU is ready - EX_STAGE
     input logic lsu_ready_i,
-    // Load store unit FU is valid - EX_STAGE
     output logic lsu_valid_o,
-    // Mult FU is valid - EX_STAGE
     output logic mdu_valid,
-    // ALU2 FU is valid - EX_STAGE
-    output logic alu2_valid_o,
-    // FU_CSR is valid - EX_STAGE
     output logic csr_valid_o,
     input logic [4:0] gpr_waddr,
     input logic [31:0] gpr_wdata,
-    input logic gpr_we,
-    // Issue stall - PERF_COUNTERS
-    output logic stall_issue_o
-
+    input logic gpr_we
 );
 
   logic stall_raw, stall_waw, stall_rs1, stall_rs2;
   logic fu_busy;  // functional unit is busy
-  logic issue_ack;
+  logic issue_ready;
   // output flipflop (ID <-> EX)
   fu_data_t fu_data_n, fu_data_q;
   logic               [31:0] pc_n;
@@ -81,17 +58,13 @@ module crossbar
 
   // forwarding signals
   logic forward_rs1, forward_rs2;
-
-  // ID <-> EX registers
-
-
   assign fu_data = fu_data_q;
   assign alu_valid_o = alu_valid_q;
   assign branch_valid_o = branch_valid_q;
   assign lsu_valid_o = lsu_valid_q;
   assign csr_valid_o = csr_valid_q;
   assign mdu_valid = mult_valid_q;
-  assign stall_issue_o = stall_raw;
+  wire stall_issue_o = stall_raw;
 
   logic [31:0] gpr_rdata_1, gpr_rdata_2;
   // ---------------
@@ -336,7 +309,7 @@ module crossbar
     alu2_valid_n   = '0;
     csr_valid_n    = '0;
     branch_valid_n = '0;
-    if (!issue_instr.ex.valid && issue_instr_valid_i && issue_ack) begin
+    if (!issue_instr.ex.valid && issue_valid && issue_ready) begin
       case (issue_instr.fu)
         FU_ALU: begin
           alu_valid_n = 1'b1;
@@ -387,7 +360,7 @@ module crossbar
 
   always_comb begin
     stall_waw = '1;
-    if (issue_instr_valid_i && !fu_busy) begin
+    if (issue_valid && !fu_busy) begin
       // -----------------------------------------
       // WAW - Write After Write Dependency Check
       // -----------------------------------------
@@ -408,15 +381,15 @@ module crossbar
   // destination register.
   // We also need to check if there is an unresolved branch in the scoreboard.
   always_comb begin
-    issue_ack = 1'b0;
+    issue_ready = 1'b0;
     // check that the instruction we got is valid
     // and that the functional unit we need is not busy
-    if (issue_instr_valid_i && !fu_busy) begin
+    if (issue_valid && !fu_busy) begin
       if (!stall_raw && !stall_waw) begin
-        issue_ack = 1'b1;
+        issue_ready = 1'b1;
       end
       if (issue_instr.ex.valid) begin
-        issue_ack = 1'b1;
+        issue_ready = 1'b1;
       end
     end
   end
@@ -455,13 +428,13 @@ module crossbar
     if (reset) begin
       fu_data_q             <= '0;
       pc_o                  <= '0;
-      is_compressed_instr_o <= 1'b0;
+      is_rv16 <= 1'b0;
       branch_predict_o      <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
       fu_data_q <= fu_data_n;
       if (issue_instr.fu == FU_BU) begin
         pc_o                  <= issue_instr.pc;
-        is_compressed_instr_o <= issue_instr.is_compressed;
+        is_rv16 <= issue_instr.is_compressed;
         branch_predict_o      <= issue_instr.bp;
       end
     end
