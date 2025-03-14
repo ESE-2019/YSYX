@@ -5,13 +5,13 @@ package OoO_pkg;
   localparam int unsigned WriteBackPorts = 2;
 
   typedef enum logic [3:0] {
-    FU_NONE,       // 0
-    FU_LOAD,       // 1
-    FU_STORE,      // 2
-    FU_ALU,        // 3
-    FU_CTRL_FLOW,  // 4
-    FU_MULT,       // 5
-    FU_CSR         // 6
+    FU_NONE,   // 0
+    FU_LOAD,   // 1
+    FU_STORE,  // 2
+    FU_ALU,    // 3
+    FU_BU,     // 4
+    FU_MDU,    // 5
+    FU_CSR     // 6
   } fu_e;
 
   typedef struct packed {
@@ -94,27 +94,6 @@ package OoO_pkg;
     logic [ScoreboardDepth-1:0] trans_id;  //transaction ID
   } writeback_t;
 
-  // typedef struct packed {
-  //   logic [RegWidth-1:0] rs1_addr;
-  //   logic [RegWidth-1:0] rs2_addr;
-  //   logic [RegWidth-1:0] rd_addr;
-
-  //   logic [31:0] imm;
-
-  //   alu_set_t alu_set;
-  //   csr_set_t csr_set;
-  //   lsu_set_t lsu_set;
-  //   mdu_set_t mdu_set;
-  //   logic [11:0] csr_name;
-  //   logic reg_we;
-
-  //   logic jal;
-  //   logic jalr;
-  //   logic branch;
-  //   logic ecall;
-  //   logic mret;
-  // } decoder_t;
-
   typedef struct packed {
     fu_e                        fu;
     fu_op_e                     operation;
@@ -154,7 +133,7 @@ package OoO_pkg;
     logic [RegWidth-1:0] rs1;
     logic [RegWidth-1:0] rs2;
     logic [RegWidth-1:0] rd;
-    logic [31:0] result;
+    logic [31:0] result;  // imm
     logic valid;
     logic use_imm;  // operand b
     logic use_zimm;  // operand a
@@ -174,16 +153,6 @@ package OoO_pkg;
     logic flush;
     logic valid;
   } stage_t;
-
-  typedef struct packed {
-    logic [32:0] a;
-    logic [32:0] b;
-  } mdu2alu_t;
-
-  typedef struct packed {
-    logic [33:0] res;
-    logic not_zero;
-  } alu2mdu_t;
 
   localparam int unsigned IcacheLineSize = 5;  // 4
   localparam int unsigned IcacheLineNum = 1;  // 1

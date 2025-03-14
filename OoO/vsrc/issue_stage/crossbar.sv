@@ -122,9 +122,9 @@ module crossbar
     unique case (issue_instr.fu)
       FU_NONE:      fu_busy = fus_busy.none;
       FU_ALU:       fu_busy = fus_busy.alu;
-      FU_CTRL_FLOW: fu_busy = fus_busy.ctrl_flow;
+      FU_BU: fu_busy = fus_busy.ctrl_flow;
       FU_CSR:       fu_busy = fus_busy.csr;
-      FU_MULT:      fu_busy = fus_busy.mult;
+      FU_MDU:      fu_busy = fus_busy.mult;
       FU_LOAD:      fu_busy = fus_busy.load;
       FU_STORE:     fu_busy = fus_busy.store;
       default:      fu_busy = 1'b0;
@@ -324,7 +324,7 @@ module crossbar
       fu_data_n.operand_a = {27'b0, issue_instr.rs1[4:0]};
     end
     // or is it an immediate (including PC), this is not the case for a store, control flow, and accelerator instructions
-    if (issue_instr.use_imm && (issue_instr.fu != FU_STORE) && (issue_instr.fu != FU_CTRL_FLOW)) begin
+    if (issue_instr.use_imm && (issue_instr.fu != FU_STORE) && (issue_instr.fu != FU_BU)) begin
       fu_data_n.operand_b = issue_instr.result;
     end
   end
@@ -341,10 +341,10 @@ module crossbar
         FU_ALU: begin
           alu_valid_n = 1'b1;
         end
-        FU_CTRL_FLOW: begin
+        FU_BU: begin
           branch_valid_n = 1'b1;
         end
-        FU_MULT: begin
+        FU_MDU: begin
           mult_valid_n = 1'b1;
         end
         FU_LOAD, FU_STORE: begin
@@ -443,7 +443,7 @@ module crossbar
     pc_n = '0;
     is_compressed_instr_n = 1'b0;
     branch_predict_n = {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
-    if (issue_instr.fu == FU_CTRL_FLOW) begin
+    if (issue_instr.fu == FU_BU) begin
       pc_n                  = issue_instr.pc;
       is_compressed_instr_n = issue_instr.is_compressed;
       branch_predict_n      = issue_instr.bp;
@@ -459,7 +459,7 @@ module crossbar
       branch_predict_o      <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
       fu_data_q <= fu_data_n;
-      if (issue_instr.fu == FU_CTRL_FLOW) begin
+      if (issue_instr.fu == FU_BU) begin
         pc_o                  <= issue_instr.pc;
         is_compressed_instr_o <= issue_instr.is_compressed;
         branch_predict_o      <= issue_instr.bp;

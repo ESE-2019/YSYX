@@ -3,10 +3,6 @@
 module alu
   import OoO_pkg::*;
 (
-    input logic mdu_valid,
-    input mdu2alu_t mdu2alu,
-    output alu2mdu_t alu2mdu,
-
     input fu_data_t fu_data,
     output logic [31:0] alu_result
 );
@@ -22,31 +18,19 @@ module alu
   //add
   logic [32:0] srcA;
   always_comb begin
-    if (mdu_valid) begin
-      srcA = mdu2alu.a;
-    end else begin
-      srcA = {fu_data.operand_a, 1'b1};
-    end
+    srcA = {fu_data.operand_a, 1'b1};
   end
 
   logic [32:0] srcB;
   always_comb begin
-    if (mdu_valid) begin
-      srcB = mdu2alu.b;
-    end else begin
-      unique case (fu_data.operation)
-        ALU_ADD: srcB = {fu_data.operand_b, 1'b0};
-        ALU_SUB, ALU_LT, ALU_LTU, ALU_EQ, ALU_NE, ALU_GE, ALU_GEU:
-        srcB = {~fu_data.operand_b, 1'b1};
-        default: srcB = {fu_data.operand_b, 1'b0};
-      endcase
-    end
+    unique case (fu_data.operation)
+      ALU_ADD: srcB = {fu_data.operand_b, 1'b0};
+      ALU_SUB, ALU_LT, ALU_LTU, ALU_EQ, ALU_NE, ALU_GE, ALU_GEU: srcB = {~fu_data.operand_b, 1'b1};
+      default: srcB = {fu_data.operand_b, 1'b0};
+    endcase
   end
   wire [33:0] add_res = {1'b0, srcA} + {1'b0, srcB};
   wire not_zero = |add_res[32:1];
-
-  assign alu2mdu.res = add_res;
-  assign alu2mdu.not_zero = not_zero;
 
   //comp
   logic comp_res;

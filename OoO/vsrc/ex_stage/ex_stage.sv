@@ -88,8 +88,6 @@ module ex_stage
 );
 
   logic mdu_valid, mdu_ready;
-  mdu2alu_t mdu2alu;
-  alu2mdu_t alu2mdu;
   logic exu2lsu_valid;
   logic exu2lsu_ready;
   logic lsu2exu_valid;

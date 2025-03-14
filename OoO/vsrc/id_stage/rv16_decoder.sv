@@ -1,6 +1,6 @@
 `default_nettype none
 
-module ysyx_24080006_rv16
+module rv16_decoder
   import OoO_pkg::*;
 (
     input  logic [31:0] inst_i,
