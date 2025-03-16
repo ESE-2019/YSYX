@@ -15,48 +15,81 @@ module ysyx_24080006_core
     input  axi_r_s2m_t lsu_r_s2m
 );
 
-  stage_t ifu2idu, idu2exu, exu2ifu;
-  logic ifu2exu_ready, exu2idu_ready, idu2ifu_ready;
 
-  logic            fencei;  //todo
-  logic     [31:0] inst;
+  logic                            fencei;
+  logic       [              31:0] inst;
+  logic       [              31:0] id_pc;
 
-  logic            ecall;
-  logic            mret;
-  csr_set_t        csr_set;
-  logic     [11:0] csr_name;
-  logic     [31:0] csr_pc;
-  logic     [31:0] csr_wdata;
-  logic     [31:0] csr_rdata;
+  logic       [              31:0] ifu_dbg_inst;
 
-  decoder_t        decoder;
-  logic            reg_we;
-  logic [RegWidth-1:0] rs1_addr, rs2_addr, rd_addr;
-  logic [31:0] rs1_data, rs2_data, rd_data;
+  logic                            idu2ifu_ready;
+  logic                            ifu2idu_valid;
 
-  logic        forward_en;
-  logic [31:0] forward_data;
+  logic                            retire_valid;
+  logic                            retire_cf;
+  logic                            retire_jump;
+  logic                            retire_branch;
+  logic                            retire_is_rv16;
+  logic       [              31:0] retire_pc;
+  logic       [              31:0] retire_dnpc;
 
-  logic [31:0] idu_dbg_inst;
-  logic [31:0] exu_dbg_inst;
 
-  logic        icache_hit;
-  logic        icache_miss;
-  logic        icache_skip;
-  logic        load_num;
-  logic        load_cycle;
-  logic        store_num;
-  logic        store_cycle;
-  logic        is_compressed;
-  logic        fetch_cycle;
+  decoder_t                        idu2isu_instr;
 
-  ysyx_24080006_ifu IFU (.*);
-  ysyx_24080006_id_stage ID (.*);
-  ysyx_24080006_ex_stage EX (.*);
-  ysyx_24080006_reg REG (.*);
-  ysyx_24080006_csr CS (
+  logic                            isu2idu_ready;
+  logic                            idu2isu_valid;
+
+  fu_data_t                        fu_data;
+  logic                            is_rv16;
+  logic                            flu_ready;
+  logic                            alu_valid;
+  logic                            bu_valid;
+  logic                            mdu_valid;
+  logic                            csr_valid;
+  logic                            lsu_ready;
+  logic                            lsu_valid;
+
+  fu_op_e                          csr_op;
+  logic       [              31:0] csr_wdata;
+  logic       [              31:0] csr_rdata;
+  logic                            commit_csr;
+
+  writeback_t [WriteBackPorts-1:0] wb;
+
+  logic       [              11:0] csr_addr;
+
+  logic                            ecall;
+  logic                            mret;
+
+  logic       [              31:0] ex_pc;
+  logic       [              31:0] csr_pc;
+
+  logic       [              31:0] branch_address;
+  logic                            branch_taken;
+
+  logic                            icache_hit;
+  logic                            icache_miss;
+  logic                            icache_skip;
+  logic                            load_num;
+  logic                            load_cycle;
+  logic                            store_num;
+  logic                            store_cycle;
+  logic                            is_compressed;
+  logic                            fetch_cycle;
+
+  if_stage IFU (.*);
+  id_stage IDU (.*);
+  issue_stage ISU (
       .*,
-      .instret(exu2ifu.valid & ifu2exu_ready)
+      .pc(ex_pc)
+  );
+  ex_stage EX (
+      .*,
+      .pc(ex_pc)
+  );
+  csr_regfile CSRF (
+      .*,
+      .instret(retire_valid)  //exu2ifu.valid & ifu2exu_ready)
   );
 endmodule
 

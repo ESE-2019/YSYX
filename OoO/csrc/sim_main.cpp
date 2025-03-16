@@ -9,7 +9,7 @@ static bool FLASH_TRACE = 0;
 
 #define ABORT_NUM 0 // 0xffff
 #define WAVE_MAX 0xffff
-#define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__REG__DOT__regfile
+#define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__ISU__DOT__ISSUE_UNIT__DOT__GPR_REGFILE__DOT__regfile
 #define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
 #define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num
 #define MISS_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__miss_num
@@ -1386,7 +1386,7 @@ int main(int argc, char **argv)
     }
     load_img();
     log_file =
-        fopen("/home/ubuntu/ysyx-workbench/npc/build/debug.log",
+        fopen("/home/ubuntu/ysyx-workbench/OoO/build/debug.log",
               "w");
     if (log_file == NULL)
     {
@@ -1411,7 +1411,7 @@ int main(int argc, char **argv)
     if (WAVE)
         top->trace(tfp, 0);
     if (WAVE)
-        tfp->open("/home/ubuntu/ysyx-workbench/npc/build/wave.fst");
+        tfp->open("/home/ubuntu/ysyx-workbench/OoO/build/wave.fst");
     uint64_t wave = 0;
 
     uint32_t reg_mirror[16];

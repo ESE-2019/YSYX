@@ -6,9 +6,9 @@ module mdu
     input logic clock,
     input logic reset,
 
-    input fu_data_t fu_data,
+    input fu_data_t mdu_data,
     output logic [31:0] mdu_result,
-    output logic [ScoreboardDepth-1:0] mdu_trans_id,
+    output logic [ScoreboardIndex-1:0] mdu_idx,
 
     input  logic mdu_valid,
     output logic mdu_ready
@@ -33,7 +33,7 @@ module mdu
   } mdu_op_e;
   mdu_op_e mdu_op;
   always_comb begin
-    unique case (fu_data.operation)
+    unique case (mdu_data.operation)
       MDU_MUL: mdu_op = ALU_MULL;
       MDU_MULH, MDU_MULHU, MDU_MULHSU: mdu_op = ALU_MULH;
       MDU_DIV, MDU_DIVU: mdu_op = ALU_DIV;
@@ -44,7 +44,7 @@ module mdu
 
   logic signed_a, signed_b;
   always_comb begin
-    unique case (fu_data.operation)
+    unique case (mdu_data.operation)
       MDU_MUL: begin
         signed_a = 1'b0;
         signed_b = 1'b0;
@@ -91,9 +91,9 @@ module mdu
   logic [32:0] accumulator_q, accumulator_d;
 
   logic [32:0] adder_a, adder_b;
-  wire [33:0] adder_res = {1'b0, adder_a} + {1'b0 + adder_b};
-  wire sign_a = fu_data.operand_a[31] & signed_a;
-  wire sign_b = fu_data.operand_b[31] & signed_b;
+  wire [33:0] adder_res = {1'b0, adder_a} + {1'b0, adder_b};
+  wire sign_a = mdu_data.operand_a[31] & signed_a;
+  wire sign_b = mdu_data.operand_b[31] & signed_b;
   wire ge = accumulator_q[31] == shift_b_q[31] ? ~adder_res[32] : accumulator_q[31];
   wire change_sign = mdu_op == ALU_DIV ? (sign_a ^ sign_b) : sign_a;
 
@@ -108,7 +108,7 @@ module mdu
       shift_b_q     <= 33'h0;
       dividend_q    <= 32'h0;
       accumulator_q <= 33'h0;
-      mdu_trans_id  <= '0;
+      mdu_idx       <= '0;
     end else begin
       curr          <= next;
       count_q       <= count_d;
@@ -116,7 +116,7 @@ module mdu
       shift_b_q     <= shift_b_d;
       dividend_q    <= dividend_d;
       accumulator_q <= accumulator_d;
-      if (mdu_valid) mdu_trans_id <= fu_data.trans_id;
+      if (mdu_valid) mdu_idx <= mdu_data.idx;
     end
   end
 
@@ -132,25 +132,25 @@ module mdu
         MD_IDLE: begin
           unique case (mdu_op)
             ALU_MULL: begin
-              shift_a_d = {sign_a, fu_data.operand_a} << 1;
+              shift_a_d = {sign_a, mdu_data.operand_a} << 1;
               accumulator_d = {
-                ~(sign_a & fu_data.operand_b[0]), fu_data.operand_a & {32{fu_data.operand_b[0]}}
+                ~(sign_a & mdu_data.operand_b[0]), mdu_data.operand_a & {32{mdu_data.operand_b[0]}}
               };
-              shift_b_d = {sign_b, fu_data.operand_b} >> 1;
+              shift_b_d = {sign_b, mdu_data.operand_b} >> 1;
               next = MD_COMP;
             end
             ALU_MULH: begin
-              shift_a_d = {sign_a, fu_data.operand_a};
+              shift_a_d = {sign_a, mdu_data.operand_a};
               accumulator_d = {
                 1'b1,
-                ~(sign_a & fu_data.operand_b[0]),
-                fu_data.operand_a[31:1] & {31{fu_data.operand_b[0]}}
+                ~(sign_a & mdu_data.operand_b[0]),
+                mdu_data.operand_a[31:1] & {31{mdu_data.operand_b[0]}}
               };
-              shift_b_d = {sign_b, fu_data.operand_b} >> 1;
+              shift_b_d = {sign_b, mdu_data.operand_b} >> 1;
               next = MD_COMP;
             end
             ALU_DIV, ALU_REM: begin
-              accumulator_d[31:0] = mdu_op == ALU_DIV ? 32'hFFFF_FFFF : fu_data.operand_a;
+              accumulator_d[31:0] = mdu_op == ALU_DIV ? 32'hFFFF_FFFF : mdu_data.operand_a;
               next = ~|adder_res[32:1] ? MD_FINISH : MD_ABS_A;
             end
             default: ;
@@ -160,13 +160,13 @@ module mdu
 
         MD_ABS_A: begin
           shift_a_d  = 33'h0;
-          dividend_d = sign_a ? adder_res[32:1] : fu_data.operand_a;
+          dividend_d = sign_a ? adder_res[32:1] : mdu_data.operand_a;
           next       = MD_ABS_B;
         end
 
         MD_ABS_B: begin
           accumulator_d = {32'h0, dividend_q[31]};
-          shift_b_d     = sign_b ? {1'b0, adder_res[32:1]} : {1'b0, fu_data.operand_b};
+          shift_b_d     = sign_b ? {1'b0, adder_res[32:1]} : {1'b0, mdu_data.operand_b};
           next          = MD_COMP;
         end
 
@@ -237,11 +237,11 @@ module mdu
         unique case (curr)
           MD_IDLE, MD_ABS_B: begin
             adder_a = 33'h1;
-            adder_b = {~fu_data.operand_b, 1'b1};
+            adder_b = {~mdu_data.operand_b, 1'b1};
           end
           MD_ABS_A: begin
             adder_a = 33'h1;
-            adder_b = {~fu_data.operand_a, 1'b1};
+            adder_b = {~mdu_data.operand_a, 1'b1};
           end
           MD_SIGN: begin
             adder_a = 33'h1;

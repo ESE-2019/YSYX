@@ -6,7 +6,7 @@ module id_stage
     input logic clock,
     input logic reset,
 
-    input logic [31:0] pc,
+    input logic [31:0] id_pc,
     input logic [31:0] inst,
     output decoder_t idu2isu_instr,
 
@@ -97,7 +97,7 @@ module id_stage
   always_ff @(posedge clock) begin
     if (ifu2idu_valid && idu2ifu_ready) begin
       if (rv32_err) begin
-        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, pc);
+        $display("[IDU] inst error 0x%08x at pc 0x%08x", inst, id_pc);
         $finish;
       end
     end

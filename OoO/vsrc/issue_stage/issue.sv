@@ -3,35 +3,34 @@ module issue
 (
     input logic clock,
     input logic reset,
-    input logic flush_i,
+    //input logic flush_i,
     input decoder_t issue_instr,
     input logic issue_valid,
     output logic issue_ready,
     input forwarding_t fwd,
+
+    // to ex_stage
     output fu_data_t fu_data,
-    output logic [31:0] pc_o,
+    output logic [31:0] pc,
     output logic is_rv16,
-    input logic flu_ready_i,
-    output logic alu_valid_o,
-    output logic branch_valid_o,
-    output branchpredict_sbe_t branch_predict_o,
-    input logic lsu_ready_i,
-    output logic lsu_valid_o,
+    input logic flu_ready,
+    output logic alu_valid,
+    output logic bu_valid,
     output logic mdu_valid,
-    output logic csr_valid_o,
+    output logic csr_valid,
+    //output branchpredict_sbe_t branch_predict_o,
+    input logic lsu_ready,
+    output logic lsu_valid,
+
     input logic [4:0] gpr_waddr,
     input logic [31:0] gpr_wdata,
     input logic gpr_we
 );
 
   logic stall_raw, stall_waw, stall_rs1, stall_rs2;
-  logic fu_busy;  // functional unit is busy
-  logic issue_ready;
+  logic fu_busy;
   // output flipflop (ID <-> EX)
   fu_data_t fu_data_n, fu_data_q;
-  logic               [31:0] pc_n;
-  logic                      is_compressed_instr_n;
-  branchpredict_sbe_t        branch_predict_n;
 
   logic alu_valid_n, alu_valid_q;
   logic mult_valid_n, mult_valid_q;
@@ -50,7 +49,7 @@ module issue
   logic [31:0] rs2_res;
 
   // clobber
-  fu_t  [31:0] rd_clobber_gpr;
+  fu_e  [31:0] rd_clobber_gpr;
 
   //forward logic
   logic [ScoreboardDepth+WriteBackPorts-1:0] rs1_fwd_req, rs2_fwd_req;
@@ -59,10 +58,10 @@ module issue
   // forwarding signals
   logic forward_rs1, forward_rs2;
   assign fu_data = fu_data_q;
-  assign alu_valid_o = alu_valid_q;
-  assign branch_valid_o = branch_valid_q;
-  assign lsu_valid_o = lsu_valid_q;
-  assign csr_valid_o = csr_valid_q;
+  assign alu_valid = alu_valid_q;
+  assign bu_valid = branch_valid_q;
+  assign lsu_valid = lsu_valid_q;
+  assign csr_valid = csr_valid_q;
   assign mdu_valid = mult_valid_q;
   wire stall_issue_o = stall_raw;
 
@@ -74,7 +73,7 @@ module issue
   always_comb begin
     automatic fus_busy_t fus_busy = '0;
 
-    if (!flu_ready_i) begin
+    if (!flu_ready) begin
       fus_busy.alu = 1'b1;
       fus_busy.ctrl_flow = 1'b1;
       fus_busy.csr = 1'b1;
@@ -87,20 +86,20 @@ module issue
       fus_busy.csr = 1'b1;
     end
 
-    if (!lsu_ready_i) begin
+    if (!lsu_ready) begin
       fus_busy.load  = 1'b1;
       fus_busy.store = 1'b1;
     end
 
     unique case (issue_instr.fu)
-      FU_NONE:      fu_busy = fus_busy.none;
-      FU_ALU:       fu_busy = fus_busy.alu;
-      FU_BU: fu_busy = fus_busy.ctrl_flow;
-      FU_CSR:       fu_busy = fus_busy.csr;
-      FU_MDU:      fu_busy = fus_busy.mult;
-      FU_LOAD:      fu_busy = fus_busy.load;
-      FU_STORE:     fu_busy = fus_busy.store;
-      default:      fu_busy = 1'b0;
+      FU_NONE:  fu_busy = fus_busy.none;
+      FU_ALU:   fu_busy = fus_busy.alu;
+      FU_BU:    fu_busy = fus_busy.ctrl_flow;
+      FU_CSR:   fu_busy = fus_busy.csr;
+      FU_MDU:   fu_busy = fus_busy.mult;
+      FU_LOAD:  fu_busy = fus_busy.load;
+      FU_STORE: fu_busy = fus_busy.store;
+      default:  fu_busy = 1'b0;
     endcase
   end
 
@@ -179,32 +178,32 @@ module issue
   // WB ports have higher prio than entries
   for (genvar i = 0; i < WriteBackPorts; i++) begin : gen_rs_wb
 
-    assign rs1_fwd_req[i] = (fwd.instr[fwd.wb[i].trans_id].rd == issue_instr.rs1) & (fwd.issued[fwd.wb[i].trans_id]) & fwd.wb[i].valid;
+    assign rs1_fwd_req[i] = (fwd.instr[fwd.wb[i].idx].rd == issue_instr.rs1) & (fwd.issued[fwd.wb[i].idx]) & fwd.wb[i].valid;
 
-    assign rs2_fwd_req[i] = (fwd.instr[fwd.wb[i].trans_id].rd == issue_instr.rs2) & (fwd.issued[fwd.wb[i].trans_id]) & fwd.wb[i].valid;
+    assign rs2_fwd_req[i] = (fwd.instr[fwd.wb[i].idx].rd == issue_instr.rs2) & (fwd.issued[fwd.wb[i].idx]) & fwd.wb[i].valid;
 
     assign rs_data[i] = fwd.wb[i].data;
   end
 
-  for (genvar i = 0; i < ScoreboardDepth; k++) begin : gen_rs_entries
+  for (genvar i = 0; i < ScoreboardDepth; i++) begin : gen_rs_entries
 
-    assign rs1_fwd_req[k+WriteBackPorts] = (fwd.instr[i].rd == issue_instr.rs1) & fwd.issued[i] & fwd.instr[i].valid;
+    assign rs1_fwd_req[i+WriteBackPorts] = (fwd.instr[i].rd == issue_instr.rs1) & fwd.issued[i] & fwd.instr[i].valid;
 
-    assign rs2_fwd_req[k+WriteBackPorts] = (fwd.instr[i].rd == issue_instr.rs2) & fwd.issued[i] & fwd.instr[i].valid;
+    assign rs2_fwd_req[i+WriteBackPorts] = (fwd.instr[i].rd == issue_instr.rs2) & fwd.issued[i] & fwd.instr[i].valid;
 
-    assign rs_data[k+WriteBackPorts] = fwd.instr[i].result;
+    assign rs_data[i+WriteBackPorts] = fwd.instr[i].result;
   end
 
   // use fixed prio here
   // this implicitly gives higher prio to WB ports
   rr_arb_tree #(
       .NumIn(ScoreboardDepth + WriteBackPorts),
-      .DataWidth(CVA6Cfg.XLEN),
+      .DataWidth(32),
       .ExtPrio(1'b1),
       .AxiVldRdy(1'b1)
   ) i_sel_rs1 (
-      .clock  (clock),
-      .reset (reset),
+      .clk_i  (clock),
+      .rst_ni (~reset),
       .flush_i(1'b0),
       .rr_i   ('0),
       .req_i  (rs1_fwd_req),
@@ -218,12 +217,12 @@ module issue
 
   rr_arb_tree #(
       .NumIn(ScoreboardDepth + WriteBackPorts),
-      .DataWidth(CVA6Cfg.XLEN),
+      .DataWidth(32),
       .ExtPrio(1'b1),
       .AxiVldRdy(1'b1)
   ) i_sel_rs2 (
-      .clock  (clock),
-      .reset (reset),
+      .clk_i  (clock),
+      .rst_ni (~reset),
       .flush_i(1'b0),
       .rr_i   ('0),
       .req_i  (rs2_fwd_req),
@@ -274,7 +273,7 @@ module issue
     fu_data_n.operand_b = gpr_rdata_2;
 
     fu_data_n.imm = issue_instr.result;
-    fu_data_n.trans_id = issue_instr.trans_id;
+    fu_data_n.idx = issue_instr.idx;
     fu_data_n.fu = issue_instr.fu;
     fu_data_n.operation = issue_instr.op;
 
@@ -306,10 +305,9 @@ module issue
     alu_valid_n    = '0;
     lsu_valid_n    = '0;
     mult_valid_n   = '0;
-    alu2_valid_n   = '0;
     csr_valid_n    = '0;
     branch_valid_n = '0;
-    if (!issue_instr.ex.valid && issue_valid && issue_ready) begin
+    if (issue_valid && issue_ready) begin
       case (issue_instr.fu)
         FU_ALU: begin
           alu_valid_n = 1'b1;
@@ -331,14 +329,14 @@ module issue
     end
     // if we got a flush request, de-assert the valid flag, otherwise we will start this
     // functional unit with the wrong inputs
-    if (flush_i) begin
-      alu_valid_n    = '0;
-      lsu_valid_n    = '0;
-      mult_valid_n   = '0;
-      alu2_valid_n   = '0;
-      csr_valid_n    = '0;
-      branch_valid_n = '0;
-    end
+    // if (flush_i) begin
+    //   alu_valid_n    = '0;
+    //   lsu_valid_n    = '0;
+    //   mult_valid_n   = '0;
+    //   alu2_valid_n   = '0;
+    //   csr_valid_n    = '0;
+    //   branch_valid_n = '0;
+    // end
   end
   // FU select, assert the correct valid out signal (in the next cycle)
   // This needs to be like this to make verilator happy. I know its ugly.
@@ -388,9 +386,9 @@ module issue
       if (!stall_raw && !stall_waw) begin
         issue_ready = 1'b1;
       end
-      if (issue_instr.ex.valid) begin
-        issue_ready = 1'b1;
-      end
+      // if (issue_instr.ex.valid) begin
+      //   issue_ready = 1'b1;
+      // end
     end
   end
 
@@ -412,30 +410,19 @@ module issue
   // Registers (ID <-> EX)
   // ----------------------
 
-  always_comb begin
-    pc_n = '0;
-    is_compressed_instr_n = 1'b0;
-    branch_predict_n = {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
-    if (issue_instr.fu == FU_BU) begin
-      pc_n                  = issue_instr.pc;
-      is_compressed_instr_n = issue_instr.is_compressed;
-      branch_predict_n      = issue_instr.bp;
-    end
-  end
-
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      fu_data_q             <= '0;
-      pc_o                  <= '0;
-      is_rv16 <= 1'b0;
-      branch_predict_o      <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
+      fu_data_q        <= '0;
+      pc               <= '0;
+      is_rv16          <= 1'b0;
+      //branch_predict_o <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
       fu_data_q <= fu_data_n;
       if (issue_instr.fu == FU_BU) begin
-        pc_o                  <= issue_instr.pc;
-        is_rv16 <= issue_instr.is_compressed;
-        branch_predict_o      <= issue_instr.bp;
+        pc               <= issue_instr.pc;
+        is_rv16          <= issue_instr.is_rv16;
+        //branch_predict_o <= issue_instr.bp;
       end
     end
   end

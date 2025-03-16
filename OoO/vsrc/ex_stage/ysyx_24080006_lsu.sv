@@ -13,8 +13,8 @@ module ysyx_24080006_lsu
     input logic [31:0] lsu_wdata,
     output logic [31:0] lsu_rdata,
 
-    input  logic [ScoreboardDepth-1:0] lsu_trans_id_i,
-    output logic [ScoreboardDepth-1:0] lsu_trans_id_o,
+    input  logic [ScoreboardIndex-1:0] lsu_idx_i,
+    output logic [ScoreboardIndex-1:0] lsu_idx,
 
     input  logic exu2lsu_valid,
     output logic lsu2exu_ready,
@@ -91,12 +91,12 @@ module ysyx_24080006_lsu
     if (reset) begin
       lsu2exu_valid <= 1'b0;
       lsu2exu_ready <= 1'b1;
-      lsu_trans_id_o <= '0;
+      lsu_idx <= '0;
     end else begin
       unique case (curr)
         LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
-            lsu_trans_id_o <= lsu_trans_id_i;
+            lsu_idx <= lsu_idx_i;
             if (lsu_write) begin
               lsu2exu_valid <= 1'b1;
               lsu2exu_ready <= 1'b0;

@@ -1,6 +1,6 @@
 `default_nettype none
 
-module ysyx_24080006_ifu
+module if_stage
   import OoO_pkg::*;
 (
     input logic clock,
@@ -8,12 +8,19 @@ module ysyx_24080006_ifu
 
     input  logic        fencei,
     output logic [31:0] inst,
-    input  logic [31:0] exu_dbg_inst,
+    output logic [31:0] id_pc,
+    input  logic [31:0] ifu_dbg_inst,
 
-    input  logic   idu2ifu_ready,
-    output logic   ifu2exu_ready,
-    input  stage_t exu2ifu,
-    output stage_t ifu2idu,
+    input  logic idu2ifu_ready,
+    output logic ifu2idu_valid,
+
+    input logic retire_valid,
+    input logic retire_cf,
+    input logic retire_jump,
+    input logic retire_branch,
+    input logic retire_is_rv16,
+    input logic [31:0] retire_pc,
+    input logic [31:0] retire_dnpc,
 
     output logic icache_hit,
     output logic icache_miss,
@@ -40,7 +47,7 @@ module ysyx_24080006_ifu
   assign ifu2icu_ready = 1'b1;
 
   logic detect_hazard_q, detect_hazard_d;
-  logic [31:0] ic_val, inst_i;
+  logic [31:0] ic_val;
   logic rv16_d, rv16_q;
   logic rv16_err;
   logic [31:0] pc_d, pc_q;
@@ -48,7 +55,7 @@ module ysyx_24080006_ifu
   logic [15:0] inst_buf;
   logic [31:0] inst_d, inst_q;
   assign inst = inst_q;
-  wire branch_or_jump = exu2ifu.jump || exu2ifu.branch;
+  wire branch_or_jump = retire_jump || retire_branch;
   wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
   wire jal = 1'b0;
   assign detect_hazard_d = inst_d[6:0] inside {riscv_instr::JAL[6:0], riscv_instr::JALR[6:0],
@@ -89,7 +96,7 @@ module ysyx_24080006_ifu
         end
       end
       IF_HAZARD: begin
-        if (exu2ifu.valid && exu2ifu.flush) begin
+        if (retire_valid & retire_cf) begin
           next = IF_EXEC;
         end else begin
           next = curr;
@@ -101,43 +108,34 @@ module ysyx_24080006_ifu
 
   always_ff @(posedge clock) begin  // fsm 3 for handshake
     if (reset) begin
-      ifu2exu_ready <= 1'b0;
-      ifu2idu.valid <= 1'b0;
+      ifu2idu_valid <= 1'b0;
     end else begin
       unique case (curr)
         IF_RESET: begin
-          ifu2exu_ready <= 1'b1;
-          ifu2idu.valid <= 1'b0;
+          ifu2idu_valid <= 1'b0;
         end
         IF_IDLE: begin
-          ifu2exu_ready <= 1'b1;
-          ifu2idu.valid <= 1'b0;
+          ifu2idu_valid <= 1'b0;
         end
         IF_EXEC: begin
           if (icu2ifu_valid && (!fetch_twice | rv16_d)) begin
-            ifu2exu_ready <= 1'b1;
-            ifu2idu.valid <= 1'b1;
+            ifu2idu_valid <= 1'b1;
           end else begin
-            ifu2exu_ready <= 1'b1;
-            ifu2idu.valid <= 1'b0;
+            ifu2idu_valid <= 1'b0;
           end
         end
         IF_WAIT: begin
           if (idu2ifu_ready) begin
-            ifu2exu_ready <= 1'b1;
-            ifu2idu.valid <= 1'b0;
+            ifu2idu_valid <= 1'b0;
           end else begin
-            ifu2exu_ready <= 1'b1;
-            ifu2idu.valid <= 1'b1;
+            ifu2idu_valid <= 1'b1;
           end
         end
         IF_HAZARD: begin
-          ifu2exu_ready <= 1'b1;
-          ifu2idu.valid <= 1'b0;
+          ifu2idu_valid <= 1'b0;
         end
         default: begin
-          ifu2exu_ready <= 1'b0;
-          ifu2idu.valid <= 1'b0;
+          ifu2idu_valid <= 1'b0;
         end
       endcase
     end
@@ -187,9 +185,7 @@ module ysyx_24080006_ifu
       ifu2icu_valid <= 1'b0;
       pc_q <= RstAddr;
       fetch_addr_q <= RstAddr;
-      ifu2idu.pc <= RstAddr;
-      ifu2idu.rv16 <= 1'b0;
-      ifu2idu.flush <= 1'b0;
+      id_pc <= RstAddr;
       inst_q <= 32'b0;
       rv16_q <= 1'b0;
       fetch_twice <= 1'b0;
@@ -217,12 +213,9 @@ module ysyx_24080006_ifu
               if (fetch_twice) begin
                 if (rv16_d) begin  // fetch_twice_terminated
                   rv16_q <= rv16_d;
-                  ifu2idu.pc <= pc_q;
+                  id_pc <= pc_q;
                   inst_q <= inst_d;
                   detect_hazard_q <= detect_hazard_d;
-                  ifu2idu.rv16 <= rv16_d;
-                  ifu2idu.rv16_err <= rv16_err;
-                  ifu2idu.flush <= detect_hazard_d;
                   fetch_twice_terminated <= 1'b1;
                 end else begin  // fetch_twice
                   ifu2icu_valid <= 1'b1;
@@ -232,12 +225,9 @@ module ysyx_24080006_ifu
                 end
               end else begin  // common case
                 rv16_q <= rv16_d;
-                ifu2idu.pc <= pc_q;
+                id_pc <= pc_q;
                 inst_q <= inst_d;
                 detect_hazard_q <= detect_hazard_d;
-                ifu2idu.rv16 <= rv16_d;
-                ifu2idu.rv16_err <= rv16_err;
-                ifu2idu.flush <= detect_hazard_d;
               end
             end
           end
@@ -246,12 +236,12 @@ module ysyx_24080006_ifu
           ifu2icu_valid <= 1'b0;
         end
         IF_HAZARD: begin
-          if (exu2ifu.valid && exu2ifu.flush) begin
+          if (retire_valid & retire_cf) begin
             if (branch_or_jump) begin
-              pc_q <= exu2ifu.dnpc;
-              fetch_addr_q <= {exu2ifu.dnpc[31:2], 2'b00};
+              pc_q <= retire_dnpc;
+              fetch_addr_q <= {retire_dnpc[31:2], 2'b00};
               ifu2icu_valid <= 1'b1;
-              fetch_twice <= exu2ifu.dnpc[1];
+              fetch_twice <= retire_dnpc[1];
               fetch_twice_terminated <= 1'b0;
             end else begin
               pc_q <= pc_d;
@@ -269,21 +259,18 @@ module ysyx_24080006_ifu
 
   always_comb begin
     if (fetch_twice) begin  // fetch_twice occurs in misaligned pc
-      inst_i = {16'b0, ic_val[31:16]};
+      inst_d = {16'b0, ic_val[31:16]};
     end else begin
-      inst_i = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
+      inst_d = pc_q[1] ? {ic_val[15:0], inst_buf} : ic_val;
     end
+    rv16_d = inst_d[1:0] != 2'b11;
   end
 
   wire [31:0] fetch_addr = fetch_addr_q;
-  ysyx_24080006_icu ICU (.*);
-  ysyx_24080006_rv16 RV16 (
-      .*,
-      .rv16  (rv16_d),
-      .inst_o(inst_d)
-  );
 
-  assign is_compressed = ifu2idu.rv16 & ifu2idu.valid & idu2ifu_ready;
+  ysyx_24080006_icu ICU (.*);
+
+  assign is_compressed = rv16_d & ifu2idu_valid & idu2ifu_ready;
   assign fetch_cycle   = curr == IF_EXEC;
 
 `ifdef SIM_MODE
@@ -313,9 +300,9 @@ module ysyx_24080006_ifu
         end
         IF_EXEC, IF_WAIT: begin
           ifu_cnt <= ifu_cnt + 1;
-          if (ifu2idu.valid && idu2ifu_ready) begin
-            dbg(inst, pc_q, (exu2ifu.jump ? ftrace : 0), ifu_cnt);
-            if (branch_or_jump) ftrace <= exu2ifu.dnpc;
+          if (ifu2idu_valid && idu2ifu_ready) begin
+            dbg(inst, pc_q, (retire_jump ? ftrace : 0), ifu_cnt);
+            if (branch_or_jump) ftrace <= retire_dnpc;
             else ftrace <= pc_d;
           end
         end
@@ -330,7 +317,7 @@ module ysyx_24080006_ifu
   );
   import "DPI-C" function int pmem_read(input int raddr);
   always_ff @(posedge clock) begin
-    if (ifu2idu.valid && idu2ifu_ready) begin
+    if (ifu2idu_valid && idu2ifu_ready) begin
       if (!INSIDE_MEM(pc_q)) begin
         $display("[IFU]pc error 0x%08x", pc_q);
         $finish;
@@ -353,12 +340,12 @@ module ysyx_24080006_ifu
   import "DPI-C" function void retirement(input int pc);
   import "DPI-C" function void ebreak();
   bit retire = 0;
-  bit [31:0] retire_pc;
+  bit [31:0] difftest_pc;
   time op_c = 0, br_c = 0, ls_c = 0, sys_c = 0;
   int op_i = 0, br_i = 0, ls_i = 0, sys_i = 0;
   always_ff @(posedge clock) begin
-    if (exu2ifu.valid && ifu2exu_ready) begin
-      case (exu_dbg_inst[6:0])
+    if (retire_valid) begin
+      case (ifu_dbg_inst[6:0])
         riscv_instr::AUIPC[6:0], riscv_instr::LUI[6:0],
         riscv_instr::ADD[6:0], riscv_instr::ADDI[6:0]: begin
           op_c += ($time - inst_queue.pop_back) / 2;
@@ -378,13 +365,13 @@ module ysyx_24080006_ifu
         end
         default: ;
       endcase
-      if (exu_dbg_inst == riscv_instr::WFI || exu_dbg_inst == riscv_instr::EBREAK) ebreak();
+      if (ifu_dbg_inst == riscv_instr::WFI || ifu_dbg_inst == riscv_instr::EBREAK) ebreak();
       retire <= 1'b1;
-      if (branch_or_jump) retire_pc <= exu2ifu.dnpc;
-      else retire_pc <= exu2ifu.pc + (exu2ifu.rv16 ? 32'h2 : 32'h4);
+      if (branch_or_jump) difftest_pc <= retire_dnpc;
+      else difftest_pc <= retire_pc + (retire_is_rv16 ? 32'h2 : 32'h4);
     end else retire <= 1'b0;
     if (retire) begin
-      retirement(retire_pc);
+      retirement(difftest_pc);
     end
   end
 `endif

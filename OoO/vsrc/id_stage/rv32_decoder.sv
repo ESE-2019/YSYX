@@ -3,7 +3,7 @@
 module rv32_decoder
   import OoO_pkg::*;
 (
-    input logic [31:0] pc,
+    input logic [31:0] id_pc,
     input logic [31:0] instr,
     input logic is_rv16,
     input logic rv16_err,
@@ -21,7 +21,7 @@ module rv32_decoder
 
   always_comb begin
     decoded_instr         = '0;
-    decoded_instr.pc      = pc;
+    decoded_instr.pc      = id_pc;
     decoded_instr.result  = immI;
     decoded_instr.is_rv16 = is_rv16;
     rv32_err              = rv16_err;
@@ -136,6 +136,7 @@ module rv32_decoder
       JAL[6:0]: begin
         decoded_instr.result = immJ;
         decoded_instr.fu     = FU_BU;
+        decoded_instr.op     = CF_JAL;
         decoded_instr.rd     = instr[7+:RegWidth];
       end
 
@@ -198,6 +199,7 @@ module rv32_decoder
       end
 
       FENCE[6:0]: begin
+        decoded_instr.fu = FU_CSR;
         unique case (instr[14:12])
           FENCE[14:12]: decoded_instr.op = CF_FENCE;
           FENCE_I[14:12]: decoded_instr.op = CF_FENCE_I;

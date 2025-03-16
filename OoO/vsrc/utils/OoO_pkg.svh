@@ -14,34 +14,7 @@ package OoO_pkg;
     FU_CSR     // 6
   } fu_e;
 
-  typedef struct packed {
-    logic csr_enable;
-    logic csr_uimm;
-    csr_op_e csr_op;
-  } csr_set_t;
-
-  typedef struct packed {
-    logic lsu_enable;
-    logic lsu_write;
-    logic lsu_sext;
-    logic [1:0] lsu_size;
-  } lsu_set_t;
-
   localparam int unsigned RegWidth = 5;
-
-  typedef enum logic [1:0] {
-    ALU_MULL,
-    ALU_MULH,
-    ALU_DIV,
-    ALU_REM
-  } mdu_op_e;
-
-  typedef struct packed {
-    logic mdu_enable;
-    logic signed_a;
-    logic signed_b;
-    mdu_op_e mdu_op;
-  } mdu_set_t;
 
   typedef enum logic [7:0] {
     ALU_ADD,
@@ -83,6 +56,7 @@ package OoO_pkg;
     CF_FENCE,
     CF_FENCE_I,
     CF_WFI,
+    CF_JAL,
     CF_JALR,
     CF_BRANCH
   } fu_op_e;
@@ -90,8 +64,8 @@ package OoO_pkg;
   typedef struct packed {
     logic valid;
     logic [31:0] data;
-    logic ex_valid;
-    logic [ScoreboardDepth-1:0] idx;
+    //logic ex_valid;
+    logic [ScoreboardIndex-1:0] idx;
   } writeback_t;
 
   typedef struct packed {
@@ -100,34 +74,34 @@ package OoO_pkg;
     logic [31:0]                operand_a;
     logic [31:0]                operand_b;
     logic [31:0]                imm;
-    logic [ScoreboardIndex-1:0] trans_id;
+    logic [ScoreboardIndex-1:0] idx;
   } fu_data_t;
 
-  typedef enum logic [2:0] {
-    NoCF,    // No control flow prediction
-    Branch,  // Branch
-    Jump,    // Jump to address from immediate
-    JumpR,   // Jump to address from registers
-    Return   // Return Address Prediction
-  } cf_e;
+  // typedef enum logic [2:0] {
+  //   NoCF,    // No control flow prediction
+  //   Branch,  // Branch
+  //   Jump,    // Jump to address from immediate
+  //   JumpR,   // Jump to address from registers
+  //   Return   // Return Address Prediction
+  // } cf_e;
 
-  typedef struct packed {
-    cf_e         cf;               // type of control flow prediction
-    logic [31:0] predict_address;  // target address at which to jump, or not
-  } bp_t;
+  // typedef struct packed {
+  //   cf_e         cf;               // type of control flow prediction
+  //   logic [31:0] predict_address;  // target address at which to jump, or not
+  // } bp_t;
 
-  typedef struct packed {
-    logic        valid;           // prediction with all its values is valid
-    logic [31:0] pc;              // PC of predict or mis-predict
-    logic [31:0] target_address;  // target address at which to jump, or not
-    logic        is_mispredict;   // set if this was a mis-predict
-    logic        is_taken;        // branch is taken
-    cf_t         cf_type;         // Type of control flow change
-  } bp_resolve_t;
+  // typedef struct packed {
+  //   logic        valid;           // prediction with all its values is valid
+  //   logic [31:0] pc;              // PC of predict or mis-predict
+  //   logic [31:0] target_address;  // target address at which to jump, or not
+  //   logic        is_mispredict;   // set if this was a mis-predict
+  //   logic        is_taken;        // branch is taken
+  //   cf_t         cf_type;         // Type of control flow change
+  // } bp_resolve_t;
 
   typedef struct packed {
     logic [31:0] pc;
-    logic [ScoreboardIndex-1:0] trans_id;
+    logic [ScoreboardIndex-1:0] idx;
     fu_e fu;
     fu_op_e op;
     logic [RegWidth-1:0] rs1;
@@ -139,20 +113,20 @@ package OoO_pkg;
     logic use_zimm;  // operand a
     logic use_pc;  // operand a
     //exception_t ex;  // exception has occurred
-    bp_t bp;  // branch predict scoreboard data structure
+    //bp_t bp;  // branch predict scoreboard data structure
     logic is_rv16;
   } decoder_t;
 
   typedef struct packed {
-    logic [31:0] pc, dnpc;
-    logic [31:0] alu_a, alu_b;
-    logic [31:0] rs1_data, rs2_data, csr_rdata;
-    logic jump, branch;
-    logic rv16;
-    logic rv16_err;
-    logic flush;
-    logic valid;
-  } stage_t;
+    logic issued;
+    decoder_t instr;
+  } scoreboard_t;
+
+  typedef struct packed {
+    logic [ScoreboardDepth-1:0] issued;
+    writeback_t [WriteBackPorts-1:0] wb;
+    decoder_t [ScoreboardDepth-1:0] instr;
+  } forwarding_t;
 
   localparam int unsigned IcacheLineSize = 5;  // 4
   localparam int unsigned IcacheLineNum = 1;  // 1
