@@ -45,12 +45,13 @@ module ex_stage
     input  axi_r_s2m_t lsu_r_s2m
 );
 
-  logic mdu_ready;
+  logic mdu_finish, mdu_ready;
   logic exu2lsu_valid;
   logic exu2lsu_ready;
   logic lsu2exu_valid;
   logic lsu2exu_ready;
   assign exu2lsu_valid = lsu_valid;
+  assign lsu_ready = lsu2exu_ready;
   assign exu2lsu_ready = 1'b1;
 
   logic [31:0] dnpc, lsu_addr;
@@ -85,12 +86,12 @@ module ex_stage
     // wb port 0 (flu)
     wb[0].data  = branch_result;
     wb[0].idx   = one_cycle_data.idx;
-    wb[0].valid = one_cycle_select | mdu_valid;
+    wb[0].valid = one_cycle_select | mdu_finish;
     if (alu_valid) begin
       wb[0].data = alu_result;
     end else if (csr_valid) begin
       wb[0].data = csr_result;
-    end else if (mdu_valid) begin
+    end else if (mdu_finish) begin
       wb[0].data = mdu_result;
       wb[0].idx  = mdu_idx;
     end

@@ -52,6 +52,7 @@ package OoO_pkg;
     CSR_SET,
     CSR_CLEAR,
     CF_ECALL,
+    CF_EBREAK,
     CF_MRET,
     CF_FENCE,
     CF_FENCE_I,

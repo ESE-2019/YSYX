@@ -73,6 +73,12 @@ module issue_stage
   scoreboard SCOREBOARD_UNIT (.*);
   commit COMMIT_UNIT (.*);
 
+`ifdef SIM_MODE
+  import "DPI-C" function void ebreak();
+  always_comb begin
+    if (retire_valid && commit_instr.op == CF_EBREAK) ebreak();
+  end
+`endif
 
 endmodule
 

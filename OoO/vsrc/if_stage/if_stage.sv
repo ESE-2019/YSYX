@@ -53,15 +53,11 @@ module if_stage
   logic [31:0] pc_d, pc_q;
   logic [31:0] fetch_addr_d, fetch_addr_q;
   logic [15:0] inst_buf;
-  logic [31:0] inst_d, inst_q;
+  logic [31:0] inst_d, inst_q, pre_dec_inst;
   assign inst = inst_q;
   wire branch_or_jump = retire_jump || retire_branch;
-  wire [31:0] immJ = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-  wire jal = 1'b0;
-  assign detect_hazard_d = inst_d[6:0] inside {riscv_instr::JAL[6:0], riscv_instr::JALR[6:0],
+  assign detect_hazard_d = pre_dec_inst[6:0] inside {riscv_instr::JAL[6:0], riscv_instr::JALR[6:0],
     riscv_instr::ECALL[6:0], riscv_instr::BEQ[6:0], riscv_instr::FENCE[6:0]};
-  // wire jal = inst[6:0] == riscv_instr::JAL[6:0];
-  // assign detect_hazard_d = inst_d[6:0] inside {riscv_instr::JALR[6:0], riscv_instr::ECALL[6:0], riscv_instr::BEQ[6:0], riscv_instr::FENCE[6:0]};
 
   always_ff @(posedge clock) begin  //fsm 1
     if (reset) begin
@@ -148,9 +144,6 @@ module if_stage
     end else if (fetch_twice) begin
       pc_d = pc_q;
       fetch_addr_d = fetch_addr_q + 32'h4;
-    end else if (jal) begin
-      pc_d = pc_q + immJ;
-      fetch_addr_d = {pc_d[31:2], 2'b00};
     end else begin
       unique case ({
         pc_q[1], rv16_q
@@ -201,7 +194,7 @@ module if_stage
           pc_q <= pc_d;
           fetch_addr_q <= fetch_addr_d;
           ifu2icu_valid <= 1'b1;
-          fetch_twice <= jal & pc_d[1];
+          fetch_twice <= 1'b0;
           fetch_twice_terminated <= 1'b0;
         end
         IF_EXEC: begin
@@ -269,6 +262,12 @@ module if_stage
   wire [31:0] fetch_addr = fetch_addr_q;
 
   ysyx_24080006_icu ICU (.*);
+  rv16_decoder PRE_DEC (
+      .inst(inst_d),
+      .instr(pre_dec_inst),
+      .is_rv16(),
+      .rv16_err()
+  );
 
   assign is_compressed = rv16_d & ifu2idu_valid & idu2ifu_ready;
   assign fetch_cycle   = curr == IF_EXEC;
@@ -365,7 +364,7 @@ module if_stage
         end
         default: ;
       endcase
-      if (ifu_dbg_inst == riscv_instr::WFI || ifu_dbg_inst == riscv_instr::EBREAK) ebreak();
+      //if (ifu_dbg_inst == riscv_instr::WFI || ifu_dbg_inst == riscv_instr::EBREAK) ebreak();
       retire <= 1'b1;
       if (branch_or_jump) difftest_pc <= retire_dnpc;
       else difftest_pc <= retire_pc + (retire_is_rv16 ? 32'h2 : 32'h4);

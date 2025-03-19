@@ -168,6 +168,7 @@ module rv32_decoder
       ECALL[6:0]: begin
         decoded_instr.fu = FU_CSR;
         decoded_instr.result = immI;
+        decoded_instr.use_imm = 1'b1;
         decoded_instr.rs1 = instr[15+:RegWidth];
         decoded_instr.rd = instr[7+:RegWidth];
         if (instr[14:12] == 3'b000) begin
@@ -178,7 +179,7 @@ module rv32_decoder
                 // decoded_instr.ex.valid = 1'b1;
                 // decoded_instr.ex.cause = 32'd11;
               end
-              EBREAK[31:20], WFI[31:20]: ;  // use DPI-C to end sim
+              EBREAK[31:20], WFI[31:20]: decoded_instr.op = CF_EBREAK;  // use DPI-C to end sim
               MRET[31:20]: begin
                 decoded_instr.op = CF_MRET;
               end

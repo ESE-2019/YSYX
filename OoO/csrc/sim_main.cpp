@@ -1,14 +1,14 @@
 static bool LOG = 0;
 static bool WAVE = 1;
-static bool SDB = 1;
+static bool SDB = 0;
 
-static bool DIFF_EN = 1;
-static bool IT_EN = 1;
-static bool FT_EN = 1;
+static bool DIFF_EN = 0;
+static bool IT_EN = 0;
+static bool FT_EN = 0;
 static bool FLASH_TRACE = 0;
 
-#define ABORT_NUM 0 // 0xffff
-#define WAVE_MAX 0xffff
+#define ABORT_NUM 0xffffff
+#define WAVE_MAX 0xffffff
 #define NPC_REG top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__ISU__DOT__ISSUE_UNIT__DOT__GPR_REGFILE__DOT__regfile
 #define HIT_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__hit_num
 #define SKIP_NUM top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__ICU__DOT__skip_num

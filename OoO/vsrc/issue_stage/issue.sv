@@ -103,55 +103,6 @@ module issue
     endcase
   end
 
-  // -------------------
-  // RD clobber process
-  // -------------------
-  // rd_clobber output: output currently clobbered destination registers
-
-  // logic [             31:0][ScoreboardDepth:0] gpr_clobber_vld;
-  // fu_t  [ScoreboardDepth:0]                    clobber_fu;
-  // always_comb begin
-  //   gpr_clobber_vld = '0;
-
-  //   // default (highest entry hast lowest prio in arbiter tree below)
-  //   clobber_fu[ScoreboardDepth] = FU_NONE;
-  //   for (int unsigned i = 0; i < 32; i++) begin
-  //     gpr_clobber_vld[i][ScoreboardDepth] = 1'b1;
-  //   end
-
-  //   // check for all valid entries and set the clobber accordingly
-
-  //   for (int unsigned i = 0; i < ScoreboardDepth; i++) begin
-  //     gpr_clobber_vld[fwd.instr[i].rd][i] = fwd.issued[i];
-  //     clobber_fu[i] = fwd.instr[i].fu;
-  //   end
-
-  //   // GPR[0] is always free
-  //   gpr_clobber_vld[0] = '0;
-  // end
-
-  // for (genvar i = 0; i < 32; i++) begin : gen_sel_clobbers
-  //   // get fu that is going to clobber this register (there should be only one)
-  //   rr_arb_tree #(
-  //       .NumIn(ScoreboardDepth + 1),
-  //       .DataType(fu_t),
-  //       .ExtPrio(1'b1),
-  //       .AxiVldRdy(1'b1)
-  //   ) i_sel_gpr_clobbers (
-  //       .clock  (clock),
-  //       .reset (reset),
-  //       .flush_i(1'b0),
-  //       .rr_i   ('0),
-  //       .req_i  (gpr_clobber_vld[i]),
-  //       .gnt_o  (),
-  //       .data_i (clobber_fu),
-  //       .gnt_i  (1'b1),
-  //       .req_o  (),
-  //       .data_o (rd_clobber_gpr[i]),
-  //       .idx_o  ()
-  //   );
-  // end
-
   always_comb begin
     for (int unsigned i = 0; i < 32; i++) begin
       rd_clobber_gpr[i] = FU_NONE;
