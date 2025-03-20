@@ -70,6 +70,24 @@ module rv32_decoder
           {DIVU[31:25], DIVU[14:12]} : decoded_instr.op = MDU_DIVU;
           {REM[31:25], REM[14:12]} : decoded_instr.op = MDU_REM;
           {REMU[31:25], REMU[14:12]} : decoded_instr.op = MDU_REMU;
+
+          {SH1ADD[31:25], SH1ADD[14:12]} : decoded_instr.op = ALU_SH1ADD;
+          {SH2ADD[31:25], SH2ADD[14:12]} : decoded_instr.op = ALU_SH2ADD;
+          {SH3ADD[31:25], SH3ADD[14:12]} : decoded_instr.op = ALU_SH3ADD;
+
+          {7'b0100000, 3'b100} : decoded_instr.op = ALU_XNOR;
+          {7'b0100000, 3'b110} : decoded_instr.op = ALU_ORN;
+          {7'b0100000, 3'b111} : decoded_instr.op = ALU_ANDN;
+          {7'b0000101, 3'b100} : decoded_instr.op = ALU_MIN;
+          {7'b0000101, 3'b110} : decoded_instr.op = ALU_MAX;
+          {7'b0000101, 3'b101} : decoded_instr.op = ALU_MINU;
+          {7'b0000101, 3'b111} : decoded_instr.op = ALU_MAXU;
+          {7'b0000100, 3'b100} : decoded_instr.op = ALU_ZEXTH;  //same as pack
+          {7'b0110000, 3'b001} : decoded_instr.op = ALU_ROL;
+          {7'b0110000, 3'b101} : decoded_instr.op = ALU_ROR;
+
+          {CZERO_EQZ[31:25], CZERO_EQZ[14:12]} : decoded_instr.op = ALU_CZERO_EQZ;
+          {CZERO_NEZ[31:25], CZERO_NEZ[14:12]} : decoded_instr.op = ALU_CZERO_NEZ;
           default: rv32_err = 1'b1;
         endcase
       end
@@ -91,6 +109,15 @@ module rv32_decoder
           SLLI[14:12]:
           unique case (instr[31:25])
             SLLI[31:25]: decoded_instr.op = ALU_SLL;
+            7'b0110000:
+            unique case (instr[24:20])
+              5'b00000: decoded_instr.op = ALU_CLZ;
+              5'b00001: decoded_instr.op = ALU_CTZ;
+              5'b00010: decoded_instr.op = ALU_CPOP;
+              5'b00100: decoded_instr.op = ALU_SEXTB;
+              5'b00101: decoded_instr.op = ALU_SEXTH;
+              default:  rv32_err = 1'b1;
+            endcase
             default: rv32_err = 1'b1;
           endcase
 
@@ -98,6 +125,17 @@ module rv32_decoder
           unique case (instr[31:25])
             SRLI[31:25]: decoded_instr.op = ALU_SRL;
             SRAI[31:25]: decoded_instr.op = ALU_SRA;
+            7'b0110000: decoded_instr.op = ALU_ROR;
+            7'b0010100:
+            unique case (instr[24:20])
+              5'b00111: decoded_instr.op = ALU_ORCB;
+              default:  rv32_err = 1'b1;
+            endcase
+            7'b0110100:
+            unique case (instr[24:20])
+              5'b11000: decoded_instr.op = ALU_REV8;
+              default:  rv32_err = 1'b1;
+            endcase
             default: rv32_err = 1'b1;
           endcase
 
@@ -136,14 +174,14 @@ module rv32_decoder
       JAL[6:0]: begin
         decoded_instr.result = immJ;
         decoded_instr.fu     = FU_BU;
-        decoded_instr.op     = CF_JAL;
+        decoded_instr.op     = BJU_JAL;
         decoded_instr.rd     = instr[7+:RegWidth];
       end
 
       JALR[6:0]: begin
         decoded_instr.result = immI;
         decoded_instr.fu     = FU_BU;
-        decoded_instr.op     = CF_JALR;
+        decoded_instr.op     = BJU_JALR;
         decoded_instr.rs1    = instr[15+:RegWidth];
         decoded_instr.rd     = instr[7+:RegWidth];
         if (instr[14:12] != JALR[14:12]) rv32_err = 1'b1;

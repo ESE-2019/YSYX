@@ -184,7 +184,18 @@ module rv16_decoder
                         // c.zext.b -> andi rd', rd', 0xff
                         instr = {12'h0FF, r9_7, 3'b111, r9_7, ADDI[6:0]};
                       end
-
+                      3'b001: begin
+                        // c.sext.b -> sext.b rd'/rs1', rd'/rs1'
+                        instr = {7'b0110000, 5'b00100, r9_7, 3'b001, r9_7, ADDI[6:0]};
+                      end
+                      3'b010: begin
+                        // c.zext.h -> zext.h rd'/rs1', rd'/rs1'
+                        instr = {7'b0000100, 5'b00000, r9_7, 3'b100, r9_7, ADD[6:0]};
+                      end
+                      3'b011: begin
+                        // c.sext.h -> sext.h rd'/rs1', rd'/rs1'
+                        instr = {7'b0110000, 5'b00101, r9_7, 3'b001, r9_7, ADDI[6:0]};
+                      end
                       3'b101: begin
                         // c.not -> xori rd', rd', -1
                         instr = {12'hFFF, r9_7, 3'b100, r9_7, ADDI[6:0]};

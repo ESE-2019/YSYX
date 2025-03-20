@@ -118,7 +118,7 @@ module ex_stage
 
 
   ysyx_24080006_lsu LSU (.*);
-  bu BU (.*);
+  bju BU (.*);
   alu ALU (.*);
   mdu MDU (.*);
   dummy_csr DUMMY_CSR (.*);

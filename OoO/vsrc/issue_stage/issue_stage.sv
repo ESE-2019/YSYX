@@ -55,7 +55,7 @@ module issue_stage
   logic               branch_taken_q;
   assign retire_valid = commit_valid;
   assign retire_cf = commit_instr.fu inside {FU_CSR, FU_BU};
-  assign retire_jump = commit_instr.op inside {CF_JAL, CF_JALR};
+  assign retire_jump = commit_instr.op inside {BJU_JAL, BJU_JALR};
   assign retire_branch = commit_instr.fu == FU_BU &&
     commit_instr.op inside {ALU_EQ, ALU_NE, ALU_GE, ALU_GEU, ALU_LT, ALU_LTU} &&
     branch_taken_q;

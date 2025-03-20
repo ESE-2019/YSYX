@@ -57,9 +57,31 @@ package OoO_pkg;
     CF_FENCE,
     CF_FENCE_I,
     CF_WFI,
-    CF_JAL,
-    CF_JALR,
-    CF_BRANCH
+    BJU_JAL,
+    BJU_JALR,
+    BJU_BRANCH,
+    ALU_SH1ADD,
+    ALU_SH2ADD,
+    ALU_SH3ADD,
+    ALU_ANDN,  //Logical with negate
+    ALU_ORN,
+    ALU_XNOR,
+    ALU_CLZ,  //Count leading/trailing zero bits
+    ALU_CTZ,
+    ALU_CPOP,  //Count population
+    ALU_MAX,  //Integer minimum/maximum
+    ALU_MAXU,
+    ALU_MIN,
+    ALU_MINU,
+    ALU_SEXTB,  //Sign- and zero-extension
+    ALU_SEXTH,
+    ALU_ZEXTH,
+    ALU_ROL,  //Bitwise rotation
+    ALU_ROR,
+    ALU_ORCB,  //OR Combine
+    ALU_REV8,  //Byte-reverse
+    ALU_CZERO_EQZ,
+    ALU_CZERO_NEZ
   } fu_op_e;
 
   typedef struct packed {
