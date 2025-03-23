@@ -13,7 +13,8 @@ module ysyx_24080006_lsu
     input logic [31:0] lsu_wdata,
     output logic [31:0] lsu_rdata,
 
-    input  logic [ScoreboardIndex-1:0] lsu_idx_i,
+    input logic commit_lsu,
+    input logic [ScoreboardIndex-1:0] lsu_idx_i,
     output logic [ScoreboardIndex-1:0] lsu_idx,
 
     input  logic exu2lsu_valid,
@@ -27,8 +28,10 @@ module ysyx_24080006_lsu
     input  axi_r_s2m_t lsu_r_s2m
 );
 
-  typedef enum logic {
+  typedef enum logic [1:0] {
     LS_IDLE,
+    LS_WAIT_LOAD,
+    LS_WAIT_STORE,
     LS_EXEC
   } ls_fsm_e;
   ls_fsm_e curr, next;
@@ -40,8 +43,9 @@ module ysyx_24080006_lsu
       4'b1111,  // funct3 == 3'b010
       4'b0000
   };
-  wire [ 3:0] lsu_strb = WSTRB[lsu_size] << lsu_addr[1:0];
+  wire [3:0] lsu_strb = WSTRB[lsu_size] << lsu_addr[1:0];
   wire [31:0] lsu_wdata_shifted = lsu_wdata << {lsu_addr[1:0], 3'b0};
+  wire is_mmio = lsu_addr < 32'h8000_0000;
 
   function automatic logic [31:0] Mr(input logic [31:0] Mr_rdata, input logic [1:0] Mr_raddr,
                                      input logic Mr_sext, input logic [1:0] Mr_size);
@@ -71,9 +75,24 @@ module ysyx_24080006_lsu
     unique case (curr)
       LS_IDLE: begin
         if (exu2lsu_valid & lsu2exu_ready) begin
-          next = LS_EXEC;
+          if (commit_lsu) begin
+            next = LS_EXEC;
+          end else begin
+            if (lsu_write) begin
+              next = LS_WAIT_STORE;
+            end else begin
+              next = LS_WAIT_LOAD;
+            end
+          end
         end else begin
           next = LS_IDLE;
+        end
+      end
+      LS_WAIT_STORE, LS_WAIT_LOAD: begin
+        if (commit_lsu) begin
+          next = LS_EXEC;
+        end else begin
+          next = curr;
         end
       end
       LS_EXEC: begin
@@ -97,9 +116,14 @@ module ysyx_24080006_lsu
         LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
             lsu_idx <= lsu_idx_i;
-            if (lsu_write) begin
-              lsu2exu_valid <= 1'b1;
-              lsu2exu_ready <= 1'b0;
+            if (commit_lsu) begin
+              if (lsu_write) begin
+                lsu2exu_valid <= 1'b1;
+                lsu2exu_ready <= 1'b0;
+              end else begin
+                lsu2exu_valid <= 1'b0;
+                lsu2exu_ready <= 1'b0;
+              end
             end else begin
               lsu2exu_valid <= 1'b0;
               lsu2exu_ready <= 1'b0;
@@ -108,6 +132,19 @@ module ysyx_24080006_lsu
             lsu2exu_valid <= 1'b0;
             lsu2exu_ready <= 1'b1;
           end
+        end
+        LS_WAIT_STORE: begin
+          if (commit_lsu) begin
+            lsu2exu_valid <= 1'b1;
+            lsu2exu_ready <= 1'b0;
+          end else begin
+            lsu2exu_valid <= 1'b0;
+            lsu2exu_ready <= 1'b0;
+          end
+        end
+        LS_WAIT_LOAD: begin
+          lsu2exu_valid <= 1'b0;
+          lsu2exu_ready <= 1'b0;
         end
         LS_EXEC: begin
           if (lsu_r_s2m.rvalid) begin
@@ -155,26 +192,64 @@ module ysyx_24080006_lsu
       unique case (curr)
         LS_IDLE: begin
           if (exu2lsu_valid & lsu2exu_ready) begin
-            if (lsu_write) begin
-              lsu_r_m2s.arvalid <= 1'b0;
-              lsu_r_m2s.rready  <= 1'b0;
-              lsu_w_m2s.awvalid <= 1'b1;
-              lsu_w_m2s.wvalid  <= 1'b1;
-              lsu_w_m2s.bready  <= 1'b0;
-              lsu_w_m2s.wdata   <= lsu_wdata_shifted;
-              lsu_w_m2s.awsize  <= {1'b0, lsu_size};
-              lsu_w_m2s.wstrb   <= lsu_strb;
-              lsu_w_m2s.awaddr  <= lsu_addr;
+            lsu_w_m2s.wdata  <= lsu_wdata_shifted;
+            lsu_w_m2s.awsize <= {1'b0, lsu_size};
+            lsu_w_m2s.wstrb  <= lsu_strb;
+            lsu_w_m2s.awaddr <= lsu_addr;
+            lsu_r_m2s.arsize <= {1'b0, lsu_size};
+            lsu_r_m2s.araddr <= lsu_addr;
+            sext_tmp         <= lsu_sext;
+            if (commit_lsu) begin
+              if (lsu_write) begin
+                lsu_r_m2s.arvalid <= 1'b0;
+                lsu_r_m2s.rready  <= 1'b0;
+                lsu_w_m2s.awvalid <= 1'b0;
+                lsu_w_m2s.wvalid  <= 1'b0;
+                lsu_w_m2s.bready  <= 1'b0;
+              end else begin
+                lsu_r_m2s.arvalid <= 1'b1;
+                lsu_r_m2s.rready  <= 1'b0;
+                lsu_w_m2s.awvalid <= 1'b0;
+                lsu_w_m2s.wvalid  <= 1'b0;
+                lsu_w_m2s.bready  <= 1'b0;
+              end
             end else begin
-              lsu_r_m2s.arvalid <= 1'b1;
+              lsu_r_m2s.arvalid <= 1'b0;
               lsu_r_m2s.rready  <= 1'b0;
               lsu_w_m2s.awvalid <= 1'b0;
               lsu_w_m2s.wvalid  <= 1'b0;
               lsu_w_m2s.bready  <= 1'b0;
-              lsu_r_m2s.arsize  <= {1'b0, lsu_size};
-              lsu_r_m2s.araddr  <= lsu_addr;
-              sext_tmp          <= lsu_sext;
             end
+          end else begin
+            lsu_r_m2s.arvalid <= 1'b0;
+            lsu_r_m2s.rready  <= 1'b0;
+            lsu_w_m2s.awvalid <= 1'b0;
+            lsu_w_m2s.wvalid  <= 1'b0;
+            lsu_w_m2s.bready  <= 1'b0;
+          end
+        end
+        LS_WAIT_STORE: begin
+          if (commit_lsu) begin
+            lsu_r_m2s.arvalid <= 1'b0;
+            lsu_r_m2s.rready  <= 1'b0;
+            lsu_w_m2s.awvalid <= 1'b1;
+            lsu_w_m2s.wvalid  <= 1'b1;
+            lsu_w_m2s.bready  <= 1'b0;
+          end else begin
+            lsu_r_m2s.arvalid <= 1'b0;
+            lsu_r_m2s.rready  <= 1'b0;
+            lsu_w_m2s.awvalid <= 1'b0;
+            lsu_w_m2s.wvalid  <= 1'b0;
+            lsu_w_m2s.bready  <= 1'b0;
+          end
+        end
+        LS_WAIT_LOAD: begin
+          if (commit_lsu) begin
+            lsu_r_m2s.arvalid <= 1'b1;
+            lsu_r_m2s.rready  <= 1'b0;
+            lsu_w_m2s.awvalid <= 1'b0;
+            lsu_w_m2s.wvalid  <= 1'b0;
+            lsu_w_m2s.bready  <= 1'b0;
           end else begin
             lsu_r_m2s.arvalid <= 1'b0;
             lsu_r_m2s.rready  <= 1'b0;

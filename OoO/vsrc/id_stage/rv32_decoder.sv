@@ -44,7 +44,7 @@ module rv32_decoder
         decoded_instr.rd      = instr[7+:RegWidth];
       end
 
-      ADD[6:0]: begin
+      ADD[6:0]: begin  // OP
         decoded_instr.fu  = instr[31:25] == MUL[31:25] ? FU_MDU : FU_ALU;
         decoded_instr.rs1 = instr[15+:RegWidth];
         decoded_instr.rs2 = instr[20+:RegWidth];
@@ -86,13 +86,18 @@ module rv32_decoder
           {7'b0110000, 3'b001} : decoded_instr.op = ALU_ROL;
           {7'b0110000, 3'b101} : decoded_instr.op = ALU_ROR;
 
+          {BCLR[31:25], BCLR[14:12]} : decoded_instr.op = ALU_BCLR;
+          {BEXT[31:25], BEXT[14:12]} : decoded_instr.op = ALU_BEXT;
+          {BINV[31:25], BINV[14:12]} : decoded_instr.op = ALU_BINV;
+          {BSET[31:25], BSET[14:12]} : decoded_instr.op = ALU_BSET;
+
           {CZERO_EQZ[31:25], CZERO_EQZ[14:12]} : decoded_instr.op = ALU_CZERO_EQZ;
           {CZERO_NEZ[31:25], CZERO_NEZ[14:12]} : decoded_instr.op = ALU_CZERO_NEZ;
           default: rv32_err = 1'b1;
         endcase
       end
 
-      ADDI[6:0]: begin
+      ADDI[6:0]: begin  // OP_IMM
         decoded_instr.result  = immI;
         decoded_instr.fu      = FU_ALU;
         decoded_instr.use_imm = 1'b1;
@@ -106,9 +111,12 @@ module rv32_decoder
           ORI[14:12]:   decoded_instr.op = ALU_OR;
           ANDI[14:12]:  decoded_instr.op = ALU_AND;
 
-          SLLI[14:12]:
+          SLLI[14:12]:  // 3'b001
           unique case (instr[31:25])
             SLLI[31:25]: decoded_instr.op = ALU_SLL;
+            BCLRI_RV32[31:25]: decoded_instr.op = ALU_BCLR;
+            BINVI_RV32[31:25]: decoded_instr.op = ALU_BINV;
+            BSETI_RV32[31:25]: decoded_instr.op = ALU_BSET;
             7'b0110000:
             unique case (instr[24:20])
               5'b00000: decoded_instr.op = ALU_CLZ;
@@ -121,11 +129,12 @@ module rv32_decoder
             default: rv32_err = 1'b1;
           endcase
 
-          SRLI[14:12]:
+          SRLI[14:12]:  // 3'b101
           unique case (instr[31:25])
             SRLI[31:25]: decoded_instr.op = ALU_SRL;
             SRAI[31:25]: decoded_instr.op = ALU_SRA;
-            7'b0110000: decoded_instr.op = ALU_ROR;
+            7'b0110000:  decoded_instr.op = ALU_ROR;
+            BEXTI_RV32[31:25]: decoded_instr.op = ALU_BEXT;
             7'b0010100:
             unique case (instr[24:20])
               5'b00111: decoded_instr.op = ALU_ORCB;
@@ -173,14 +182,14 @@ module rv32_decoder
 
       JAL[6:0]: begin
         decoded_instr.result = immJ;
-        decoded_instr.fu     = FU_BU;
+        decoded_instr.fu     = FU_BJU;
         decoded_instr.op     = BJU_JAL;
         decoded_instr.rd     = instr[7+:RegWidth];
       end
 
       JALR[6:0]: begin
         decoded_instr.result = immI;
-        decoded_instr.fu     = FU_BU;
+        decoded_instr.fu     = FU_BJU;
         decoded_instr.op     = BJU_JALR;
         decoded_instr.rs1    = instr[15+:RegWidth];
         decoded_instr.rd     = instr[7+:RegWidth];
@@ -189,7 +198,7 @@ module rv32_decoder
 
       BEQ[6:0]: begin
         decoded_instr.result = immB;
-        decoded_instr.fu     = FU_BU;
+        decoded_instr.fu     = FU_BJU;
         decoded_instr.rs1    = instr[15+:RegWidth];
         decoded_instr.rs2    = instr[20+:RegWidth];
         unique case (instr[14:12])
@@ -213,13 +222,13 @@ module rv32_decoder
           if ({instr[19:15], instr[11:7]} == '0) begin
             unique case (instr[31:20])
               ECALL[31:20]: begin
-                decoded_instr.op = CF_ECALL;
+                decoded_instr.op = SYS_ECALL;
                 // decoded_instr.ex.valid = 1'b1;
                 // decoded_instr.ex.cause = 32'd11;
               end
-              EBREAK[31:20], WFI[31:20]: decoded_instr.op = CF_EBREAK;  // use DPI-C to end sim
+              EBREAK[31:20], WFI[31:20]: decoded_instr.op = SYS_EBREAK;  // use DPI-C to end sim
               MRET[31:20]: begin
-                decoded_instr.op = CF_MRET;
+                decoded_instr.op = SYS_MRET;
               end
               default: rv32_err = 1'b1;
             endcase
@@ -240,8 +249,8 @@ module rv32_decoder
       FENCE[6:0]: begin
         decoded_instr.fu = FU_CSR;
         unique case (instr[14:12])
-          FENCE[14:12]: decoded_instr.op = CF_FENCE;
-          FENCE_I[14:12]: decoded_instr.op = CF_FENCE_I;
+          FENCE[14:12]: decoded_instr.op = SYS_FENCE;
+          FENCE_I[14:12]: decoded_instr.op = SYS_FENCE_I;
           default: rv32_err = 1'b1;
         endcase
       end

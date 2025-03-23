@@ -13,7 +13,7 @@ module ex_stage
 
     output logic flu_ready,
     input logic alu_valid,
-    input logic bu_valid,
+    input logic bju_valid,
     input logic mdu_valid,
     input logic csr_valid,
     //input branchpredict_sbe_t branch_predict_i,
@@ -27,7 +27,7 @@ module ex_stage
     // output exception_t load_exception_o,
     // output logic store_valid_o,
     // output logic [CVA6Cfg.XLEN-1:0] store_result_o,
-    // input logic lsu_commit_i,
+    input logic commit_lsu,
     // output logic lsu_commit_ready_o,
 
     output writeback_t [WriteBackPorts-1:0] wb,
@@ -67,7 +67,7 @@ module ex_stage
   logic [ScoreboardIndex-1:0] mdu_idx, lsu_idx;
 
   logic one_cycle_select;
-  assign one_cycle_select = alu_valid | bu_valid | csr_valid;
+  assign one_cycle_select = alu_valid | bju_valid | csr_valid;
 
   fu_data_t one_cycle_data;
   assign one_cycle_data = one_cycle_select ? fu_data : '0;
@@ -124,37 +124,37 @@ module ex_stage
   dummy_csr DUMMY_CSR (.*);
 
 
-// `ifdef SIM_MODE
-//   import ysyx_24080006_sim_pkg::*;
-//   import "DPI-C" function void SKIP_DIFFTEST();
-//   import "DPI-C" function void LSU_CNT(
-//     input int load_en,
-//     input int cnt
-//   );
-//   bit [31:0] lsu_cnt = 32'b0;
-//   always_ff @(posedge clock) begin
-//     if (curr == EX_IDLE) lsu_cnt <= 32'h1;
-//     else lsu_cnt <= lsu_cnt + 32'h1;
-//     if (curr == EX_LSU && lsu2exu_valid && lsu_write) begin
-//       //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, pc);
-//       LSU_CNT(0, lsu_cnt);
-//       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
-//       if (!INSIDE_STORE(lsu_addr)) begin
-//         $display("[LSU] store addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
-//         $finish;
-//       end
-//     end
-//     if (curr == EX_LSU && lsu2exu_valid && !lsu_write) begin
-//       //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, pc);
-//       LSU_CNT(1, lsu_cnt);
-//       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
-//       if (!INSIDE_LOAD(lsu_addr)) begin
-//         $display("[LSU] load addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
-//         $finish;
-//       end
-//     end
-//   end
-// `endif
+  // `ifdef SIM_MODE
+  //   import ysyx_24080006_sim_pkg::*;
+  //   import "DPI-C" function void SKIP_DIFFTEST();
+  //   import "DPI-C" function void LSU_CNT(
+  //     input int load_en,
+  //     input int cnt
+  //   );
+  //   bit [31:0] lsu_cnt = 32'b0;
+  //   always_ff @(posedge clock) begin
+  //     if (curr == EX_IDLE) lsu_cnt <= 32'h1;
+  //     else lsu_cnt <= lsu_cnt + 32'h1;
+  //     if (curr == EX_LSU && lsu2exu_valid && lsu_write) begin
+  //       //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, pc);
+  //       LSU_CNT(0, lsu_cnt);
+  //       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
+  //       if (!INSIDE_STORE(lsu_addr)) begin
+  //         $display("[LSU] store addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
+  //         $finish;
+  //       end
+  //     end
+  //     if (curr == EX_LSU && lsu2exu_valid && !lsu_write) begin
+  //       //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, pc);
+  //       LSU_CNT(1, lsu_cnt);
+  //       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
+  //       if (!INSIDE_LOAD(lsu_addr)) begin
+  //         $display("[LSU] load addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
+  //         $finish;
+  //       end
+  //     end
+  //   end
+  // `endif
 endmodule
 
 `default_nettype wire

@@ -6,12 +6,12 @@ module ideal_itcm
 
     input  logic [31:0] fetch_addr,
     output logic [31:0] ic_val,
+    output logic [31:0] ic_addr,
 
     input  logic ifu2icu_valid,
     input  logic ifu2icu_ready,
     output logic icu2ifu_valid,
     output logic icu2ifu_ready,
-    input  logic fencei,
 
     output logic icache_hit,
     output logic icache_miss,
@@ -31,11 +31,13 @@ module ideal_itcm
       icu2ifu_ready <= 1'b1;
       icu2ifu_valid <= 1'b0;
       ic_val <= 32'b0;
+      ic_addr <= 32'b0;
     end else begin
       if (ifu2icu_valid) begin
         icu2ifu_ready <= 1'b0;
         icu2ifu_valid <= 1'b1;
         ic_val <= pmem_read(fetch_addr);
+        ic_addr <= fetch_addr;
         hit_num++;
         miss_num++;
         skip_num++;

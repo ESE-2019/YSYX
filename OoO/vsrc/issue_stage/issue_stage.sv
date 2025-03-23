@@ -15,7 +15,7 @@ module issue_stage
     output logic            is_rv16,
     input  logic            flu_ready,
     output logic            alu_valid,
-    output logic            bu_valid,
+    output logic            bju_valid,
     output logic            mdu_valid,
     output logic            csr_valid,
     //output branchpredict_sbe_t        branch_predict_o,
@@ -26,6 +26,7 @@ module issue_stage
     output logic [31:0] csr_wdata,
     input logic [31:0] csr_rdata,
     output logic commit_csr,
+    output logic commit_lsu,
 
     output logic        retire_valid,
     output logic        retire_cf,
@@ -54,9 +55,9 @@ module issue_stage
 
   logic               branch_taken_q;
   assign retire_valid = commit_valid;
-  assign retire_cf = commit_instr.fu inside {FU_CSR, FU_BU};
+  assign retire_cf = commit_instr.fu inside {FU_CSR, FU_BJU};
   assign retire_jump = commit_instr.op inside {BJU_JAL, BJU_JALR};
-  assign retire_branch = commit_instr.fu == FU_BU &&
+  assign retire_branch = commit_instr.fu == FU_BJU &&
     commit_instr.op inside {ALU_EQ, ALU_NE, ALU_GE, ALU_GEU, ALU_LT, ALU_LTU} &&
     branch_taken_q;
   assign retire_is_rv16 = commit_instr.is_rv16;
@@ -76,7 +77,7 @@ module issue_stage
 `ifdef SIM_MODE
   import "DPI-C" function void ebreak();
   always_comb begin
-    if (retire_valid && commit_instr.op == CF_EBREAK) ebreak();
+    if (retire_valid && commit_instr.op == SYS_EBREAK) ebreak();
   end
 `endif
 

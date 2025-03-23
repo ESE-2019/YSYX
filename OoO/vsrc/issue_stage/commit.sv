@@ -9,10 +9,13 @@ module commit
     output fu_op_e csr_op,
     output logic [31:0] csr_wdata,
     input logic [31:0] csr_rdata,
-    output logic commit_csr
+    output logic commit_csr,
+    output logic commit_lsu
 );
 
   assign gpr_waddr = commit_instr.rd;
+  assign commit_lsu = commit_instr.valid && commit_instr.fu inside {FU_LOAD, FU_STORE} ?
+                        1'b1 : 1'b0;
 
   always_comb begin
     commit_valid = 1'b0;

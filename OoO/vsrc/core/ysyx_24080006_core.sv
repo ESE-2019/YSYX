@@ -43,7 +43,7 @@ module ysyx_24080006_core
   logic                            is_rv16;
   logic                            flu_ready;
   logic                            alu_valid;
-  logic                            bu_valid;
+  logic                            bju_valid;
   logic                            mdu_valid;
   logic                            csr_valid;
   logic                            lsu_ready;
@@ -53,6 +53,7 @@ module ysyx_24080006_core
   logic       [              31:0] csr_wdata;
   logic       [              31:0] csr_rdata;
   logic                            commit_csr;
+  logic                            commit_lsu;
 
   writeback_t [WriteBackPorts-1:0] wb;
 

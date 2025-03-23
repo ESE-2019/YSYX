@@ -25,6 +25,10 @@ module csr_regfile
     input logic is_compressed,
     input logic fetch_cycle,
 
+    output logic [31:0] mtvec_addr,
+    output logic mret_valid,
+    output logic [31:0] mepc_addr,
+
     input  logic [31:0] csr_wdata,
     output logic [31:0] csr_rdata
 );
@@ -52,6 +56,9 @@ module csr_regfile
 
   logic [31:0] counter_incr_en;
   wire [4:0] counter_addr = csr_addr[4:0];
+
+  assign mtvec_addr = mtvec_q;
+  assign mepc_addr  = mepc_q;
 
   always_comb begin
     csr_rdata   = 32'b0;
@@ -159,19 +166,23 @@ module csr_regfile
       mcountinhibit_q <= 32'b0;
       mepc_q <= 32'b0;
       mcause_q <= 32'b0;
+      mret_valid <= 1'b0;
     end else begin
       if (ecall) begin
         mstatus_q <= mstatus_ecall;
         mcause_q <= csr_cause;
         mepc_q <= {csr_pc[31:1], 1'b0};
+        mret_valid <= 1'b0;
       end else if (mret) begin
-        mstatus_q <= mstatus_mret;
+        mret_valid <= 1'b1;
+        mstatus_q  <= mstatus_mret;
       end else begin
         mstatus_q <= mstatus_d;
         mtvec_q <= mtvec_d;
         mcountinhibit_q <= mcountinhibit_d;
         mepc_q <= mepc_d;
         mcause_q <= mcause_d;
+        mret_valid <= 1'b0;
       end
     end
   end

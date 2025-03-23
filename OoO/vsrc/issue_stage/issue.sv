@@ -15,7 +15,7 @@ module issue
     output logic is_rv16,
     input logic flu_ready,
     output logic alu_valid,
-    output logic bu_valid,
+    output logic bju_valid,
     output logic mdu_valid,
     output logic csr_valid,
     //output branchpredict_sbe_t branch_predict_o,
@@ -59,7 +59,7 @@ module issue
   logic forward_rs1, forward_rs2;
   assign fu_data = fu_data_q;
   assign alu_valid = alu_valid_q;
-  assign bu_valid = branch_valid_q;
+  assign bju_valid = branch_valid_q;
   assign lsu_valid = lsu_valid_q;
   assign csr_valid = csr_valid_q;
   assign mdu_valid = mult_valid_q;
@@ -94,7 +94,7 @@ module issue
     unique case (issue_instr.fu)
       FU_NONE:  fu_busy = fus_busy.none;
       FU_ALU:   fu_busy = fus_busy.alu;
-      FU_BU:    fu_busy = fus_busy.ctrl_flow;
+      FU_BJU:    fu_busy = fus_busy.ctrl_flow;
       FU_CSR:   fu_busy = fus_busy.csr;
       FU_MDU:   fu_busy = fus_busy.mult;
       FU_LOAD:  fu_busy = fus_busy.load;
@@ -247,7 +247,7 @@ module issue
       fu_data_n.operand_a = {27'b0, issue_instr.rs1[4:0]};
     end
     // or is it an immediate (including PC), this is not the case for a store, control flow, and accelerator instructions
-    if (issue_instr.use_imm && (issue_instr.fu != FU_STORE) && (issue_instr.fu != FU_BU)) begin
+    if (issue_instr.use_imm && (issue_instr.fu != FU_STORE) && (issue_instr.fu != FU_BJU)) begin
       fu_data_n.operand_b = issue_instr.result;
     end
   end
@@ -263,7 +263,7 @@ module issue
         FU_ALU: begin
           alu_valid_n = 1'b1;
         end
-        FU_BU: begin
+        FU_BJU: begin
           branch_valid_n = 1'b1;
         end
         FU_MDU: begin
@@ -370,7 +370,7 @@ module issue
       //branch_predict_o <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
       fu_data_q <= fu_data_n;
-      if (issue_instr.fu == FU_BU) begin
+      if (issue_instr.fu == FU_BJU) begin
         pc               <= issue_instr.pc;
         is_rv16          <= issue_instr.is_rv16;
         //branch_predict_o <= issue_instr.bp;

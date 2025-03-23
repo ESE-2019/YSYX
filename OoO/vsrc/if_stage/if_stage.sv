@@ -47,7 +47,7 @@ module if_stage
   assign ifu2icu_ready = 1'b1;
 
   logic detect_hazard_q, detect_hazard_d;
-  logic [31:0] ic_val;
+  logic [31:0] ic_val, ic_addr;
   logic rv16_d, rv16_q;
   logic rv16_err;
   logic [31:0] pc_d, pc_q;

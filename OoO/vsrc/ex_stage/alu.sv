@@ -115,6 +115,8 @@ module alu
     endcase
   end
 
+  wire [31:0] zbs_index = 32'h1 << (fu_data.operand_b & (32'd31));
+
   always_comb begin
     unique case (fu_data.operation)
       ALU_ADD, ALU_SUB, ALU_SH1ADD, ALU_SH2ADD, ALU_SH3ADD: alu_result = add_res[32:1];
@@ -144,6 +146,10 @@ module alu
         {fu_data.operand_a[23:16]},
         {fu_data.operand_a[31:24]}
       };
+      ALU_BCLR: alu_result = fu_data.operand_a & ~zbs_index;
+      ALU_BEXT: alu_result = {31'b0, |(fu_data.operand_a & zbs_index)};
+      ALU_BINV: alu_result = fu_data.operand_a ^ zbs_index;
+      ALU_BSET: alu_result = fu_data.operand_a | zbs_index;
       ALU_CZERO_EQZ: alu_result = (|fu_data.operand_b) ? fu_data.operand_a : '0;
       ALU_CZERO_NEZ: alu_result = (|fu_data.operand_b) ? '0 : fu_data.operand_a;
       default: alu_result = add_res[32:1];

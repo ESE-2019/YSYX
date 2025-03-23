@@ -3,13 +3,14 @@ package OoO_pkg;
   localparam int unsigned ScoreboardDepth = 4;
   localparam int unsigned ScoreboardIndex = 2;
   localparam int unsigned WriteBackPorts = 2;
+  localparam int unsigned InstPerFetch = 1;
 
   typedef enum logic [3:0] {
     FU_NONE,   // 0
     FU_LOAD,   // 1
     FU_STORE,  // 2
     FU_ALU,    // 3
-    FU_BU,     // 4
+    FU_BJU,     // 4
     FU_MDU,    // 5
     FU_CSR     // 6
   } fu_e;
@@ -51,35 +52,45 @@ package OoO_pkg;
     CSR_WRITE,
     CSR_SET,
     CSR_CLEAR,
-    CF_ECALL,
-    CF_EBREAK,
-    CF_MRET,
-    CF_FENCE,
-    CF_FENCE_I,
-    CF_WFI,
+
+    SYS_ECALL,
+    SYS_EBREAK,
+    SYS_MRET,
+    SYS_FENCE,
+    SYS_FENCE_I,
+    SYS_WFI,
+
     BJU_JAL,
     BJU_JALR,
     BJU_BRANCH,
+
     ALU_SH1ADD,
     ALU_SH2ADD,
     ALU_SH3ADD,
-    ALU_ANDN,  //Logical with negate
+
+    ALU_ANDN,
     ALU_ORN,
     ALU_XNOR,
-    ALU_CLZ,  //Count leading/trailing zero bits
+    ALU_CLZ,
     ALU_CTZ,
-    ALU_CPOP,  //Count population
-    ALU_MAX,  //Integer minimum/maximum
+    ALU_CPOP,
+    ALU_MAX,
     ALU_MAXU,
     ALU_MIN,
     ALU_MINU,
-    ALU_SEXTB,  //Sign- and zero-extension
+    ALU_SEXTB,
     ALU_SEXTH,
     ALU_ZEXTH,
-    ALU_ROL,  //Bitwise rotation
+    ALU_ROL,
     ALU_ROR,
-    ALU_ORCB,  //OR Combine
-    ALU_REV8,  //Byte-reverse
+    ALU_ORCB,
+    ALU_REV8,
+
+    ALU_BCLR,
+    ALU_BEXT,
+    ALU_BINV,
+    ALU_BSET,
+
     ALU_CZERO_EQZ,
     ALU_CZERO_NEZ
   } fu_op_e;
@@ -100,27 +111,76 @@ package OoO_pkg;
     logic [ScoreboardIndex-1:0] idx;
   } fu_data_t;
 
-  // typedef enum logic [2:0] {
-  //   NoCF,    // No control flow prediction
-  //   Branch,  // Branch
-  //   Jump,    // Jump to address from immediate
-  //   JumpR,   // Jump to address from registers
-  //   Return   // Return Address Prediction
-  // } cf_e;
+  typedef enum logic [2:0] {
+    CF_NONE,
+    CF_BRANCH,
+    CF_JAL,
+    CF_JALR,
+    CF_RET
+  } cf_e;
 
-  // typedef struct packed {
-  //   cf_e         cf;               // type of control flow prediction
-  //   logic [31:0] predict_address;  // target address at which to jump, or not
-  // } bp_t;
+  typedef struct packed {
+    cf_e         cf;
+    logic [31:0] predict_addr;
+  } bpu_t;
 
-  // typedef struct packed {
-  //   logic        valid;           // prediction with all its values is valid
-  //   logic [31:0] pc;              // PC of predict or mis-predict
-  //   logic [31:0] target_address;  // target address at which to jump, or not
-  //   logic        is_mispredict;   // set if this was a mis-predict
-  //   logic        is_taken;        // branch is taken
-  //   cf_t         cf_type;         // Type of control flow change
-  // } bp_resolve_t;
+  typedef struct packed {
+    logic [31:0] pc;
+    logic [31:0] inst;
+    bpu_t         bp;
+  } frontend_t;
+
+  typedef struct packed {
+    logic        valid;
+    logic [31:0] pc;
+    logic [31:0] target_address;
+    logic        is_mispredict;
+    logic        is_taken;
+    cf_t         cf_type;
+  } bju_t;
+
+    typedef struct packed {
+    logic valid;
+    logic [31:0] inst;
+    logic [31:0] pc;
+  } aligner_t;
+
+  typedef struct packed {
+    logic        valid;
+    logic [31:0] pc;
+    logic        taken;
+  } bht_update_t;
+
+  typedef struct packed {
+    logic        valid;
+    logic [31:0] target_address;
+  } btb_predict_t;
+
+  typedef struct packed {
+    logic        valid;
+    logic [31:0] pc;
+    logic [31:0] target_address;
+  } btb_update_t;
+
+  typedef struct packed {
+    logic        valid;
+    logic [31:0] ra;
+  } ras_predict_t;
+
+  typedef struct packed {
+    logic push;
+    logic pop;
+    logic [31:0] ra;
+  } ras_update_t;
+
+  typedef struct packed {
+    logic branch;
+    logic jal;
+    logic jalr;
+    logic call;
+    logic ret;
+    logic [31:0] imm;
+  } predecoder_t;
 
   typedef struct packed {
     logic [31:0] pc;
@@ -135,8 +195,7 @@ package OoO_pkg;
     logic use_imm;  // operand b
     logic use_zimm;  // operand a
     logic use_pc;  // operand a
-    //exception_t ex;  // exception has occurred
-    //bp_t bp;  // branch predict scoreboard data structure
+    bpu_t bp;
     logic is_rv16;
   } decoder_t;
 
