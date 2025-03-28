@@ -132,11 +132,11 @@ package OoO_pkg;
 
   typedef struct packed {
     logic        valid;
-    logic [31:0] pc;
-    logic [31:0] target_address;
     logic        is_mispredict;
     logic        is_taken;
     cf_e         cf;
+    logic [31:0] pc;
+    logic [31:0] target_address;
   } bju_t;
 
   typedef struct packed {

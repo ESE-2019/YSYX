@@ -30,13 +30,13 @@ module issue
   logic stall_raw, stall_waw, stall_rs1, stall_rs2;
   logic fu_busy;
   // output flipflop (ID <-> EX)
-  fu_data_t fu_data_n, fu_data_q;
+  fu_data_t fu_data_d, fu_data_q;
 
-  logic alu_valid_n, alu_valid_q;
-  logic mult_valid_n, mult_valid_q;
-  logic lsu_valid_n, lsu_valid_q;
-  logic csr_valid_n, csr_valid_q;
-  logic branch_valid_n, branch_valid_q;
+  logic alu_valid_d, alu_valid_q;
+  logic mdu_valid_d, mdu_valid_q;
+  logic lsu_valid_d, lsu_valid_q;
+  logic csr_valid_d, csr_valid_q;
+  logic branch_valid_d, branch_valid_q;
 
   //fwd logic
   logic        rs1_has_raw;
@@ -62,7 +62,7 @@ module issue
   assign bju_valid = branch_valid_q;
   assign lsu_valid = lsu_valid_q;
   assign csr_valid = csr_valid_q;
-  assign mdu_valid = mult_valid_q;
+  assign mdu_valid = mdu_valid_q;
   wire stall_issue_o = stall_raw;
 
   logic [31:0] gpr_rdata_1, gpr_rdata_2;
@@ -73,20 +73,14 @@ module issue
   always_comb begin
     automatic fus_busy_t fus_busy = '0;
 
-    if (!flu_ready) begin
+    if (!flu_ready | mdu_valid) begin
       fus_busy.alu = 1'b1;
       fus_busy.ctrl_flow = 1'b1;
       fus_busy.csr = 1'b1;
       fus_busy.mult = 1'b1;
     end
 
-    if (|mult_valid_q) begin
-      fus_busy.alu = 1'b1;
-      fus_busy.ctrl_flow = 1'b1;
-      fus_busy.csr = 1'b1;
-    end
-
-    if (!lsu_ready) begin
+    if (!lsu_ready | lsu_valid) begin
       fus_busy.load  = 1'b1;
       fus_busy.store = 1'b1;
     end
@@ -220,71 +214,71 @@ module issue
 
   // Forwarding/Output MUX
   always_comb begin
-    fu_data_n.operand_a = gpr_rdata_1;
-    fu_data_n.operand_b = gpr_rdata_2;
+    fu_data_d.operand_a = gpr_rdata_1;
+    fu_data_d.operand_b = gpr_rdata_2;
 
-    fu_data_n.imm = issue_instr.result;
-    fu_data_n.idx = issue_instr.idx;
-    fu_data_n.fu = issue_instr.fu;
-    fu_data_n.operation = issue_instr.op;
+    fu_data_d.imm = issue_instr.result;
+    fu_data_d.idx = issue_instr.idx;
+    fu_data_d.fu = issue_instr.fu;
+    fu_data_d.operation = issue_instr.op;
 
     // or should we forward
     if (forward_rs1) begin
-      fu_data_n.operand_a = rs1_res;
+      fu_data_d.operand_a = rs1_res;
     end
     if (forward_rs2) begin
-      fu_data_n.operand_b = rs2_res;
+      fu_data_d.operand_b = rs2_res;
     end
 
     // use the PC as operand a
     if (issue_instr.use_pc) begin
-      fu_data_n.operand_a = issue_instr.pc;
+      fu_data_d.operand_a = issue_instr.pc;
     end
 
     // use the zimm as operand a
     if (issue_instr.use_zimm) begin
       // zero extend operand a
-      fu_data_n.operand_a = {27'b0, issue_instr.rs1[4:0]};
+      fu_data_d.operand_a = {27'b0, issue_instr.rs1[4:0]};
     end
     // or is it an immediate (including PC), this is not the case for a store, control flow, and accelerator instructions
     if (issue_instr.use_imm && (issue_instr.fu != FU_STORE) && (issue_instr.fu != FU_BJU)) begin
-      fu_data_n.operand_b = issue_instr.result;
+      fu_data_d.operand_b = issue_instr.result;
     end
   end
 
   always_comb begin
-    alu_valid_n    = '0;
-    lsu_valid_n    = '0;
-    mult_valid_n   = '0;
-    csr_valid_n    = '0;
-    branch_valid_n = '0;
+    alu_valid_d    = '0;
+    lsu_valid_d    = '0;
+    mdu_valid_d   = '0;
+    csr_valid_d    = '0;
+    branch_valid_d = '0;
     if (issue_valid && issue_ready) begin
       case (issue_instr.fu)
         FU_ALU: begin
-          alu_valid_n = 1'b1;
+          alu_valid_d = 1'b1;
         end
         FU_BJU: begin
-          branch_valid_n = 1'b1;
+          branch_valid_d = 1'b1;
         end
         FU_MDU: begin
-          mult_valid_n = 1'b1;
+          mdu_valid_d = 1'b1;
         end
         FU_LOAD, FU_STORE: begin
-          lsu_valid_n = 1'b1;
+          lsu_valid_d = 1'b1;
         end
         FU_CSR: begin
-          csr_valid_n = 1'b1;
+          csr_valid_d = 1'b1;
         end
         default: ;
       endcase
     end
 
     if (flush_unissued_instr) begin
-      alu_valid_n    = '0;
-      lsu_valid_n    = '0;
-      mult_valid_n   = '0;
-      csr_valid_n    = '0;
-      branch_valid_n = '0;
+      alu_valid_d    = '0;
+      lsu_valid_d    = '0;
+      mdu_valid_d   = '0;
+      csr_valid_d    = '0;
+      branch_valid_d = '0;
     end
   end
   // FU select, assert the correct valid out signal (in the next cycle)
@@ -293,15 +287,15 @@ module issue
     if (reset) begin
       alu_valid_q    <= '0;
       lsu_valid_q    <= '0;
-      mult_valid_q   <= '0;
+      mdu_valid_q   <= '0;
       csr_valid_q    <= '0;
       branch_valid_q <= '0;
     end else begin
-      alu_valid_q    <= alu_valid_n;
-      lsu_valid_q    <= lsu_valid_n;
-      mult_valid_q   <= mult_valid_n;
-      csr_valid_q    <= csr_valid_n;
-      branch_valid_q <= branch_valid_n;
+      alu_valid_q    <= alu_valid_d;
+      lsu_valid_q    <= lsu_valid_d;
+      mdu_valid_q   <= mdu_valid_d;
+      csr_valid_q    <= csr_valid_d;
+      branch_valid_q <= branch_valid_d;
     end
   end
 
@@ -367,7 +361,7 @@ module issue
       is_rv16   <= 1'b0;
       //branch_predict_o <= {cf_e'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
-      fu_data_q <= fu_data_n;
+      fu_data_q <= fu_data_d;
       if (issue_instr.fu == FU_BJU) begin
         pc      <= issue_instr.pc;
         is_rv16 <= issue_instr.is_rv16;

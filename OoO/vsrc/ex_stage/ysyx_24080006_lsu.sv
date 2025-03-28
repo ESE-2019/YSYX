@@ -203,8 +203,8 @@ module ysyx_24080006_lsu
               if (lsu_write) begin
                 lsu_r_m2s.arvalid <= 1'b0;
                 lsu_r_m2s.rready  <= 1'b0;
-                lsu_w_m2s.awvalid <= 1'b0;
-                lsu_w_m2s.wvalid  <= 1'b0;
+                lsu_w_m2s.awvalid <= 1'b1;
+                lsu_w_m2s.wvalid  <= 1'b1;
                 lsu_w_m2s.bready  <= 1'b0;
               end else begin
                 lsu_r_m2s.arvalid <= 1'b1;

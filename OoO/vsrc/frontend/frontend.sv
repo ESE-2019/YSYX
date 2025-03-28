@@ -64,42 +64,38 @@ module frontend
   assign if_ready = icu2ifu_ready & instr_queue_ready;
 
   always_comb begin
-    automatic logic [31:0] fetch_address;
     if (first_fetch) begin
-      npc_d         = RstAddr;
-      fetch_address = RstAddr;
+      fetch_addr = RstAddr;
+      npc_d      = RstAddr;
     end else begin
-      fetch_address = npc_q;
-      // keep stable by default
-      npc_d         = npc_q;
+      fetch_addr = npc_q;
+      npc_d      = npc_q;
     end
-    // 0. Branch Prediction
+
     if (bp_valid) begin
-      fetch_address = predict_addr;
+      fetch_addr = predict_addr;
       npc_d = predict_addr;
     end
-    // 1. Default assignment
+
     if (if_ready) begin
-      npc_d = fetch_address + 32'h4;
+      npc_d = fetch_addr + 32'h4;
     end
-    // 2. Replay instruction fetch
+
     if (replay) begin
       npc_d = replay_addr;
     end
-    // 3. Control flow change request
+
     if (bju.valid & bju.is_mispredict) begin
       npc_d = bju.target_address;
     end
-    // 4. Return from environment call
+
     if (mret_valid) begin
       npc_d = mepc_addr;
     end
-    // 5. Exception/Interrupt
+
     if (ex_valid) begin
       npc_d = mtvec_addr;
     end
-
-    fetch_addr = fetch_address;
   end
 
   always_ff @(posedge clock) begin
@@ -112,7 +108,7 @@ module frontend
     end else begin
       first_fetch    <= 1'b0;
       npc_q          <= npc_d;
-      icache_valid_q <= icu2ifu_valid;
+      icache_valid_q <= icu2ifu_valid & !flush_frontend;
       if (icu2ifu_valid) begin
         icache_data_q <= ic_val;
         icache_addr_q <= ic_addr;
@@ -127,15 +123,6 @@ module frontend
 
   bpu BPU (.*);
   ideal_itcm ICU (.*);
-  inst_queue INST_QUEUE (
-      .*,
-      .instr_i       (instr),              // from re-aligner
-      .addr_i        (addr),               // from re-aligner
-      .predict_addr  (predict_addr),
-      .cf_type_i     (cf_type),
-      .ready_o       (instr_queue_ready),
-      .replay        (replay),
-      .replay_addr   (replay_addr)
-  );
+  inst_queue INST_QUEUE (.*);
 
 endmodule

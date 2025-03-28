@@ -3,6 +3,7 @@ module ideal_itcm
 (
     input logic clock,
     input logic reset,
+    input logic flush_frontend,
 
     input  logic [31:0] fetch_addr,
     output logic [31:0] ic_val,
@@ -21,9 +22,6 @@ module ideal_itcm
     input  axi_r_s2m_t ifu_r_s2m
 );
 
-  int hit_num = 0;
-  int skip_num = 0;
-  int miss_num = 0;
   import "DPI-C" function int pmem_read(input int raddr);
 
   always_ff @(posedge clock) begin
@@ -33,14 +31,11 @@ module ideal_itcm
       ic_val <= 32'b0;
       ic_addr <= 32'b0;
     end else begin
-      if (ifu2icu_valid) begin
+      if (ifu2icu_valid & icu2ifu_ready & !flush_frontend) begin
         icu2ifu_ready <= 1'b0;
         icu2ifu_valid <= 1'b1;
         ic_val <= pmem_read(fetch_addr);
         ic_addr <= fetch_addr;
-        hit_num++;
-        miss_num++;
-        skip_num++;
       end else begin
         icu2ifu_ready <= 1'b1;
         icu2ifu_valid <= 1'b0;

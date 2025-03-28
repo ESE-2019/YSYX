@@ -49,7 +49,7 @@ module id_stage
 
     if (!idu_d.valid && frontend_valid) begin
       backend_ready = 1'b1;
-      idu_d = '{decoded_instr, 1'b1};
+      idu_d = '{1'b1, decoded_instr};
     end
 
     if (flush_frontend) idu_d.valid = 1'b0;

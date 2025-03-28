@@ -48,7 +48,7 @@ VERILATOR_CFLAGS += -I$(SOC_PATH)/perip/uart16550/rtl -I$(SOC_PATH)/perip/spi/rt
 VERILATOR_CFLAGS += -CFLAGS -flto -CFLAGS -fno-exceptions
 VERILATOR_CFLAGS += -LDFLAGS -lreadline -LDFLAGS -ldl -LDFLAGS -lSDL2 \
 	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/libdisasm.so \
-	-LDFLAGS /home/ubuntu/ysyx-workbench/npc/csrc/riscv32-nemu-interpreter-so \
+	-LDFLAGS /home/ubuntu/ysyx-workbench/OoO/csrc/riscv32-nemu-interpreter-so \
 	-LDFLAGS -lLLVM-18 -LDFLAGS -flto
 ifneq ($(words $(CURDIR)),1)
  $(error Unsupported: GNU Make cannot build in directories containing spaces, build elsewhere: '$(CURDIR)')

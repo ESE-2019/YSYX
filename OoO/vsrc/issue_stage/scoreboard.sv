@@ -50,9 +50,7 @@ module scoreboard
       mem_n[issue_pointer_q] = '{issued: 1'b1, instr: idu2isu_instr};
     end
 
-    // ------------
     // Write Back
-    // ------------
     for (int unsigned i = 0; i < WriteBackPorts; i++) begin
       // check if this instruction was issued (e.g.: it could happen after a flush that there is still
       // something in the pipeline e.g. an incomplete memory operation)
@@ -62,11 +60,8 @@ module scoreboard
       end
     end
 
-    // ------------
-    // Commit Port
-    // ------------
+    // Commit
     if (commit_valid) begin
-      // this instruction is no longer in issue e.g.: it is considered finished
       mem_n[commit_pointer_q].issued    = 1'b0;
       mem_n[commit_pointer_q].instr.valid = 1'b0;
     end

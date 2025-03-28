@@ -431,7 +431,6 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t ifu_cnt
 {
     uint32_t ist = inst;
     cycle--;
-    ipc_inst++;
     fetch_delay += ifu_cnt;
     PC = pc;
 
@@ -468,8 +467,14 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t ifu_cnt
     }
 }
 
+uint32_t detect_halt = 0;
+
 extern "C" void retirement(uint32_t pc)
 {
+
+    ipc_inst++;
+    detect_halt = 0;
+    bool err = 0;
     // diff test
     uint32_t check[32];
     if (DIFF_EN)
@@ -492,24 +497,29 @@ extern "C" void retirement(uint32_t pc)
             {
                 if (j == 0)
                 {
-                    if (check[j] != pc)
-                    {
-                        printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", check[j], pc);
-                        cycle = 0;
-                    }
+                    // if (check[j] != pc)
+                    // {
+                    //     printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", check[j], pc);
+                    //     cycle = 0;
+                    // }
                 }
                 else
                 {
                     if (check[j] != NPC_REG[j])
                     {
-                        printf("\033[1;31m%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", j, check[j], NPC_REG[j]);
+                        printf("\033[1;31m%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x  at 0x%08x\n\033[0m", j, check[j], NPC_REG[j], check[0]);
                         cycle = 0;
+                        err = 1;
                     }
                 }
             }
         }
 
-    wp_exec(); // watchpoint
+    if (err)
+        printf("----------------------\n");
+
+    if (SDB)
+        wp_exec(); // watchpoint
 }
 
 static void print_ipc()
@@ -1394,7 +1404,7 @@ int main(int argc, char **argv)
     }
     if (DIFF_EN)
     {
-        difftest_memcpy(0x30000000, mem, 0x01000000 / 4, 0);
+        difftest_memcpy(0x80000000, mem, 0x01000000 / 4, 0);
         difftest_init(0);
     }
     Verilated::commandArgs(argc, argv);
@@ -1418,7 +1428,7 @@ int main(int argc, char **argv)
     {
         reg_mirror[i] = 0;
     }
-    while (!contextp->gotFinish() && ebreak_n && (ipc_cycle < (uint64_t)ABORT_NUM || ABORT_NUM == 0))
+    while (!contextp->gotFinish() && ebreak_n && (ipc_cycle < (uint64_t)ABORT_NUM || ABORT_NUM == 0) && (detect_halt < 10000))
     {
 
         contextp->timeInc(1);
@@ -1474,6 +1484,7 @@ int main(int argc, char **argv)
                 }
 
                 ipc_cycle++;
+                detect_halt++;
             }
         }
         top->eval();

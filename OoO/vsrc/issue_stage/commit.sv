@@ -13,9 +13,8 @@ module commit
     output logic commit_lsu
 );
 
-  assign gpr_waddr = commit_instr.rd;
-  assign commit_lsu = commit_instr.valid && commit_instr.fu inside {FU_LOAD, FU_STORE} ?
-                        1'b1 : 1'b0;
+  assign gpr_waddr  = commit_instr.rd;
+  assign commit_lsu = commit_instr.fu inside {FU_LOAD, FU_STORE} ? 1'b1 : 1'b0;
 
   always_comb begin
     commit_valid = 1'b0;

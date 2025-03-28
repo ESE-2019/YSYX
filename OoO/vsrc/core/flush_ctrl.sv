@@ -7,8 +7,8 @@ module flush_ctrl
 );
 
   always_comb begin
-    flush_frontend = 1'b1;
-    flush_unissued_instr = 1'b1;
+    flush_frontend = 1'b0;
+    flush_unissued_instr = 1'b0;
     if (bju.valid & bju.is_mispredict) begin
       flush_frontend       = 1'b1;
       flush_unissued_instr = 1'b1;

@@ -1,14 +1,15 @@
-module ysyx_24080006_fifo #(
+module fifo #(
     parameter int unsigned FIFO_DEPTH = 2,
-    parameter int unsigned ADDR_DEPTH = $clog2(FIFO_DEPTH)
+    parameter int unsigned ADDR_DEPTH = $clog2(FIFO_DEPTH),
+    parameter int unsigned DATA_WIDTH = 32
 ) (
     input logic clock,
     input logic reset,
     input logic fifo_flush,
     input logic fifo_wren,
     input logic fifo_rden,
-    input logic [31:0] fifo_wdata,
-    output logic [31:0] fifo_rdata,
+    input logic [DATA_WIDTH - 1:0] fifo_wdata,
+    output logic [DATA_WIDTH - 1:0] fifo_rdata,
     output logic fifo_full,
     output logic fifo_empty,
     output logic [ADDR_DEPTH:0] fifo_data_avail
@@ -16,9 +17,9 @@ module ysyx_24080006_fifo #(
 
   logic [ADDR_DEPTH - 1:0] rd_ptr_d, rd_ptr_q, wr_ptr_d, wr_ptr_q;
   logic [ADDR_DEPTH:0] num_entries_d, num_entries_q;
-  logic [31:0] fifo_ram[FIFO_DEPTH];
+  logic [DATA_WIDTH - 1:0] fifo_ram[FIFO_DEPTH];
 
-  assign fifo_rdata = fifo_ram_q[rd_ptr_q];
+  assign fifo_rdata = fifo_ram[rd_ptr_q];
   assign fifo_data_avail = num_entries_q;
   assign fifo_full = num_entries_q == (ADDR_DEPTH + 1)'(FIFO_DEPTH);
   assign fifo_empty = num_entries_q == 0;

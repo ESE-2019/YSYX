@@ -77,8 +77,10 @@ module issue_stage
 
 `ifdef SIM_MODE
   import "DPI-C" function void ebreak();
+  import "DPI-C" function void retirement(input int pc);
   always_comb begin
     if (retire_valid && commit_instr.op == SYS_EBREAK) ebreak();
+    if (retire_valid) retirement(commit_instr.pc);
   end
 `endif
 
