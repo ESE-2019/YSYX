@@ -12,7 +12,7 @@
 // Author: Florian Zaruba <zarubaf@iis.ee.ethz.ch>
 // Additional contributions by:
 //                 Angela Gonzalez - PlanV Technologies
-
+/* verilator lint_off LATCH */
 module cva6_fifo_v3 #(
     parameter bit FALL_THROUGH = 1'b0,  // fifo is in fall-through mode
     parameter bit FPGA_ALTERA = 1'b0,  // FPGA Altera optimizations enabled
@@ -185,3 +185,4 @@ module cva6_fifo_v3 #(
 
 
 endmodule  // fifo_v3
+/* verilator lint_on LATCH */

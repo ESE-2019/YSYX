@@ -22,12 +22,12 @@ module bju
 
     branch_result = pc + (is_rv16 ? 32'h2 : 32'h4);  // next pc
 
-    bju.valid = branch_valid_i;
-    bju.pc = pc_i;
+    bju.valid = bju_valid;
+    bju.pc = pc;
     bju.target_address = 32'b0;
     bju.is_mispredict = 1'b0;
     bju.is_taken = 1'b0;
-    bju.cf_type = bpu.cf;
+    bju.cf = bpu.cf;
 
     if (bju_valid) begin
       if (fu_data.operation == BJU_JAL) begin
@@ -37,14 +37,14 @@ module bju
         bju.target_address = target_address;
         if (bpu.cf == CF_NONE || target_address != bpu.predict_addr) begin
           bju.is_mispredict = 1'b1;
-          if (bpu.cf != CF_RET) bju.cf_type = CF_JALR;
+          if (bpu.cf != CF_RET) bju.cf = CF_JALR;
         end
 
       end else begin
 
         bju.target_address = alu_result[0] ? target_address : branch_result;
         bju.is_taken = alu_result[0];
-        bju.cf_type = CF_BRANCH;
+        bju.cf = CF_BRANCH;
         bju.is_mispredict = alu_result[0] != (bpu.cf == CF_BRANCH);
 
       end

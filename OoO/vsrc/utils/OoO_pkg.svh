@@ -127,7 +127,7 @@ package OoO_pkg;
   typedef struct packed {
     logic [31:0] pc;
     logic [31:0] inst;
-    bpu_t         bp;
+    bpu_t        bp;
   } frontend_t;
 
   typedef struct packed {
@@ -136,19 +136,24 @@ package OoO_pkg;
     logic [31:0] target_address;
     logic        is_mispredict;
     logic        is_taken;
-    cf_t         cf_type;
+    cf_e         cf;
   } bju_t;
 
-    typedef struct packed {
+  typedef struct packed {
     logic valid;
     logic [31:0] inst;
     logic [31:0] pc;
   } aligner_t;
 
   typedef struct packed {
+    logic valid;
+    logic taken;
+  } bht_predict_t;
+
+  typedef struct packed {
     logic        valid;
-    logic [31:0] pc;
     logic        taken;
+    logic [31:0] pc;
   } bht_update_t;
 
   typedef struct packed {
@@ -183,20 +188,20 @@ package OoO_pkg;
   } predecoder_t;
 
   typedef struct packed {
-    logic [31:0] pc;
     logic [ScoreboardIndex-1:0] idx;
     fu_e fu;
     fu_op_e op;
     logic [RegWidth-1:0] rs1;
     logic [RegWidth-1:0] rs2;
     logic [RegWidth-1:0] rd;
-    logic [31:0] result;  // imm
-    logic valid;
     logic use_imm;  // operand b
     logic use_zimm;  // operand a
     logic use_pc;  // operand a
     bpu_t bp;
     logic is_rv16;
+    logic valid;
+    logic [31:0] pc;
+    logic [31:0] result;  // imm
   } decoder_t;
 
   typedef struct packed {

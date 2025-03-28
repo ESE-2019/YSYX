@@ -514,68 +514,67 @@ extern "C" void retirement(uint32_t pc)
 
 static void print_ipc()
 {
-
-    uint64_t compute_cnt = CNT_OP_I;
-    uint64_t loadstore_cnt = CNT_LS_I;
-    uint64_t system_cnt = CNT_SYS_I;
-    uint64_t branch_cnt = CNT_BR_I;
-    uint64_t compute_cycle = CNT_OP_C;
-    uint64_t loadstore_cycle = CNT_LS_C;
-    uint64_t system_cycle = CNT_SYS_C;
-    uint64_t branch_cycle = CNT_BR_C;
-
     double num;
 
-    printf("\033[1;93m                          inst    cycle     cpi\n\033[0m");
+    // uint64_t compute_cnt = CNT_OP_I;
+    // uint64_t loadstore_cnt = CNT_LS_I;
+    // uint64_t system_cnt = CNT_SYS_I;
+    // uint64_t branch_cnt = CNT_BR_I;
+    // uint64_t compute_cycle = CNT_OP_C;
+    // uint64_t loadstore_cycle = CNT_LS_C;
+    // uint64_t system_cycle = CNT_SYS_C;
+    // uint64_t branch_cycle = CNT_BR_C;
 
-    num = 100 * (double)compute_cnt / (double)ipc_inst;
-    printf("\033[1;33m%.3f%% compute_cnt   %8ld %8ld  ", num, compute_cnt, compute_cycle);
-    num = (double)compute_cycle / (double)compute_cnt;
-    printf("%5.3f\n\033[0m", num);
+    // printf("\033[1;93m                          inst    cycle     cpi\n\033[0m");
 
-    num = 100 * (double)loadstore_cnt / (double)ipc_inst;
-    printf("\033[1;93m%.3f%% loadstore_cnt %8ld %8ld  ", num, loadstore_cnt, loadstore_cycle);
-    num = (double)loadstore_cycle / (double)loadstore_cnt;
-    printf("%5.3f\n\033[0m", num);
-
-    num = 100 * (double)system_cnt / (double)ipc_inst;
-    printf("\033[1;33m%.3f%% system_cnt    %8ld %8ld  ", num, system_cnt, system_cycle);
-    num = (double)system_cycle / (double)system_cnt;
-    printf("%5.3f\n\033[0m", num);
-
-    num = 100 * (double)branch_cnt / (double)ipc_inst;
-    printf("\033[1;93m%.3f%% branch_cnt    %8ld %8ld  ", num, branch_cnt, branch_cycle);
-    num = (double)branch_cycle / (double)branch_cnt;
-    printf("%5.3f\n\033[0m", num);
-
-    // num = 100 * (double)jump_cnt / (double)ipc_inst;
-    // printf("\033[1;33m%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
-    // num = (double)jump_cycle / (double)jump_cnt;
+    // num = 100 * (double)compute_cnt / (double)ipc_inst;
+    // printf("\033[1;33m%.3f%% compute_cnt   %8ld %8ld  ", num, compute_cnt, compute_cycle);
+    // num = (double)compute_cycle / (double)compute_cnt;
     // printf("%5.3f\n\033[0m", num);
 
-    num = (double)load_c / (double)load_i;
-    printf("\033[1;93mLOAD_DELAY  = %8ld / %8ld = %6.4f\n\033[0m", load_c, load_i, num);
-    num = (double)store_c / (double)store_i;
-    printf("\033[1;33mSTORE_DELAY = %8ld / %8ld = %6.4f\n\033[0m", store_c, store_i, num);
-    num = (double)(load_c + store_c) / (double)(load_i + store_i);
-    printf("\033[1;93mAVER_DELAY  = %8ld / %8ld = %6.4f\n\033[0m", (load_c + store_c), (load_i + store_i), num);
+    // num = 100 * (double)loadstore_cnt / (double)ipc_inst;
+    // printf("\033[1;93m%.3f%% loadstore_cnt %8ld %8ld  ", num, loadstore_cnt, loadstore_cycle);
+    // num = (double)loadstore_cycle / (double)loadstore_cnt;
+    // printf("%5.3f\n\033[0m", num);
 
-    num = (double)fetch_delay / (double)ipc_inst;
-    printf("\033[1;33mFETCH_DELAY = %8ld / %8ld = %6.4f\n\033[0m", fetch_delay, ipc_inst, num);
-    int hit_num = HIT_NUM;
-    int miss_num = MISS_NUM;
-    int skip_num = SKIP_NUM;
-    num = 100 * (double)hit_num / (double)(hit_num + miss_num);
-    printf("\033[1;93mH/(H+M) = %.2f%% ", num);
-    num = 100 * (double)(hit_num + skip_num) / (double)(hit_num + miss_num + skip_num);
-    printf("(H+S)/A = %.2f%% ", num);
+    // num = 100 * (double)system_cnt / (double)ipc_inst;
+    // printf("\033[1;33m%.3f%% system_cnt    %8ld %8ld  ", num, system_cnt, system_cycle);
+    // num = (double)system_cycle / (double)system_cnt;
+    // printf("%5.3f\n\033[0m", num);
 
-    // hit_num = D_HIT;
-    // miss_num = D_MISS;
+    // num = 100 * (double)branch_cnt / (double)ipc_inst;
+    // printf("\033[1;93m%.3f%% branch_cnt    %8ld %8ld  ", num, branch_cnt, branch_cycle);
+    // num = (double)branch_cycle / (double)branch_cnt;
+    // printf("%5.3f\n\033[0m", num);
+
+    // // num = 100 * (double)jump_cnt / (double)ipc_inst;
+    // // printf("\033[1;33m%.3f%% jump_cnt      %8ld %8ld  ", num, jump_cnt, jump_cycle);
+    // // num = (double)jump_cycle / (double)jump_cnt;
+    // // printf("%5.3f\n\033[0m", num);
+
+    // num = (double)load_c / (double)load_i;
+    // printf("\033[1;93mLOAD_DELAY  = %8ld / %8ld = %6.4f\n\033[0m", load_c, load_i, num);
+    // num = (double)store_c / (double)store_i;
+    // printf("\033[1;33mSTORE_DELAY = %8ld / %8ld = %6.4f\n\033[0m", store_c, store_i, num);
+    // num = (double)(load_c + store_c) / (double)(load_i + store_i);
+    // printf("\033[1;93mAVER_DELAY  = %8ld / %8ld = %6.4f\n\033[0m", (load_c + store_c), (load_i + store_i), num);
+
+    // num = (double)fetch_delay / (double)ipc_inst;
+    // printf("\033[1;33mFETCH_DELAY = %8ld / %8ld = %6.4f\n\033[0m", fetch_delay, ipc_inst, num);
+    // int hit_num = HIT_NUM;
+    // int miss_num = MISS_NUM;
+    // int skip_num = SKIP_NUM;
     // num = 100 * (double)hit_num / (double)(hit_num + miss_num);
-    printf("\n\033[0m");
+    // printf("\033[1;93mH/(H+M) = %.2f%% ", num);
+    // num = 100 * (double)(hit_num + skip_num) / (double)(hit_num + miss_num + skip_num);
+    // printf("(H+S)/A = %.2f%% ", num);
 
-    printf("\033[1;33mHIT = %d MISS = %d SKIP = %d\n\033[0m", hit_num, miss_num, skip_num);
+    // // hit_num = D_HIT;
+    // // miss_num = D_MISS;
+    // // num = 100 * (double)hit_num / (double)(hit_num + miss_num);
+    // printf("\n\033[0m");
+
+    // printf("\033[1;33mHIT = %d MISS = %d SKIP = %d\n\033[0m", hit_num, miss_num, skip_num);
 
     num = (double)ipc_inst / (double)ipc_cycle;
     printf("\033[1;93mIPC         = %8ld / %8ld = %6.4f\n\033[0m", ipc_inst, ipc_cycle, num);

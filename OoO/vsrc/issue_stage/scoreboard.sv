@@ -3,11 +3,12 @@ module scoreboard
 (
     input  logic                             clock,
     input  logic                             reset,
+    input  logic                             flush_unissued_instr,
     output decoder_t                         issue_instr,
     output decoder_t                         commit_instr,
     input  logic                             commit_valid,
     input  decoder_t                         idu2isu_instr,
-    input  logic                             idu2isu_valid,
+    input  logic                             idu_valid,
     output logic                             isu2idu_ready,
     output logic                             issue_valid,
     input  logic                             issue_ready,
@@ -36,7 +37,7 @@ module scoreboard
   always_comb begin
     issue_instr = idu2isu_instr;
     issue_instr.idx = issue_pointer_q;
-    issue_valid = idu2isu_valid & ~issue_full;
+    issue_valid = idu_valid & ~issue_full;
     isu2idu_ready = issue_ready & ~issue_full;
   end
 
@@ -44,7 +45,7 @@ module scoreboard
     mem_n     = mem_q;
     num_issue = '0;
 
-    if (idu2isu_valid && isu2idu_ready) begin
+    if (idu_valid && isu2idu_ready && !flush_unissued_instr) begin
       num_issue = 1;
       mem_n[issue_pointer_q] = '{issued: 1'b1, instr: idu2isu_instr};
     end

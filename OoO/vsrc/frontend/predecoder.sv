@@ -5,6 +5,8 @@ module predecoder
     output predecoder_t predecoded
 );
 
+  import riscv_instr::*;
+
   wire rv32_branch = inst[6:0] == BEQ[6:0];
   wire rv32_jal = inst[6:0] == JAL[6:0] || inst == MRET;
   wire rv32_jalr = inst[6:0] == JALR[6:0];
@@ -22,7 +24,7 @@ module predecoder
 
   assign predecoded.branch = rv32_branch | rv16_branch;
   assign predecoded.jal = rv32_jal | rv16_jal;
-  assign predecoded.jalr = ~is_ret & (rv32_jalr | rvc_jalr | rvc_jr);
+  assign predecoded.jalr = ~(rv32_ret | rv16_ret) & (rv32_jalr | rvc_jalr | rvc_jr);
   assign predecoded.call = rv32_call | rv16_call;
   assign predecoded.ret = rv32_ret | rv16_ret;
 

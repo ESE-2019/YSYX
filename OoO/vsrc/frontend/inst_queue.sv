@@ -3,14 +3,14 @@ module inst_queue
 (
     input logic clock,
     input logic reset,
-    input logic flush_i,
+    input logic flush_frontend,
     input logic [31:0] instr_i,
     input logic [31:0] addr_i,
-    input logic valid_i,
+    input logic instruction_valid,
     output logic ready_o,
     output logic inst_queue_push,
     input logic [31:0] predict_addr,
-    input cf_t cf_type_i,
+    input cf_e cf_type_i,
     output logic replay,
     output logic [31:0] replay_addr,
     output frontend_t frontend_data,
@@ -32,7 +32,7 @@ module inst_queue
   // ----------------------
   // Input interface
   // ----------------------
-  assign fifo_push = valid_i & ~instr_queue_full;
+  assign fifo_push = instruction_valid & ~instr_queue_full;
 
   assign fifo_in.pc = addr_i;
   assign fifo_in.inst = instr_i;
@@ -47,7 +47,7 @@ module inst_queue
   // (e.g.: we pushed and it was full)
   // 2. The address/branch predict FIFO was full
   // if one of the FIFOs was full we need to replay the faulting instruction
-  assign instr_overflow_fifo = instr_queue_full & valid_i;
+  assign instr_overflow_fifo = instr_queue_full & instruction_valid;
   assign instr_overflow = |instr_overflow_fifo;
   assign replay = instr_overflow;
   assign replay_addr = addr_i;
@@ -70,7 +70,7 @@ module inst_queue
   ) i_fifo_instr_data (
       .clk_i     (clock),
       .rst_ni    (~reset),
-      .flush_i   (flush_i),
+      .flush_i   (flush_frontend),
       .testmode_i(1'b0),
       .full_o    (instr_queue_full),
       .empty_o   (instr_queue_empty),

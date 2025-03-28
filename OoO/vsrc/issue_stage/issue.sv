@@ -1,13 +1,13 @@
 module issue
   import OoO_pkg::*;
 (
-    input logic clock,
-    input logic reset,
-    //input logic flush_i,
-    input decoder_t issue_instr,
-    input logic issue_valid,
-    output logic issue_ready,
-    input forwarding_t fwd,
+    input  logic        clock,
+    input  logic        reset,
+    input  logic        flush_unissued_instr,
+    input  decoder_t    issue_instr,
+    input  logic        issue_valid,
+    output logic        issue_ready,
+    input  forwarding_t fwd,
 
     // to ex_stage
     output fu_data_t fu_data,
@@ -18,7 +18,7 @@ module issue
     output logic bju_valid,
     output logic mdu_valid,
     output logic csr_valid,
-    //output branchpredict_sbe_t branch_predict_o,
+    output bpu_t bpu,
     input logic lsu_ready,
     output logic lsu_valid,
 
@@ -57,7 +57,7 @@ module issue
 
   // forwarding signals
   logic forward_rs1, forward_rs2;
-  assign fu_data = fu_data_q;
+  assign fu_data   = fu_data_q;
   assign alu_valid = alu_valid_q;
   assign bju_valid = branch_valid_q;
   assign lsu_valid = lsu_valid_q;
@@ -94,7 +94,7 @@ module issue
     unique case (issue_instr.fu)
       FU_NONE:  fu_busy = fus_busy.none;
       FU_ALU:   fu_busy = fus_busy.alu;
-      FU_BJU:    fu_busy = fus_busy.ctrl_flow;
+      FU_BJU:   fu_busy = fus_busy.ctrl_flow;
       FU_CSR:   fu_busy = fus_busy.csr;
       FU_MDU:   fu_busy = fus_busy.mult;
       FU_LOAD:  fu_busy = fus_busy.load;
@@ -278,16 +278,14 @@ module issue
         default: ;
       endcase
     end
-    // if we got a flush request, de-assert the valid flag, otherwise we will start this
-    // functional unit with the wrong inputs
-    // if (flush_i) begin
-    //   alu_valid_n    = '0;
-    //   lsu_valid_n    = '0;
-    //   mult_valid_n   = '0;
-    //   alu2_valid_n   = '0;
-    //   csr_valid_n    = '0;
-    //   branch_valid_n = '0;
-    // end
+
+    if (flush_unissued_instr) begin
+      alu_valid_n    = '0;
+      lsu_valid_n    = '0;
+      mult_valid_n   = '0;
+      csr_valid_n    = '0;
+      branch_valid_n = '0;
+    end
   end
   // FU select, assert the correct valid out signal (in the next cycle)
   // This needs to be like this to make verilator happy. I know its ugly.
@@ -364,16 +362,16 @@ module issue
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      fu_data_q        <= '0;
-      pc               <= '0;
-      is_rv16          <= 1'b0;
-      //branch_predict_o <= {cf_t'(0), {CVA6Cfg.VLEN{1'b0}}};
+      fu_data_q <= '0;
+      pc        <= '0;
+      is_rv16   <= 1'b0;
+      //branch_predict_o <= {cf_e'(0), {CVA6Cfg.VLEN{1'b0}}};
     end else begin
       fu_data_q <= fu_data_n;
       if (issue_instr.fu == FU_BJU) begin
-        pc               <= issue_instr.pc;
-        is_rv16          <= issue_instr.is_rv16;
-        //branch_predict_o <= issue_instr.bp;
+        pc      <= issue_instr.pc;
+        is_rv16 <= issue_instr.is_rv16;
+        bpu     <= issue_instr.bp;
       end
     end
   end

@@ -7,8 +7,9 @@ module issue_stage
     input logic reset,
 
     input  decoder_t idu2isu_instr,
-    input  logic     idu2isu_valid,
+    input  logic     idu_valid,
     output logic     isu2idu_ready,
+    input  logic     flush_unissued_instr,
 
     output fu_data_t        fu_data,
     output logic     [31:0] pc,
@@ -18,7 +19,7 @@ module issue_stage
     output logic            bju_valid,
     output logic            mdu_valid,
     output logic            csr_valid,
-    //output branchpredict_sbe_t        branch_predict_o,
+    output bpu_t            bpu,
     input  logic            lsu_ready,
     output logic            lsu_valid,
 

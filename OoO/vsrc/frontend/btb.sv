@@ -6,7 +6,7 @@ module btb
     input logic reset,
     input logic [31:0] pc,
     input btb_update_t btb_update,
-    output btb_prediction_t [0:0] btb_predict
+    output btb_predict_t [0:0] btb_predict
 );
 
   localparam NR_ROWS = 8;
@@ -19,8 +19,8 @@ module btb
 
   // typedef for all branch target entries
   // we may want to try to put a tag field that fills the rest of the PC in-order to mitigate aliasing effects
-  btb_prediction_t [NR_ROWS-1:0] btb_d;
-  btb_prediction_t [NR_ROWS-1:0] btb_q;
+  btb_predict_t [NR_ROWS-1:0] btb_d;
+  btb_predict_t [NR_ROWS-1:0] btb_q;
 
 
   assign btb_predict[0] = btb_q[index];

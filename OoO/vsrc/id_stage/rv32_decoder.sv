@@ -3,8 +3,9 @@
 module rv32_decoder
   import OoO_pkg::*;
 (
-    input logic [31:0] id_pc,
+    input logic [31:0] pc,
     input logic [31:0] instr,
+    input bpu_t bp,
     input logic is_rv16,
     input logic rv16_err,
     output decoder_t decoded_instr,
@@ -21,9 +22,10 @@ module rv32_decoder
 
   always_comb begin
     decoded_instr         = '0;
-    decoded_instr.pc      = id_pc;
+    decoded_instr.pc      = pc;
     decoded_instr.result  = immI;
     decoded_instr.is_rv16 = is_rv16;
+    decoded_instr.bp      = bp;
     rv32_err              = rv16_err;
     unique case (instr[6:0])
 
@@ -133,7 +135,7 @@ module rv32_decoder
           unique case (instr[31:25])
             SRLI[31:25]: decoded_instr.op = ALU_SRL;
             SRAI[31:25]: decoded_instr.op = ALU_SRA;
-            7'b0110000:  decoded_instr.op = ALU_ROR;
+            7'b0110000: decoded_instr.op = ALU_ROR;
             BEXTI_RV32[31:25]: decoded_instr.op = ALU_BEXT;
             7'b0010100:
             unique case (instr[24:20])

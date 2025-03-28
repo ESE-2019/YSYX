@@ -16,8 +16,8 @@ module ex_stage
     input logic bju_valid,
     input logic mdu_valid,
     input logic csr_valid,
-    //input branchpredict_sbe_t branch_predict_i,
-    //output bp_resolve_t resolved_branch_o,
+    input bpu_t bpu,
+    output bju_t bju,
     //output logic resolve_branch_o,
     output logic [11:0] csr_addr,
     input logic commit_csr,
@@ -118,7 +118,7 @@ module ex_stage
 
 
   ysyx_24080006_lsu LSU (.*);
-  bju BU (.*);
+  bju BJU (.*);
   alu ALU (.*);
   mdu MDU (.*);
   dummy_csr DUMMY_CSR (.*);

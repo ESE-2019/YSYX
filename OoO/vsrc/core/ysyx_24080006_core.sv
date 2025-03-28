@@ -17,13 +17,12 @@ module ysyx_24080006_core
 
 
   logic                            fencei;
-  logic       [              31:0] inst;
-  logic       [              31:0] id_pc;
+  frontend_t                       frontend_data;
 
   logic       [              31:0] ifu_dbg_inst;
 
-  logic                            idu2ifu_ready;
-  logic                            ifu2idu_valid;
+  logic                            backend_ready;
+  logic                            frontend_valid;
 
   logic                            retire_valid;
   logic                            retire_cf;
@@ -37,8 +36,10 @@ module ysyx_24080006_core
   decoder_t                        idu2isu_instr;
 
   logic                            isu2idu_ready;
-  logic                            idu2isu_valid;
+  logic                            idu_valid;
 
+  bpu_t                            bpu;
+  bju_t                            bju;
   fu_data_t                        fu_data;
   logic                            is_rv16;
   logic                            flu_ready;
@@ -78,7 +79,16 @@ module ysyx_24080006_core
   logic                            is_compressed;
   logic                            fetch_cycle;
 
-  if_stage IFU (.*);
+  logic       [              31:0] mtvec_addr;
+  logic                            mret_valid;
+  logic       [              31:0] mepc_addr;
+
+  logic                            flush_frontend;
+  logic                            flush_unissued_instr;
+  logic                            ex_valid;
+  logic                            flush_id;
+
+  frontend IFU (.*);
   id_stage IDU (.*);
   issue_stage ISU (
       .*,
@@ -92,6 +102,7 @@ module ysyx_24080006_core
       .*,
       .instret(retire_valid)  //exu2ifu.valid & ifu2exu_ready)
   );
+  flush_ctrl CONTROLLER (.*);
 endmodule
 
 `default_nettype wire

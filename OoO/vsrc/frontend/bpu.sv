@@ -8,7 +8,7 @@ module bpu
     input  logic     [InstPerFetch-1:0] inst_queue_push,
     output logic                        bp_valid,
     output logic     [            31:0] predict_addr,
-    output cf_t      [InstPerFetch-1:0] cf_type
+    output cf_e      [InstPerFetch-1:0] cf_type
 );
 
   predecoder_t  [InstPerFetch-1:0] predecoded;
@@ -23,12 +23,6 @@ module bpu
   bht_update_t                     bht_update;
   btb_update_t                     btb_update;
   ras_update_t                     ras_update;
-
-  // Instruction FIFO
-
-  // for the return address stack it doens't matter as we have the
-  // address of the call/return already
-  logic                            bp_valid;
 
   // taken/not taken
   always_comb begin
@@ -102,24 +96,26 @@ module bpu
     // Check that we encountered a control flow and that for a return the RAS
     // contains a valid prediction.
     for (int i = 0; i < InstPerFetch; i++)
-    bp_valid |= ((cf_type[i] != NoCF & cf_type[i] != Return) | ((cf_type[i] == Return) & ras_predict.valid));
+    bp_valid |= ((cf_type[i] != CF_NONE & cf_type[i] != CF_RET) | ((cf_type[i] == CF_RET) & ras_predict.valid));
   end
 
   // Update Control Flow Predictions
-  assign bht_update.valid = bju.valid & (bju.cf_type == CF_BRANCH);
+  assign bht_update.valid = bju.valid & (bju.cf == CF_BRANCH);
   assign bht_update.pc = bju.pc;
   assign bht_update.taken = bju.is_taken;
   // only update mispredicted branches e.g. no returns from the RAS
-  assign btb_update.valid = bju.valid & bju.is_mispredict & (bju.cf_type == CF_JALR);
+  assign btb_update.valid = bju.valid & bju.is_mispredict & (bju.cf == CF_JALR);
   assign btb_update.pc = bju.pc;
   assign btb_update.target_address = bju.target_address;
 
-  for (genvar i = 1; i < InstPerFetch; i++) begin : gen_pre_decoder
+  for (genvar i = 0; i < InstPerFetch; i++) begin : gen_pre_decoder
     predecoder PreDecoder (
         .inst(aligned[i].inst),
         .predecoded(predecoded[i])
     );
   end
+
+  wire [31:0] pc = aligned[0].pc;
 
   ras RAS (.*);
   btb BTB (.*);

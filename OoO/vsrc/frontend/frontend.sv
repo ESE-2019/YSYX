@@ -3,11 +3,11 @@ module frontend
 (
     input logic clock,
     input logic reset,
-    input logic flush_i,
+    input logic flush_frontend,
     input bju_t bju,
     input logic mret_valid,
     input logic [31:0] mepc_addr,
-    input logic ex_valid_i,
+    input logic ex_valid,
     input logic [31:0] mtvec_addr,
     output frontend_t frontend_data,
     output logic frontend_valid,
@@ -46,7 +46,7 @@ module frontend
 
   // Instruction FIFO
   logic [            31:0] predict_addr;
-  cf_t  [InstPerFetch-1:0] cf_type;
+  cf_e  [InstPerFetch-1:0] cf_type;
 
   logic [            31:0] instr;
   logic [            31:0] addr;
@@ -58,8 +58,6 @@ module frontend
   // for the return address stack it doens't matter as we have the
   // address of the call/return already
   logic bp_valid;
-
-  assign is_mispredict = bju.valid & bju.is_mispredict;
 
   // Cache interface
   assign ifu2icu_valid = instr_queue_ready;
@@ -89,15 +87,15 @@ module frontend
       npc_d = replay_addr;
     end
     // 3. Control flow change request
-    if (is_mispredict) begin
+    if (bju.valid & bju.is_mispredict) begin
       npc_d = bju.target_address;
     end
     // 4. Return from environment call
-    if (eret_i) begin
+    if (mret_valid) begin
       npc_d = mepc_addr;
     end
     // 5. Exception/Interrupt
-    if (ex_valid_i) begin
+    if (ex_valid) begin
       npc_d = mtvec_addr;
     end
 
@@ -130,21 +128,14 @@ module frontend
   bpu BPU (.*);
   ideal_itcm ICU (.*);
   inst_queue INST_QUEUE (
-      .clock         (clock),
-      .reset         (reset),
-      .flush_i       (flush_i),
+      .*,
       .instr_i       (instr),              // from re-aligner
       .addr_i        (addr),               // from re-aligner
       .predict_addr  (predict_addr),
       .cf_type_i     (cf_type),
-      .valid_i       (instruction_valid),  // from re-aligner
-      .consumed_o    (inst_queue_push),
       .ready_o       (instr_queue_ready),
       .replay        (replay),
-      .replay_addr   (replay_addr),
-      .frontend_data (frontend_data),      // to back-end
-      .frontend_valid(frontend_valid),     // to back-end
-      .backend_ready (backend_ready)       // to back-end
+      .replay_addr   (replay_addr)
   );
 
 endmodule

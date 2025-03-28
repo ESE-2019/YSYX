@@ -6,7 +6,7 @@ module bht
     input logic reset,
     input logic [31:0] pc,
     input bht_update_t bht_update,
-    output ariane_pkg::bht_prediction_t [0:0] bht_predict
+    output bht_predict_t bht_predict
 );
 
   localparam NR_ROWS = 32;
