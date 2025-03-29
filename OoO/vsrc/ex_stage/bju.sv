@@ -36,6 +36,7 @@ module bju
 
         bju.target_address = target_address;
         if (bpu.cf == CF_NONE || target_address != bpu.predict_addr) begin
+          // CF_NONE --> jalr not found in btb
           bju.is_mispredict = 1'b1;
           if (bpu.cf != CF_RET) bju.cf = CF_JALR;
         end

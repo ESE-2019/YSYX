@@ -14,7 +14,7 @@ module commit
 );
 
   assign gpr_waddr  = commit_instr.rd;
-  assign commit_lsu = commit_instr.fu inside {FU_LOAD, FU_STORE} ? 1'b1 : 1'b0;
+  assign commit_lsu = 1'b1;  //commit_instr.fu inside {FU_LOAD, FU_STORE} ? 1'b1 : 1'b0;
 
   always_comb begin
     commit_valid = 1'b0;

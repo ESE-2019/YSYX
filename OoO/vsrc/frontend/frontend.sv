@@ -26,7 +26,7 @@ module frontend
   logic icu2ifu_valid, ifu2icu_valid;
   logic icu2ifu_ready, ifu2icu_ready;
   assign ifu2icu_ready = 1'b1;
-  logic [31:0] ic_val, fetch_addr, ic_addr;
+  logic [31:0] ic_val, ic_addr;
   logic [            31:0] icache_data_q;
   logic                    icache_valid_q;
   logic [            31:0] icache_addr_q;
@@ -34,9 +34,7 @@ module frontend
   // Instruction Cache Registers, from I$
   logic                    instr_queue_ready;
   logic [InstPerFetch-1:0] inst_queue_push;
-  // instruction fetch is ready
-  logic                    if_ready;
-  logic [31:0] npc_d, npc_q;  // next PC
+  logic [31:0] fetch_addr, next_fetch_d, next_fetch_q;  // next PC
 
   // indicates whether we come out of reset (then we need to load RstAddr)
   logic                    first_fetch;
@@ -57,58 +55,57 @@ module frontend
 
   // for the return address stack it doens't matter as we have the
   // address of the call/return already
-  logic bp_valid;
+  logic bpu_predict;
 
   // Cache interface
   assign ifu2icu_valid = instr_queue_ready;
-  assign if_ready = icu2ifu_ready & instr_queue_ready;
 
   always_comb begin
     if (first_fetch) begin
-      fetch_addr = RstAddr;
-      npc_d      = RstAddr;
+      fetch_addr   = RstAddr;
+      next_fetch_d = RstAddr;
     end else begin
-      fetch_addr = npc_q;
-      npc_d      = npc_q;
+      fetch_addr   = next_fetch_q;
+      next_fetch_d = next_fetch_q;
     end
 
-    if (bp_valid) begin
-      fetch_addr = predict_addr;
-      npc_d = predict_addr;
+    if (bpu_predict) begin
+      fetch_addr   = predict_addr;
+      next_fetch_d = predict_addr;
     end
 
-    if (if_ready) begin
-      npc_d = fetch_addr + 32'h4;
+    if (icu2ifu_ready & instr_queue_ready) begin
+      next_fetch_d = fetch_addr + 32'h4;
     end
 
     if (replay) begin
-      npc_d = replay_addr;
+      next_fetch_d = replay_addr;
     end
 
     if (bju.valid & bju.is_mispredict) begin
-      npc_d = bju.target_address;
+      next_fetch_d = bju.target_address;
     end
 
-    if (mret_valid) begin
-      npc_d = mepc_addr;
-    end
+    // if (mret_valid) begin
+    //   next_fetch_d = mepc_addr;
+    // end
 
-    if (ex_valid) begin
-      npc_d = mtvec_addr;
-    end
+    // if (ex_valid) begin
+    //   next_fetch_d = mtvec_addr;
+    // end
   end
-
+  wire flush_inside = flush_frontend | replay | bju.valid & bju.is_mispredict;
   always_ff @(posedge clock) begin
     if (reset) begin
       first_fetch    <= 1'b1;
-      npc_q          <= '0;
+      next_fetch_q   <= '0;
       icache_data_q  <= '0;
       icache_valid_q <= 1'b0;
       icache_addr_q  <= 'b0;
     end else begin
       first_fetch    <= 1'b0;
-      npc_q          <= npc_d;
-      icache_valid_q <= icu2ifu_valid & !flush_frontend;
+      next_fetch_q   <= next_fetch_d;
+      icache_valid_q <= icu2ifu_valid & !flush_inside;
       if (icu2ifu_valid) begin
         icache_data_q <= ic_val;
         icache_addr_q <= ic_addr;

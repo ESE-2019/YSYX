@@ -78,6 +78,26 @@ extern "C" void ebreak()
         TRAP = true;
 }
 
+extern "C" int32_t __div__(int32_t a, int32_t b)
+{
+    if (a == -1 << 31 && b == -1)
+        return -1 << 31;
+    else if (b != 0)
+        return a / b;
+    else
+        return -1;
+}
+
+extern "C" int32_t __rem__(int32_t a, int32_t b)
+{
+    if (a == -1 << 31 && b == -1)
+        return 0;
+    else if (b != 0)
+        return a % b;
+    else
+        return a;
+}
+
 static uint8_t sdram_mem[4][8192][512][4];
 extern "C" int sdram_read(int i, int j, int k)
 {
@@ -468,6 +488,7 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t ifu_cnt
 }
 
 uint32_t detect_halt = 0;
+uint32_t difftest_pc;
 
 extern "C" void retirement(uint32_t pc)
 {
@@ -475,6 +496,36 @@ extern "C" void retirement(uint32_t pc)
     ipc_inst++;
     detect_halt = 0;
     bool err = 0;
+    int pmem_read(uint32_t raddr);
+    uint32_t ist = pmem_read(pc);
+    if (IT_EN)
+    {
+        char logbuf[128];
+        char *p = logbuf;
+        p += snprintf(p, sizeof(logbuf), "0x%08x:", pc);
+        int ilen = 4;
+        int i;
+        uint8_t *tmp = (uint8_t *)&ist;
+        for (i = ilen - 1; i >= 0; i--)
+        {
+            p += snprintf(p, 4, " %02x", tmp[i]);
+        }
+        int ilen_max = 4;
+        int space_len = ilen_max - ilen;
+        if (space_len < 0)
+            space_len = 0;
+        space_len = space_len * 3 + 1;
+        memset(p, ' ', space_len);
+        p += space_len;
+
+        // void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+        disassemble(p, logbuf + sizeof(logbuf) - p, pc, (uint8_t *)&ist, ilen);
+
+        printf("%s\n", logbuf);
+        // strcpy(iringbuf[iringbuf_index], logbuf);
+        // if (iringbuf_index++ >= 15)
+        //     iringbuf_index = 0;
+    }
     // diff test
     uint32_t check[32];
     if (DIFF_EN)
@@ -491,23 +542,25 @@ extern "C" void retirement(uint32_t pc)
         }
         else
         {
+            difftest_regcpy(check, 0);
+            difftest_pc = check[0];
             difftest_exec(1);
             difftest_regcpy(check, 0); // 0 for normal, 1 for skip
             for (int j = 0; j < 32; j++)
             {
                 if (j == 0)
                 {
-                    // if (check[j] != pc)
-                    // {
-                    //     printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", check[j], pc);
-                    //     cycle = 0;
-                    // }
+                    if (difftest_pc != pc)
+                    {
+                        printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", difftest_pc, pc);
+                        cycle = 0;
+                    }
                 }
                 else
                 {
                     if (check[j] != NPC_REG[j])
                     {
-                        printf("\033[1;31m%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x  at 0x%08x\n\033[0m", j, check[j], NPC_REG[j], check[0]);
+                        printf("\033[1;31m%02d: REF(nemu) 0x%08x DUT(npc) 0x%08x  at 0x%08x\n\033[0m", j, check[j], NPC_REG[j], difftest_pc);
                         cycle = 0;
                         err = 1;
                     }
@@ -1404,8 +1457,8 @@ int main(int argc, char **argv)
     }
     if (DIFF_EN)
     {
-        difftest_memcpy(0x80000000, mem, 0x01000000 / 4, 0);
         difftest_init(0);
+        difftest_memcpy(0x80000000, mem, 0x08000000 / 4, 0);
     }
     Verilated::commandArgs(argc, argv);
     contextp = new VerilatedContext;

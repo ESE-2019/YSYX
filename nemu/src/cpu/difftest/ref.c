@@ -27,6 +27,7 @@ __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
     paddr_write(tmp, 4, buffer[i]);
     tmp += 4;
   }
+  Log("nemu will start inst 0x%08x at 0x%08x", paddr_read(addr, 4), addr);
 }
 
 __EXPORT void difftest_regcpy(void *dut, bool direction) // 0 for normal, 1 for skip

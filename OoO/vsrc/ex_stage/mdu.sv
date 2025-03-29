@@ -19,6 +19,15 @@ module mdu
   assign mdu_idx = fu_data.idx;
   wire [31:0] a = fu_data.operand_a;
   wire [31:0] b = fu_data.operand_b;
+  ;
+  import "DPI-C" function int __div__(
+    int a,
+    int b
+  );
+  import "DPI-C" function int __rem__(
+    int a,
+    int b
+  );
   /* verilator lint_off WIDTHTRUNC */
   always_comb begin
     unique case (fu_data.operation)
@@ -35,17 +44,13 @@ module mdu
         mdu_result = ({{32{a[31]}}, a} * {32'b0, b}) >> 32;
       end
       MDU_DIV: begin
-        mdu_result = b == 32'b0 ? {32{1'b1}} :
-                                 a == {1'b1, {31{1'b0}}} && b == {32{1'b1}} ? {1'b1, {31{1'b0}}} :
-                                 $signed(a) / $signed(b);
+        mdu_result = __div__(a,b);
       end
       MDU_DIVU: begin
         mdu_result = b == 32'b0 ? {32{1'b1}} : a / b;
       end
       MDU_REM: begin
-        mdu_result = b == 32'b0 ? a :
-                                  a == {1'b1, {31{1'b0}}} && b == {32{1'b1}} ? {32{1'b0}} :
-                                 $signed(a) % $signed(b);
+        mdu_result = __rem__(a,b);
       end
       MDU_REMU: begin
         mdu_result = b == 32'b0 ? a : a % b;

@@ -80,8 +80,8 @@ static inline void print_ysyx()
 
 void _trm_init()
 {
+    uart_init();
     int ret = main(mainargs);
     halt(ret);
-    uart_init();
     print_ysyx();
 }

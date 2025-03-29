@@ -10,8 +10,10 @@ module predecoder
   wire rv32_branch = inst[6:0] == BEQ[6:0];
   wire rv32_jal = inst[6:0] == JAL[6:0] || inst == MRET;
   wire rv32_jalr = inst[6:0] == JALR[6:0];
-  wire rv32_call = (rv32_jalr | rv32_jal) & ((inst[11:7] == 5'd1) | inst[11:7] == 5'd5);
-  wire rv32_ret = rv32_jalr & ((inst[19:15] == 5'd1) | inst[19:15] == 5'd5) & (inst[19:15] != inst[11:7]);
+  wire rv32_call = (rv32_jalr | rv32_jal) & (inst[11:7] == 5'd1);
+  wire rv32_ret = rv32_jalr & (inst[19:15] == 5'd1) & (inst[19:15] != inst[11:7]);
+  // wire rv32_call = (rv32_jalr | rv32_jal) & ((inst[11:7] == 5'd1) | inst[11:7] == 5'd5);
+  // wire rv32_ret = rv32_jalr & ((inst[19:15] == 5'd1) | inst[19:15] == 5'd5) & (inst[19:15] != inst[11:7]);
 
   wire rv16_branch = inst[15:13] inside {C_BEQZ[15:13], C_BNEZ[15:13]} && inst[1:0] == C_BEQZ[1:0];
   wire rvc_j = inst[15:13] == C_J[15:13] && inst[1:0] == C_J[1:0];

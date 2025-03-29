@@ -6,7 +6,7 @@ module bpu
     input  bju_t                        bju,
     input  aligner_t [InstPerFetch-1:0] aligned,
     input  logic     [InstPerFetch-1:0] inst_queue_push,
-    output logic                        bp_valid,
+    output logic                        bpu_predict,
     output logic     [            31:0] predict_addr,
     output cf_e      [InstPerFetch-1:0] cf_type
 );
@@ -91,12 +91,12 @@ module bpu
 
   // or reduce struct
   always_comb begin
-    bp_valid = 1'b0;
+    bpu_predict = 1'b0;
     // BP cannot be valid if we have a return instruction and the RAS is not giving a valid address
     // Check that we encountered a control flow and that for a return the RAS
     // contains a valid prediction.
     for (int i = 0; i < InstPerFetch; i++)
-    bp_valid |= ((cf_type[i] != CF_NONE & cf_type[i] != CF_RET) | ((cf_type[i] == CF_RET) & ras_predict.valid));
+    bpu_predict |= ((cf_type[i] != CF_NONE & cf_type[i] != CF_RET) | ((cf_type[i] == CF_RET) & ras_predict.valid));
   end
 
   // Update Control Flow Predictions

@@ -3,7 +3,7 @@ module ideal_itcm
 (
     input logic clock,
     input logic reset,
-    input logic flush_frontend,
+    input logic flush_inside,
 
     input  logic [31:0] fetch_addr,
     output logic [31:0] ic_val,
@@ -26,12 +26,12 @@ module ideal_itcm
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      icu2ifu_ready <= 1'b1;
+      icu2ifu_ready <= 1'b0;
       icu2ifu_valid <= 1'b0;
       ic_val <= 32'b0;
       ic_addr <= 32'b0;
     end else begin
-      if (ifu2icu_valid & icu2ifu_ready & !flush_frontend) begin
+      if (ifu2icu_valid & icu2ifu_ready & !flush_inside) begin
         icu2ifu_ready <= 1'b0;
         icu2ifu_valid <= 1'b1;
         ic_val <= pmem_read(fetch_addr);

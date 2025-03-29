@@ -20,13 +20,13 @@
 
 #define PMEM_LEFT ((paddr_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-#ifdef CONFIG_TARGET_SHARE
-#define RESET_VECTOR 0x80000000 // soc 3 npc 8
-#elif CONFIG_CACHESIM
-#define RESET_VECTOR 0x30000000
-#else
+// #ifdef CONFIG_TARGET_SHARE
+// #define RESET_VECTOR 0x30000000
+// #elif CONFIG_CACHESIM
+// #define RESET_VECTOR 0x30000000
+// #else
 #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
-#endif
+//#endif
 
 /* convert the guest physical address in the guest program to host virtual
  * address in NEMU */
