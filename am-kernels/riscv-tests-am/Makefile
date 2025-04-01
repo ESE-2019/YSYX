@@ -1,4 +1,4 @@
-TEST_ISA = i m #a f d c m
+TEST_ISA = i m zba zbb zbs#a f d c m
 EXCLUDE_TEST = fence_i ma_data
 
 SUPPORTED_AM_ISA = riscv64 riscv32 riscv64e riscv32e riscv32mini

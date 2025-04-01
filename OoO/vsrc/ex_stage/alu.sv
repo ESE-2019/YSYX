@@ -131,7 +131,7 @@ module alu
       ALU_AND, ALU_OR, ALU_XOR, ALU_ANDN, ALU_ORN, ALU_XNOR: alu_result = bit_res;
       ALU_SEXTB: alu_result = {{24{fu_data.operand_a[7]}}, fu_data.operand_a[7:0]};
       ALU_SEXTH: alu_result = {{16{fu_data.operand_a[15]}}, fu_data.operand_a[15:0]};
-      ALU_ZEXTH: alu_result = {{16{fu_data.operand_a[15]}}, fu_data.operand_a[15:0]};
+      ALU_ZEXTH: alu_result = {16'b0, fu_data.operand_a[15:0]};
       ALU_ORCB:
       alu_result = {
         {8{|fu_data.operand_a[31:24]}},
