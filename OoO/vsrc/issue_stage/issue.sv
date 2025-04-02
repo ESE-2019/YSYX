@@ -184,7 +184,7 @@ module issue
   // ---------------
   // check that all operands are available, otherwise stall
   // forward corresponding register
-  always_comb begin : operands_available
+  always_comb begin
     stall_raw   = '0;
     stall_rs1   = '0;
     stall_rs2   = '0;

@@ -97,9 +97,13 @@ module ex_stage
     end
 
     // wb port 1 (lsu)
-    wb[1].data  = lsu_rdata;
-    wb[1].idx   = lsu_idx;
+    wb[1].data = lsu_rdata;
+    wb[1].idx = lsu_idx;
     wb[1].valid = lsu2exu_valid;
+
+    // used for dbg
+    wb[0].dbg_pc_wdata = bju.target_address;
+    wb[1].dbg_pc_wdata = 32'b0;
   end
 
   always_comb begin

@@ -13,7 +13,9 @@ module scoreboard
     output logic                             issue_valid,
     input  logic                             issue_ready,
     output forwarding_t                      fwd,
-    input  writeback_t  [WriteBackPorts-1:0] wb
+    input  writeback_t  [WriteBackPorts-1:0] wb,
+
+    input fu_data_t fu_data  // used for dbg
 );
   scoreboard_t [ScoreboardDepth-1:0] mem_q, mem_n;
 
@@ -48,6 +50,12 @@ module scoreboard
     if (idu_valid && isu2idu_ready && !flush_unissued_instr) begin
       num_issue = 1;
       mem_n[issue_pointer_q] = '{issued: 1'b1, instr: idu2isu_instr};
+      // used for dbg
+      mem_n[issue_pointer_q].instr.dbg_imm = fu_data.imm;
+      mem_n[issue_pointer_q].instr.dbg_rs1 = fu_data.operand_a;
+      mem_n[issue_pointer_q].instr.dbg_rs2 = fu_data.operand_b;
+      mem_n[issue_pointer_q].instr.dbg_pc_wdata = mem_n[issue_pointer_q].instr.pc +
+          (mem_n[issue_pointer_q].instr.is_rv16 ? 32'h2 : 32'h4);
     end
 
     // Write Back
@@ -57,6 +65,8 @@ module scoreboard
       if (wb[i].valid && mem_q[wb[i].idx].issued) begin
         mem_n[wb[i].idx].instr.valid  = 1'b1;
         mem_n[wb[i].idx].instr.result = wb[i].data;
+        // used for dbg
+        if (|wb[i].dbg_pc_wdata) mem_n[wb[i].idx].instr.dbg_pc_wdata = wb[i].dbg_pc_wdata;
       end
     end
 

@@ -4,6 +4,7 @@ module rv32_decoder
   import OoO_pkg::*;
 (
     input logic [31:0] pc,
+    input logic [31:0] inst,  // used for dbg
     input logic [31:0] instr,
     input bpu_t bp,
     input logic is_rv16,
@@ -21,12 +22,13 @@ module rv32_decoder
   wire [31:0] immJ = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
 
   always_comb begin
-    decoded_instr         = '0;
-    decoded_instr.pc      = pc;
-    decoded_instr.result  = immI;
-    decoded_instr.is_rv16 = is_rv16;
-    decoded_instr.bp      = bp;
-    rv32_err              = rv16_err;
+    decoded_instr          = '0;
+    decoded_instr.pc       = pc;
+    decoded_instr.result   = immI;
+    decoded_instr.is_rv16  = is_rv16;
+    decoded_instr.bp       = bp;
+    decoded_instr.dbg_insn = inst;
+    rv32_err               = rv16_err;
     unique case (instr[6:0])
 
       LUI[6:0]: begin

@@ -31,7 +31,7 @@ module bju
 
     if (bju_valid) begin
       if (fu_data.operation == BJU_JAL) begin
-        ;
+        bju.target_address = target_address; // unnecessary, used for dbg
       end else if (fu_data.operation == BJU_JALR) begin
 
         bju.target_address = target_address;
@@ -50,6 +50,7 @@ module bju
 
       end
     end
+
   end
 
 endmodule

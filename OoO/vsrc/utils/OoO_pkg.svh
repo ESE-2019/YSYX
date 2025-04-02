@@ -98,8 +98,8 @@ package OoO_pkg;
   typedef struct packed {
     logic valid;
     logic [31:0] data;
-    //logic ex_valid;
     logic [ScoreboardIndex-1:0] idx;
+    logic [31:0] dbg_pc_wdata; // used for dbg
   } writeback_t;
 
   typedef struct packed {
@@ -202,6 +202,12 @@ package OoO_pkg;
     logic valid;
     logic [31:0] pc;
     logic [31:0] result;  // imm
+    // used for debug
+    logic [31:0] dbg_insn;
+    logic [31:0] dbg_imm;
+    logic [31:0] dbg_rs1;
+    logic [31:0] dbg_rs2;
+    logic [31:0] dbg_pc_wdata;
   } decoder_t;
 
   typedef struct packed {

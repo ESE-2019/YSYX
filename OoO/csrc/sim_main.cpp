@@ -2,7 +2,7 @@ static bool LOG = 0;
 static bool WAVE = 1;
 static bool SDB = 0;
 
-static bool DIFF_EN = 0;
+static bool DIFF_EN = 1;
 static bool IT_EN = 0;
 static bool FT_EN = 0;
 static bool FLASH_TRACE = 0;
@@ -490,7 +490,7 @@ extern "C" void dbg(uint32_t inst, uint32_t pc, uint32_t ft_pc, uint32_t ifu_cnt
 uint32_t detect_halt = 0;
 uint32_t difftest_pc;
 
-extern "C" void retirement(uint32_t pc)
+extern "C" void retirement(uint32_t pc, uint32_t npc)
 {
 
     ipc_inst++;
@@ -553,6 +553,11 @@ extern "C" void retirement(uint32_t pc)
                     if (difftest_pc != pc)
                     {
                         printf("\033[1;31mpc: REF(nemu) 0x%08x DUT(npc) 0x%08x\n\033[0m", difftest_pc, pc);
+                        cycle = 0;
+                    }
+                    if (check[0] != npc)
+                    {
+                        printf("\033[1;31mnpc: REF(nemu) 0x%08x DUT(npc) 0x%08x  at 0x%08x\n\033[0m", check[0], pc, difftest_pc);
                         cycle = 0;
                     }
                 }
