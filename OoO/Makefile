@@ -79,7 +79,7 @@ all: default
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$^ -IMG=$(SIM_IMG) $(SIM_FLAGS)
+	@$^ -IMG=$(SIM_IMG) $(SIM_FLAGS) +ibex_tracer_enable=1 +ibex_tracer_file_base=./build/OoO
 
 wave:
 	gtkwave ./build/wave.fst &

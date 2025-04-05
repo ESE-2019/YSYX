@@ -15,7 +15,7 @@ module scoreboard
     output forwarding_t                      fwd,
     input  writeback_t  [WriteBackPorts-1:0] wb,
 
-    input fu_data_t fu_data  // used for dbg
+    input fu_data_t dbg_data  // used for dbg
 );
   scoreboard_t [ScoreboardDepth-1:0] mem_q, mem_n;
 
@@ -51,9 +51,9 @@ module scoreboard
       num_issue = 1;
       mem_n[issue_pointer_q] = '{issued: 1'b1, instr: idu2isu_instr};
       // used for dbg
-      mem_n[issue_pointer_q].instr.dbg_imm = fu_data.imm;
-      mem_n[issue_pointer_q].instr.dbg_rs1 = fu_data.operand_a;
-      mem_n[issue_pointer_q].instr.dbg_rs2 = fu_data.operand_b;
+      mem_n[issue_pointer_q].instr.dbg_imm = dbg_data.imm;
+      mem_n[issue_pointer_q].instr.dbg_rs1 = dbg_data.operand_a;
+      mem_n[issue_pointer_q].instr.dbg_rs2 = dbg_data.operand_b;
       mem_n[issue_pointer_q].instr.dbg_pc_wdata = mem_n[issue_pointer_q].instr.pc +
           (mem_n[issue_pointer_q].instr.is_rv16 ? 32'h2 : 32'h4);
     end

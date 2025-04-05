@@ -93,6 +93,29 @@ module ysyx_24080006 (
   axi_r_m2s_t core_r_m2s;
   axi_r_s2m_t core_r_s2m;
 
+  logic [0:0] rvfi_valid;
+  logic [63:0] rvfi_order;
+  logic [31:0] rvfi_insn;
+  logic [0:0] rvfi_trap;
+  logic [0:0] rvfi_halt;
+  logic [0:0] rvfi_intr;
+  logic [1:0] rvfi_mode;
+  logic [4:0] rvfi_rs1_addr;
+  logic [4:0] rvfi_rs2_addr;
+  logic [31:0] rvfi_rs1_rdata;
+  logic [31:0] rvfi_rs2_rdata;
+  logic [4:0] rvfi_rd_addr;
+  logic [31:0] rvfi_rd_wdata;
+  logic [31:0] rvfi_pc_rdata;
+  logic [31:0] rvfi_pc_wdata;
+  logic [31:0] rvfi_mem_addr;
+  logic [3:0] rvfi_mem_rmask;
+  logic [3:0] rvfi_mem_wmask;
+  logic [31:0] rvfi_mem_rdata;
+  logic [31:0] rvfi_mem_wdata;
+  logic [0:0] rvfi_mem_extamo;
+  logic [15:0] errcode;
+
   ysyx_24080006_core CORE (.*);
   ysyx_24080006_clint CLINT (.*);
 
@@ -114,6 +137,17 @@ module ysyx_24080006 (
   );
   npc_xbar NPC_XBAR (.*);
   sram NPC_SRAM (.*);
+  rvfimon RVFIMON (.*);
+
+  ibex_tracer TRACER (
+      .*,
+      .clk_i(clock),
+      .rst_ni(~reset),
+      .hart_id_i('0),
+      .rvfi_ixl('0),
+      .rvfi_rs3_addr('0),
+      .rvfi_rs3_rdata('0)
+  );
 `else
   ysyx_24080006_interconnect ITCNT (.*);
 `endif

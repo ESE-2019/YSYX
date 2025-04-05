@@ -27,6 +27,7 @@ module sram
         sram_w_s2m.wready  <= 0;
         sram_w_s2m.bvalid  <= 1;
         pmem_write(sram_w_m2s.awaddr, sram_w_m2s.wdata, {28'b0, sram_w_m2s.wstrb});
+        if(sram_w_m2s.awaddr == 32'h87ff_fff0) $write("%c", sram_w_m2s.wdata[7:0]);
       end else if (sram_w_m2s.bready) begin
         sram_w_s2m.awready <= 1;
         sram_w_s2m.wready  <= 1;

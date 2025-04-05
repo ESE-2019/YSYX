@@ -12,7 +12,29 @@ module ysyx_24080006_core
     output axi_w_m2s_t lsu_w_m2s,
     input  axi_w_s2m_t lsu_w_s2m,
     output axi_r_m2s_t lsu_r_m2s,
-    input  axi_r_s2m_t lsu_r_s2m
+    input  axi_r_s2m_t lsu_r_s2m,
+
+    output logic [ 0:0] rvfi_valid,
+    output logic [63:0] rvfi_order,
+    output logic [31:0] rvfi_insn,
+    output logic [ 0:0] rvfi_trap,
+    output logic [ 0:0] rvfi_halt,
+    output logic [ 0:0] rvfi_intr,
+    output logic [ 1:0] rvfi_mode,
+    output logic [ 4:0] rvfi_rs1_addr,
+    output logic [ 4:0] rvfi_rs2_addr,
+    output logic [31:0] rvfi_rs1_rdata,
+    output logic [31:0] rvfi_rs2_rdata,
+    output logic [ 4:0] rvfi_rd_addr,
+    output logic [31:0] rvfi_rd_wdata,
+    output logic [31:0] rvfi_pc_rdata,
+    output logic [31:0] rvfi_pc_wdata,
+    output logic [31:0] rvfi_mem_addr,
+    output logic [ 3:0] rvfi_mem_rmask,
+    output logic [ 3:0] rvfi_mem_wmask,
+    output logic [31:0] rvfi_mem_rdata,
+    output logic [31:0] rvfi_mem_wdata,
+    output logic [ 0:0] rvfi_mem_extamo
 );
 
 

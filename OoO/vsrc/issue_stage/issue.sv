@@ -24,13 +24,16 @@ module issue
 
     input logic [4:0] gpr_waddr,
     input logic [31:0] gpr_wdata,
-    input logic gpr_we
+    input logic gpr_we,
+
+    output fu_data_t dbg_data  // used for dbg
 );
 
   logic stall_raw, stall_waw, stall_rs1, stall_rs2;
   logic fu_busy;
   // output flipflop (ID <-> EX)
   fu_data_t fu_data_d, fu_data_q;
+  assign dbg_data = fu_data_d;
 
   logic alu_valid_d, alu_valid_q;
   logic mdu_valid_d, mdu_valid_q;

@@ -40,7 +40,29 @@ module issue_stage
 
     input writeback_t [WriteBackPorts-1:0] wb,
     input logic [31:0] branch_address,
-    input logic branch_taken
+    input logic branch_taken,
+
+    output logic [ 0:0] rvfi_valid,
+    output logic [63:0] rvfi_order,
+    output logic [31:0] rvfi_insn,
+    output logic [ 0:0] rvfi_trap,
+    output logic [ 0:0] rvfi_halt,
+    output logic [ 0:0] rvfi_intr,
+    output logic [ 1:0] rvfi_mode,
+    output logic [ 4:0] rvfi_rs1_addr,
+    output logic [ 4:0] rvfi_rs2_addr,
+    output logic [31:0] rvfi_rs1_rdata,
+    output logic [31:0] rvfi_rs2_rdata,
+    output logic [ 4:0] rvfi_rd_addr,
+    output logic [31:0] rvfi_rd_wdata,
+    output logic [31:0] rvfi_pc_rdata,
+    output logic [31:0] rvfi_pc_wdata,
+    output logic [31:0] rvfi_mem_addr,
+    output logic [ 3:0] rvfi_mem_rmask,
+    output logic [ 3:0] rvfi_mem_wmask,
+    output logic [31:0] rvfi_mem_rdata,
+    output logic [31:0] rvfi_mem_wdata,
+    output logic [ 0:0] rvfi_mem_extamo
 );
 
 
@@ -70,14 +92,18 @@ module issue_stage
       retire_dnpc <= branch_address;
     end
   end
-
+  fu_data_t dbg_data;
   issue ISSUE_UNIT (.*);
   scoreboard SCOREBOARD_UNIT (.*);
   commit COMMIT_UNIT (.*);
+  rvfi_adapter RVFI_ADAPTER (.*);
 
 `ifdef SIM_MODE
   import "DPI-C" function void ebreak();
-  import "DPI-C" function void retirement(input int pc, input int npc);
+  import "DPI-C" function void retirement(
+    input int pc,
+    input int npc
+  );
   logic difftest;
   logic [31:0] difftest_pc, difftest_npc;
   always_comb begin
