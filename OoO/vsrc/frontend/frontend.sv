@@ -19,6 +19,12 @@ module frontend
     output logic is_compressed,
     output logic fetch_cycle,
 
+    output logic data_req_o,
+    output logic [31:0] data_addr_o,
+    input logic data_gnt_i,
+    input logic data_rvalid_i,
+    input logic [31:0] data_rdata_i,
+
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m
 );
@@ -119,7 +125,7 @@ module frontend
   assign aligned[0].inst = instr;
 
   bpu BPU (.*);
-  ideal_itcm ICU (.*);
+  dummy_icache ICU (.*);
   inst_queue INST_QUEUE (.*);
 
 endmodule

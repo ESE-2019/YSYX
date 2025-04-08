@@ -116,6 +116,12 @@ module ysyx_24080006 (
   logic [0:0] rvfi_mem_extamo;
   logic [15:0] errcode;
 
+  logic data_req_o;
+  logic [31:0] data_addr_o;
+  logic data_gnt_i;
+  logic data_rvalid_i;
+  logic [31:0] data_rdata_i;
+
   ysyx_24080006_core CORE (.*);
   ysyx_24080006_clint CLINT (.*);
 
@@ -148,6 +154,7 @@ module ysyx_24080006 (
       .rvfi_rs3_addr('0),
       .rvfi_rs3_rdata('0)
   );
+  dummy_ram IRAM (.*);
 `else
   ysyx_24080006_interconnect ITCNT (.*);
 `endif
