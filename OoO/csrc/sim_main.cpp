@@ -25,6 +25,10 @@ static bool FLASH_TRACE = 0;
 #define CNT_SYS_I top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__sys_i;
 #define CNT_SYS_C top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__CORE__DOT__IFU__DOT__sys_c;
 
+#define BITMASK(bits) ((1ull << (bits)) - 1)
+#define BITS(x, hi, lo) \
+    (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog
+
 #include <verilated.h>
 #include "VysyxSoCFull.h"
 #include "VysyxSoCFull___024root.h"
@@ -660,9 +664,9 @@ static uint32_t pmem_readC(uint32_t addr)
 {
     uint32_t add = (((addr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
     uint32_t ret = mem[add];
-    if (LOG)
-        fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u,
-                ret);
+    // if (LOG)
+    //     fprintf(log_file, "read] addr: 0x%08x value: 0x%08x\n", addr & ~0x3u,
+    //             ret);
     return ret;
 }
 
@@ -672,6 +676,29 @@ extern "C" int pmem_read(uint32_t raddr)
     if (LOG)
         fprintf(log_file, "[CPU");
     return pmem_readC(raddr & ~0x3u);
+}
+
+extern "C" void pmem_write_new(uint32_t waddr, uint32_t wdata, uint32_t wmask)
+{
+    uint32_t data = pmem_readC(waddr);
+    uint32_t add = (((waddr & ~0x3u) - MEM_BASE) / 0x4) % MAX_IMG;
+    if (BITS(wmask, 0, 0))
+    {
+        data = (BITS(data, 31, 8) << 8) | (BITS(wdata, 7, 0));
+    }
+    if (BITS(wmask, 1, 1))
+    {
+        data = (BITS(data, 31, 16) << 16) | (BITS(wdata, 15, 8) << 8) | (BITS(data, 7, 0));
+    }
+    if (BITS(wmask, 2, 2))
+    {
+        data = (BITS(data, 31, 24) << 24) | (BITS(wdata, 23, 16) << 16) | (BITS(data, 15, 0));
+    }
+    if (BITS(wmask, 3, 3))
+    {
+        data = (BITS(wdata, 31, 24) << 24) | (BITS(data, 23, 0));
+    }
+    mem[add] = data;
 }
 
 extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, uint32_t wmask)

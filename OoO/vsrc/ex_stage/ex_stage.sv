@@ -39,6 +39,16 @@ module ex_stage
     output logic store_num,
     output logic store_cycle,
 
+    output logic data_req_o,
+    input  logic data_gnt_i,
+    input  logic data_rvalid_i,
+
+    output logic [31:0] data_addr_o,
+    output logic        data_we_o,
+    output logic [ 3:0] data_be_o,
+    output logic [31:0] data_wdata_o,
+    input  logic [31:0] data_rdata_i,
+
     output axi_w_m2s_t lsu_w_m2s,
     input  axi_w_s2m_t lsu_w_s2m,
     output axi_r_m2s_t lsu_r_m2s,
@@ -121,44 +131,12 @@ module ex_stage
   wire [ScoreboardIndex-1:0] lsu_idx_i = fu_data.idx;
 
 
-  ysyx_24080006_lsu LSU (.*);
+  lsu LSU (.*);
   bju BJU (.*);
   alu ALU (.*);
   mdu MDU (.*);
   dummy_csr DUMMY_CSR (.*);
 
-
-  // `ifdef SIM_MODE
-  //   import ysyx_24080006_sim_pkg::*;
-  //   import "DPI-C" function void SKIP_DIFFTEST();
-  //   import "DPI-C" function void LSU_CNT(
-  //     input int load_en,
-  //     input int cnt
-  //   );
-  //   bit [31:0] lsu_cnt = 32'b0;
-  //   always_ff @(posedge clock) begin
-  //     if (curr == EX_IDLE) lsu_cnt <= 32'h1;
-  //     else lsu_cnt <= lsu_cnt + 32'h1;
-  //     if (curr == EX_LSU && lsu2exu_valid && lsu_write) begin
-  //       //$display("[LSU] 0x%08x write [0x%08x] at pc 0x%08x", lsu_addr, lsu_wdata, pc);
-  //       LSU_CNT(0, lsu_cnt);
-  //       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
-  //       if (!INSIDE_STORE(lsu_addr)) begin
-  //         $display("[LSU] store addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
-  //         $finish;
-  //       end
-  //     end
-  //     if (curr == EX_LSU && lsu2exu_valid && !lsu_write) begin
-  //       //$display("[LSU] 0x%08x  read [0x%08x] at pc 0x%08x", lsu_addr, lsu_rdata, pc);
-  //       LSU_CNT(1, lsu_cnt);
-  //       if (INSIDE_PERIP(lsu_addr)) SKIP_DIFFTEST();
-  //       if (!INSIDE_LOAD(lsu_addr)) begin
-  //         $display("[LSU] load addr error 0x%08x at pc 0x%08x", lsu_addr, pc);
-  //         $finish;
-  //       end
-  //     end
-  //   end
-  // `endif
 endmodule
 
 `default_nettype wire

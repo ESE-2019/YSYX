@@ -6,11 +6,21 @@ module ysyx_24080006_core
     input logic clock,
     input logic reset,
 
+    output logic instr_req_o,
+    output logic [31:0] instr_addr_o,
+    input logic instr_gnt_i,
+    input logic instr_rvalid_i,
+    input logic [31:0] instr_rdata_i,
+
     output logic data_req_o,
+    input  logic data_gnt_i,
+    input  logic data_rvalid_i,
+
     output logic [31:0] data_addr_o,
-    input logic data_gnt_i,
-    input logic data_rvalid_i,
-    input logic [31:0] data_rdata_i,
+    output logic        data_we_o,
+    output logic [ 3:0] data_be_o,
+    output logic [31:0] data_wdata_o,
+    input  logic [31:0] data_rdata_i,
 
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m,

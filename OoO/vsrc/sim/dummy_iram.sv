@@ -1,14 +1,14 @@
-module dummy_ram
+module dummy_iram
   import OoO_pkg::*;
 (
     input logic clock,
     input logic reset,
 
-    input logic data_req_o,
-    input logic [31:0] data_addr_o,
-    output logic data_gnt_i,
-    output logic data_rvalid_i,
-    output logic [31:0] data_rdata_i
+    input logic instr_req_o,
+    input logic [31:0] instr_addr_o,
+    output logic instr_gnt_i,
+    output logic instr_rvalid_i,
+    output logic [31:0] instr_rdata_i
 );
 
   import "DPI-C" function int pmem_read(input int raddr);
@@ -19,25 +19,25 @@ module dummy_ram
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      data_gnt_i <= 1'b0;
-      data_rvalid_i <= 1'b0;
-      data_rdata_i <= 32'b0;
+      instr_gnt_i <= 1'b0;
+      instr_rvalid_i <= 1'b0;
+      instr_rdata_i <= 32'b0;
       rden <= 1'b0;
       cnt <= '0;
     end else begin
       cnt <= cnt + {{CNT_W - 1{1'b0}}, {1'b1}};
-      if (data_req_o && &cnt) begin
-        data_gnt_i <= 1'b1;
+      if (instr_req_o && &cnt) begin
+        instr_gnt_i <= 1'b1;
         rden <= 1'b1;
-        data_rdata_i <= pmem_read(data_addr_o);
+        instr_rdata_i <= pmem_read(instr_addr_o);
       end else begin
-        data_gnt_i <= 1'b0;
+        instr_gnt_i <= 1'b0;
       end
       if (rden && &cnt) begin
-        data_rvalid_i <= 1'b1;
+        instr_rvalid_i <= 1'b1;
         rden <= 1'b0;
       end else begin
-        data_rvalid_i <= 1'b0;
+        instr_rvalid_i <= 1'b0;
       end
     end
   end

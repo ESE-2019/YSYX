@@ -75,52 +75,62 @@ module ysyx_24080006 (
 );
   import OoO_pkg::*;
 
-  axi_r_m2s_t ifu_r_m2s;
-  axi_r_s2m_t ifu_r_s2m;
+  axi_r_m2s_t        ifu_r_m2s;
+  axi_r_s2m_t        ifu_r_s2m;
 
-  axi_w_m2s_t lsu_w_m2s;
-  axi_w_s2m_t lsu_w_s2m;
-  axi_r_m2s_t lsu_r_m2s;
-  axi_r_s2m_t lsu_r_s2m;
+  axi_w_m2s_t        lsu_w_m2s;
+  axi_w_s2m_t        lsu_w_s2m;
+  axi_r_m2s_t        lsu_r_m2s;
+  axi_r_s2m_t        lsu_r_s2m;
 
-  axi_w_m2s_t clint_w_m2s;
-  axi_w_s2m_t clint_w_s2m;
-  axi_r_m2s_t clint_r_m2s;
-  axi_r_s2m_t clint_r_s2m;
+  axi_w_m2s_t        clint_w_m2s;
+  axi_w_s2m_t        clint_w_s2m;
+  axi_r_m2s_t        clint_r_m2s;
+  axi_r_s2m_t        clint_r_s2m;
 
-  axi_w_m2s_t core_w_m2s;
-  axi_w_s2m_t core_w_s2m;
-  axi_r_m2s_t core_r_m2s;
-  axi_r_s2m_t core_r_s2m;
+  axi_w_m2s_t        core_w_m2s;
+  axi_w_s2m_t        core_w_s2m;
+  axi_r_m2s_t        core_r_m2s;
+  axi_r_s2m_t        core_r_s2m;
 
-  logic [0:0] rvfi_valid;
-  logic [63:0] rvfi_order;
-  logic [31:0] rvfi_insn;
-  logic [0:0] rvfi_trap;
-  logic [0:0] rvfi_halt;
-  logic [0:0] rvfi_intr;
-  logic [1:0] rvfi_mode;
-  logic [4:0] rvfi_rs1_addr;
-  logic [4:0] rvfi_rs2_addr;
-  logic [31:0] rvfi_rs1_rdata;
-  logic [31:0] rvfi_rs2_rdata;
-  logic [4:0] rvfi_rd_addr;
-  logic [31:0] rvfi_rd_wdata;
-  logic [31:0] rvfi_pc_rdata;
-  logic [31:0] rvfi_pc_wdata;
-  logic [31:0] rvfi_mem_addr;
-  logic [3:0] rvfi_mem_rmask;
-  logic [3:0] rvfi_mem_wmask;
-  logic [31:0] rvfi_mem_rdata;
-  logic [31:0] rvfi_mem_wdata;
-  logic [0:0] rvfi_mem_extamo;
-  logic [15:0] errcode;
+  logic       [ 0:0] rvfi_valid;
+  logic       [63:0] rvfi_order;
+  logic       [31:0] rvfi_insn;
+  logic       [ 0:0] rvfi_trap;
+  logic       [ 0:0] rvfi_halt;
+  logic       [ 0:0] rvfi_intr;
+  logic       [ 1:0] rvfi_mode;
+  logic       [ 4:0] rvfi_rs1_addr;
+  logic       [ 4:0] rvfi_rs2_addr;
+  logic       [31:0] rvfi_rs1_rdata;
+  logic       [31:0] rvfi_rs2_rdata;
+  logic       [ 4:0] rvfi_rd_addr;
+  logic       [31:0] rvfi_rd_wdata;
+  logic       [31:0] rvfi_pc_rdata;
+  logic       [31:0] rvfi_pc_wdata;
+  logic       [31:0] rvfi_mem_addr;
+  logic       [ 3:0] rvfi_mem_rmask;
+  logic       [ 3:0] rvfi_mem_wmask;
+  logic       [31:0] rvfi_mem_rdata;
+  logic       [31:0] rvfi_mem_wdata;
+  logic       [ 0:0] rvfi_mem_extamo;
+  logic       [15:0] errcode;
 
-  logic data_req_o;
-  logic [31:0] data_addr_o;
-  logic data_gnt_i;
-  logic data_rvalid_i;
-  logic [31:0] data_rdata_i;
+  logic              instr_req_o;
+  logic       [31:0] instr_addr_o;
+  logic              instr_gnt_i;
+  logic              instr_rvalid_i;
+  logic       [31:0] instr_rdata_i;
+
+  logic              data_req_o;
+  logic              data_gnt_i;
+  logic              data_rvalid_i;
+
+  logic       [31:0] data_addr_o;
+  logic              data_we_o;
+  logic       [ 3:0] data_be_o;
+  logic       [31:0] data_wdata_o;
+  logic       [31:0] data_rdata_i;
 
   ysyx_24080006_core CORE (.*);
   ysyx_24080006_clint CLINT (.*);
@@ -154,7 +164,11 @@ module ysyx_24080006 (
       .rvfi_rs3_addr('0),
       .rvfi_rs3_rdata('0)
   );
-  dummy_ram IRAM (.*);
+  dummy_iram IRAM (.*);
+  dummy_dram DRAM (.*);
+  always_comb begin
+    if (|errcode) $finish;
+  end
 `else
   ysyx_24080006_interconnect ITCNT (.*);
 `endif

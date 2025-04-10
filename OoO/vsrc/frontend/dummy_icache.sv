@@ -18,11 +18,11 @@ module dummy_icache
     output logic icache_miss,
     output logic icache_skip,
 
-    output logic data_req_o,
-    output logic [31:0] data_addr_o,
-    input logic data_gnt_i,
-    input logic data_rvalid_i,
-    input logic [31:0] data_rdata_i,
+    output logic instr_req_o,
+    output logic [31:0] instr_addr_o,
+    input logic instr_gnt_i,
+    input logic instr_rvalid_i,
+    input logic [31:0] instr_rdata_i,
 
     output axi_r_m2s_t ifu_r_m2s,
     input  axi_r_s2m_t ifu_r_s2m
@@ -53,7 +53,7 @@ module dummy_icache
         end
       end
       IC_READ: begin
-        if (data_rvalid_i) begin
+        if (instr_rvalid_i) begin
           next = IC_IDLE;
         end else if (flush_inside) begin
           next = IC_FLUSH;
@@ -62,7 +62,7 @@ module dummy_icache
         end
       end
       IC_FLUSH: begin
-        if (data_rvalid_i) begin
+        if (instr_rvalid_i) begin
           next = IC_IDLE;
         end else begin
           next = curr;
@@ -78,32 +78,32 @@ module dummy_icache
       icu2ifu_valid <= 1'b0;
       ic_val <= 32'b0;
       ic_addr <= 32'b0;
-      data_req_o <= 1'b0;
-      data_addr_o <= 32'b0;
+      instr_req_o <= 1'b0;
+      instr_addr_o <= 32'b0;
     end else begin
       unique case (curr)
         IC_IDLE: begin
           if (ifu2icu_valid & icu2ifu_ready & !flush_inside) begin
             icu2ifu_ready <= 1'b0;
             icu2ifu_valid <= 1'b0;
-            data_req_o <= 1'b1;
-            data_addr_o <= fetch_addr;
+            instr_req_o <= 1'b1;
+            instr_addr_o <= fetch_addr;
             ic_addr <= fetch_addr;
           end else begin
             icu2ifu_ready <= 1'b1;
             icu2ifu_valid <= 1'b0;
-            data_req_o <= 1'b0;
+            instr_req_o <= 1'b0;
           end
         end
         IC_READ: begin
-          if (data_gnt_i) begin
-            data_req_o <= 1'b0;
+          if (instr_gnt_i) begin
+            instr_req_o <= 1'b0;
           end
           if (flush_inside) begin
             icu2ifu_ready <= 1'b0;
             icu2ifu_valid <= 1'b0;
-          end else if (data_rvalid_i) begin
-            ic_val <= data_rdata_i;
+          end else if (instr_rvalid_i) begin
+            ic_val <= instr_rdata_i;
             icu2ifu_ready <= 1'b0;
             icu2ifu_valid <= 1'b1;
           end else begin
@@ -112,8 +112,8 @@ module dummy_icache
           end
         end
         IC_FLUSH: begin
-          if (data_gnt_i) begin
-            data_req_o <= 1'b0;
+          if (instr_gnt_i) begin
+            instr_req_o <= 1'b0;
           end
           icu2ifu_ready <= 1'b0;
           icu2ifu_valid <= 1'b0;
