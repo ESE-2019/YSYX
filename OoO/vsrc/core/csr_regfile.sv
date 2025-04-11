@@ -203,7 +203,7 @@ module csr_regfile
   end
 
   for (genvar i = 0; i < 32; i++) begin : gen_counter
-    ysyx_24080006_counter HPM (
+    counter HPM (
         .clock             (clock),
         .reset             (reset),
         .counter_incr_en   (counter_incr_en[i] & ~mcountinhibit_q[i]),
@@ -214,18 +214,6 @@ module csr_regfile
         .counter_low_rdata (counter_low[i])
     );
   end
-
-`ifdef SIM_MODE
-  import "DPI-C" function void SKIP_DIFFTEST();
-  always_ff @(posedge clock) begin
-    if (csr_op inside {CSR_READ, CSR_WRITE, CSR_SET, CSR_CLEAR})
-      unique case (csr_addr)
-        CSR_MSTATUS, CSR_MTVEC, CSR_MEPC, CSR_MCAUSE, CSR_MVENDORID, CSR_MARCHID: ;
-        default: SKIP_DIFFTEST();
-      endcase
-  end
-
-`endif
 
 endmodule
 

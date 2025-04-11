@@ -19,15 +19,19 @@ module mdu
   assign mdu_idx = fu_data.idx;
   wire [31:0] a = fu_data.operand_a;
   wire [31:0] b = fu_data.operand_b;
-  ;
-  import "DPI-C" function int __div__(
-    int a,
-    int b
-  );
-  import "DPI-C" function int __rem__(
-    int a,
-    int b
-  );
+
+  function automatic logic signed [31:0] div(logic signed [31:0] opa, opb);
+    if (opa == 32'h8000_0000 && opb == 32'hFFFF_FFFF) return 32'h8000_0000;
+    else if (opb == 32'h0) return 32'hFFFF_FFFF;
+    else return opa / opb;
+  endfunction
+
+  function automatic logic signed [31:0] rem(logic signed [31:0] opa, opb);
+    if (opa == 32'h8000_0000 && opb == 32'hFFFF_FFFF) return 32'h0;
+    else if (opb == 32'h0) return opa;
+    else return opa % opb;
+  endfunction
+
   /* verilator lint_off WIDTHTRUNC */
   always_comb begin
     unique case (fu_data.operation)
@@ -44,13 +48,13 @@ module mdu
         mdu_result = ({{32{a[31]}}, a} * {32'b0, b}) >> 32;
       end
       MDU_DIV: begin
-        mdu_result = __div__(a,b);
+        mdu_result = div(a, b);
       end
       MDU_DIVU: begin
         mdu_result = b == 32'b0 ? {32{1'b1}} : a / b;
       end
       MDU_REM: begin
-        mdu_result = __rem__(a,b);
+        mdu_result = rem(a, b);
       end
       MDU_REMU: begin
         mdu_result = b == 32'b0 ? a : a % b;

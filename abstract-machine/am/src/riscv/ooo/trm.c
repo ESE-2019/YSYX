@@ -20,7 +20,9 @@ void putch(char ch)
 
 void inline halt(int code)
 {
-    __asm__ volatile("mv a0, %0; ebreak" : : "r"(code));
+    __asm__ volatile("mv a0, %0" : : "r"(code));
+    outl(0x87FFFFF4, 0x12345678);
+    __asm__ volatile("ebreak");
     while (1)
         ;
 }

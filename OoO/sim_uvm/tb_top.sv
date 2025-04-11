@@ -11,7 +11,6 @@ module tb_top;
       .clk  (clk),
       .rst_n(rst_n)
   );
-  irq_if irq_vif (.clk(clk));
   ibex_mem_intf data_mem_vif (.clk(clk));
   ibex_mem_intf instr_mem_vif (.clk(clk));
 
@@ -23,24 +22,44 @@ module tb_top;
   axi_r_m2s_t lsu_r_m2s;
   axi_r_s2m_t lsu_r_s2m;
 
+  initial begin
+    // Drive the clock and reset lines. Reset everything and start the clock at the beginning of
+    // time
+    ibex_clk_if.set_active();
+    fork
+      ibex_clk_if.apply_reset(.reset_width_clks(100));
+    join_none
 
+    uvm_config_db#(virtual clk_rst_if)::set(null, "*", "clk_if", ibex_clk_if);
+    uvm_config_db#(virtual ibex_mem_intf)::set(null, "*data_if_response*", "vif", data_mem_vif);
+    uvm_config_db#(virtual ibex_mem_intf)::set(null, "*instr_if_response*", "vif", instr_mem_vif);
+    uvm_config_db#(virtual core_ibex_ifetch_if)::set(null, "*", "ifetch_if", ifetch_if);
+
+    // Expose ISA config parameters to UVM DB
+    uvm_config_db#(bit)::set(null, "*", "RV32E", RV32E);
+    uvm_config_db#(ibex_pkg::rv32m_e)::set(null, "*", "RV32M", RV32M);
+    uvm_config_db#(ibex_pkg::rv32b_e)::set(null, "*", "RV32B", RV32B);
+
+
+    run_test();
+  end
 
   // Data load/store vif connection
   assign data_mem_vif.reset = ~rst_n;
-  assign data_mem_vif.rintg = '0;
-  assign data_mem_vif.wintg= '0;
-  assign data_mem_vif.error = '0;
-  assign data_mem_vif.misaligned_first ='0;
-  assign data_mem_vif.misaligned_second ='0;
-  assign data_mem_vif.misaligned_first_saw_error ='0;
-  assign data_mem_vif.m_mode_access ='1;
+  //   assign data_mem_vif.rintg = '0;
+  //   assign data_mem_vif.wintg= '0;
+  //   assign data_mem_vif.error = '0;
+  //   assign data_mem_vif.misaligned_first ='0;
+  //   assign data_mem_vif.misaligned_second ='0;
+  //   assign data_mem_vif.misaligned_first_saw_error ='0;
+  //   assign data_mem_vif.m_mode_access ='1;
   // Instruction fetch vif connnection
   assign instr_mem_vif.reset = ~rst_n;
   assign instr_mem_vif.we    = 0;
   assign instr_mem_vif.be    = 0;
   assign instr_mem_vif.wdata = 0;
-  assign instr_mem_vif.rintg = '0;
-  assign instr_mem_vif.error = '0;
+  //   assign instr_mem_vif.rintg = '0;
+  //   assign instr_mem_vif.error = '0;
 
   logic [ 0:0] rvfi_valid;
   logic [63:0] rvfi_order;
@@ -65,7 +84,7 @@ module tb_top;
   logic [ 0:0] rvfi_mem_extamo;
   logic [15:0] errcode;
 
-  ysyx_24080006_core CORE (
+  ooo_core CORE (
       .*,
       .clock(clk),
       .reset(~rst_n),
@@ -104,38 +123,5 @@ module tb_top;
   dummy_iram IRAM (.*);
 
 
-  assign core_w_s2m.awready = io_master_awready;
-  assign io_master_awvalid = core_w_m2s.awvalid;
-  assign io_master_awaddr = core_w_m2s.awaddr;
-  assign io_master_awid = '0;  //core_w_m2s.awid;
-  assign io_master_awlen = core_w_m2s.awlen;
-  assign io_master_awsize = core_w_m2s.awsize;
-  assign io_master_awburst = core_w_m2s.awburst;
-
-  assign core_w_s2m.wready = io_master_wready;
-  assign io_master_wvalid = core_w_m2s.wvalid;
-  assign io_master_wdata = core_w_m2s.wdata;
-  assign io_master_wstrb = core_w_m2s.wstrb;
-  assign io_master_wlast = core_w_m2s.wlast;
-
-  assign io_master_bready = core_w_m2s.bready;
-  assign core_w_s2m.bvalid = io_master_bvalid;
-  //assign core_w_s2m.bresp = io_master_bresp;
-  //assign core_w_s2m.bid = io_master_bid;
-
-  assign core_r_s2m.arready = io_master_arready;
-  assign io_master_arvalid = core_r_m2s.arvalid;
-  assign io_master_araddr = core_r_m2s.araddr;
-  assign io_master_arid = '0;  //core_r_m2s.arid;
-  assign io_master_arlen = core_r_m2s.arlen;
-  assign io_master_arsize = core_r_m2s.arsize;
-  assign io_master_arburst = core_r_m2s.arburst;
-
-  assign io_master_rready = core_r_m2s.rready;
-  assign core_r_s2m.rvalid = io_master_rvalid;
-  //assign core_r_s2m.rresp = io_master_rresp;
-  assign core_r_s2m.rdata = io_master_rdata;
-  assign core_r_s2m.rlast = io_master_rlast;
-  //assign core_r_s2m.rid = io_master_rid;
 
 endmodule

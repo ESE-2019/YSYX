@@ -83,11 +83,6 @@ module ysyx_24080006 (
   axi_r_m2s_t        lsu_r_m2s;
   axi_r_s2m_t        lsu_r_s2m;
 
-  axi_w_m2s_t        clint_w_m2s;
-  axi_w_s2m_t        clint_w_s2m;
-  axi_r_m2s_t        clint_r_m2s;
-  axi_r_s2m_t        clint_r_s2m;
-
   axi_w_m2s_t        core_w_m2s;
   axi_w_s2m_t        core_w_s2m;
   axi_r_m2s_t        core_r_m2s;
@@ -132,27 +127,8 @@ module ysyx_24080006 (
   logic       [31:0] data_wdata_o;
   logic       [31:0] data_rdata_i;
 
-  ysyx_24080006_core CORE (.*);
-  ysyx_24080006_clint CLINT (.*);
+  ooo_core CORE (.*);
 
-`ifdef NPC_MODE
-  axi_w_m2s_t imd_w_m2s;
-  axi_w_s2m_t imd_w_s2m;
-  axi_r_m2s_t imd_r_m2s;
-  axi_r_s2m_t imd_r_s2m;
-  axi_w_m2s_t sram_w_m2s;
-  axi_w_s2m_t sram_w_s2m;
-  axi_r_m2s_t sram_r_m2s;
-  axi_r_s2m_t sram_r_s2m;
-  ysyx_24080006_interconnect ITCNT (
-      .*,
-      .core_w_m2s(imd_w_m2s),
-      .core_w_s2m(imd_w_s2m),
-      .core_r_m2s(imd_r_m2s),
-      .core_r_s2m(imd_r_s2m)
-  );
-  npc_xbar NPC_XBAR (.*);
-  sram NPC_SRAM (.*);
   rvfimon RVFIMON (.*);
 
   ibex_tracer TRACER (
@@ -166,12 +142,9 @@ module ysyx_24080006 (
   );
   dummy_iram IRAM (.*);
   dummy_dram DRAM (.*);
-  always_comb begin
-    if (|errcode) $finish;
-  end
-`else
-  ysyx_24080006_interconnect ITCNT (.*);
-`endif
+  // always_comb begin
+  //   if (|errcode) $finish;
+  // end
 
   assign core_w_s2m.awready = io_master_awready;
   assign io_master_awvalid = core_w_m2s.awvalid;

@@ -99,16 +99,12 @@ module issue_stage
   rvfi_adapter RVFI_ADAPTER (.*);
 
 `ifdef SIM_MODE
-  import "DPI-C" function void ebreak();
   import "DPI-C" function void retirement(
     input int pc,
     input int npc
   );
   logic difftest;
   logic [31:0] difftest_pc, difftest_npc;
-  always_comb begin
-    if (retire_valid && commit_instr.op == SYS_EBREAK) ebreak();
-  end
   always_ff @(posedge clock) begin
     difftest <= retire_valid;
     difftest_pc <= commit_instr.pc;

@@ -58,7 +58,7 @@ module top  // use for syn
   axi_r_m2s_t core_r_m2s;
   axi_r_s2m_t core_r_s2m;
 
-  ysyx_24080006_core CORE (.*);
+  ooo_core CORE (.*);
   ysyx_24080006_interconnect ITCNT (.*);
   ysyx_24080006_clint CLINT (.*);
 
